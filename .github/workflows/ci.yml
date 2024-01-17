@@ -36,15 +36,6 @@ jobs:
       - name: Build frontend
         run: yarn build
 
-      - name: Start grafana docker
-        run: yarn server -d
-
-      - name: Run e2e tests
-        run: yarn e2e
-
-      - name: Stop grafana docker
-        run: docker-compose down
-
       - name: Check for backend
         id: check-for-backend
         run: |
@@ -71,4 +62,13 @@ jobs:
         uses: magefile/mage-action@v1
         with:
           version: latest
-          args: build 
+          args: build
+
+      - name: Start grafana docker
+        run: yarn server -d
+  
+      - name: Run e2e tests
+        run: yarn e2e
+
+      - name: Stop grafana docker
+        run: docker-compose down

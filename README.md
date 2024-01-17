@@ -12,10 +12,6 @@ custom API end point without needing to run the
 as a separate web service. The advantage of the plugin approach is the authenticated access 
 to the reporter app is guaranteed by Grafana auth.
 
-## Get started
-
-
-
 ## Documentation
 
 More documentation can be found in [README](./src/README.md)
