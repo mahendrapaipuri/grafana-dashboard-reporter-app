@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "app",
+  "name": "Grafana Dashboard Reporter",
+  "id": "dashboard-reporter-app",
+  "backend": true,
+  "executable": "gpx_app-dashboard-reporter-app",
+  "info": {
+    "keywords": [
+      "report",
+      "pdf",
+      "dashboards",
+      "api"
+    ],
+    "description": "A Grafana plugin app that generates PDF reports from Grafana dashboards",
+    "author": {
+      "name": "Mahendra Paipuri"
+    },
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "includes": [
+    {
+      "type": "page",
+      "name": "Status",
+      "path": "/a/%PLUGIN_ID%/status",
+      "role": "Viewer",
+      "addToNav": true,
+      "defaultNav": true
+    },
+    {
+      "type": "page",
+      "icon": "cog",
+      "name": "Configuration",
+      "path": "/plugins/%PLUGIN_ID%",
+      "role": "Admin",
+      "addToNav": false
+    }
+  ],
+  "dependencies": {
+    "grafanaDependency": ">=10.0.3",
+    "plugins": []
+  }
+}

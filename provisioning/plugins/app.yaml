@@ -1,0 +1,11 @@
+apiVersion: 1
+
+apps:
+  - type: dashboard-reporter-app
+    org_id: 1
+    org_name: Main Org.
+    disabled: false
+    jsonData:
+      appUrl: http://localhost:3000
+      useGridLayout: false
+      maxRenderWorkers: 2
