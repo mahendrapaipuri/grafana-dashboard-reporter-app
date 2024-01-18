@@ -4,7 +4,8 @@
   "description": "A Grafana plugin app that generates PDF reports from Grafana dashboards",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
-    "build:plugin": "yarn install --pure-lockfile && yarn build && mage -v && pushd dist && tar -czvf ../grafana-dashboard-reporter-app.tar.gz * && popd",
+    "build:plugin": "yarn install --pure-lockfile && yarn build && mage -v",
+    "package": "yarn build:plugin && cd dist && tar -czvf ../grafana-dashboard-reporter-app.tar.gz * && cd ..",
     "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development",
     "e2e:update": "npm exec cypress install && npm exec grafana-e2e run --update-screenshots",
     "e2e": "npm exec cypress install && npm exec grafana-e2e run",
