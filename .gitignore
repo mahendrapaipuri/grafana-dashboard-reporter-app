@@ -35,3 +35,6 @@ e2e-results/
 
 # Lock files
 package-lock.json
+
+# Ignore zip files
+*.tar.gz
