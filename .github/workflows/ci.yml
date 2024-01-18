@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # For nightly build releases
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
 
@@ -72,3 +75,28 @@ jobs:
 
       - name: Stop grafana docker
         run: docker-compose down
+
+      - name: Package plugin
+        run: |
+          pushd dist 
+          tar -czvf ../grafana-dashboard-reporter-app.tar.gz *
+          popd
+          sha256sum grafana-dashboard-reporter-app.tar.gz > grafana-dashboard-reporter-app.sha256
+
+      - name: Release nightly
+        uses: softprops/action-gh-release@v1
+        # Run this only when there is a PR merged or on main branch
+        if: github.event.pull_request.merged || github.ref == 'refs/heads/main'
+        with:
+          prerelease: true
+          name: nightly
+          tag_name: nightly
+          files: |
+            grafana-dashboard-reporter-app.tar.gz
+            grafana-dashboard-reporter-app.sha256
+          fail_on_unmatched_files: true
+          body: |
+            # Latest Build Complete! :rocket:
+            
+            For the public download links of these build artifacts, please see:
+            <https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/tag/nightly>
