@@ -9,4 +9,8 @@ export const testIds = {
     container: "data-testid pg-one-container",
     health: "data-testid pg-one-health",
   },
+  Panel: {
+    container: "data-testid Panel header Test Panel 1",
+    reportLink: "data-testid Dashboard link container"
+  }
 };
