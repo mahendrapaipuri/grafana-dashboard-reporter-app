@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+      # Just until Grafana labs review plugin
+      - grafana_labs_review
   pull_request:
     branches:
       - main
@@ -87,8 +89,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         # Run this only when there is a PR merged or on main branch
         # if: github.event.pull_request.merged || github.ref == 'refs/heads/main'
-        # Run this only on grafana_labs_review branch for Grafana team to review plugin
-        if: github.ref == 'refs/heads/grafana_labs_review'
         with:
           prerelease: true
           name: nightly
