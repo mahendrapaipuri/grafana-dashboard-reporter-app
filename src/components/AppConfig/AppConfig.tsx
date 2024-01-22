@@ -1,25 +1,47 @@
 import React, { useState, ChangeEvent } from 'react';
 import { lastValueFrom } from 'rxjs';
 import { css } from '@emotion/css';
-import { Button, useStyles2, Field, Switch, Input, TextArea, FieldSet } from '@grafana/ui';
-import { PluginConfigPageProps, AppPluginMeta, PluginMeta, GrafanaTheme2 } from '@grafana/data';
-import { config, getBackendSrv } from '@grafana/runtime';
-import { testIds } from '../testIds';
+import {
+  Button,
+  useStyles2,
+  Field,
+  Input,
+  TextArea,
+  FieldSet,
+  RadioButtonGroup,
+} from "@grafana/ui";
+import {
+  PluginConfigPageProps,
+  AppPluginMeta,
+  PluginMeta,
+  GrafanaTheme2,
+} from "@grafana/data";
+import { config, getBackendSrv } from "@grafana/runtime";
+import { testIds } from "../testIds";
 
 export type JsonData = {
   appUrl?: string;
-  useGridLayout?: boolean;
-  texTemplate?: string;
+  orientation?: string;
+  layout?: string;
   maxRenderWorkers?: number;
+  texTemplate?: string;
 };
 
 type State = {
-  // Use Grid layout in report
-  useGridLayout: boolean;
-  // The custom TeX template.
-  texTemplate: string;
+  // PDF report orientation (portrait or landscape)
+  orientation: string;
+  // If orientation has changed
+  orientationChanged: boolean;
+  // Layout in report (grid or simple)
+  layout: string;
+  // If layout has changed
+  layoutChanged: boolean;
   // Maximum rendering workers
   maxRenderWorkers: number;
+  // If maxRenderWorkers has changed
+  maxRenderWorkersChanged: boolean;
+  // The custom TeX template.
+  texTemplate: string;
 };
 
 interface Props extends PluginConfigPageProps<AppPluginMeta<JsonData>> {}
@@ -28,48 +50,40 @@ export const AppConfig = ({ plugin }: Props) => {
   const s = useStyles2(getStyles);
   const { enabled, pinned, jsonData } = plugin.meta;
   const [state, setState] = useState<State>({
-    useGridLayout: jsonData?.useGridLayout || false,
-    texTemplate: jsonData?.texTemplate || '',
+    orientation: jsonData?.orientation || "portrait",
+    orientationChanged: false,
+    layout: jsonData?.layout || "simple",
+    layoutChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
+    maxRenderWorkersChanged: false,
+    texTemplate: jsonData?.texTemplate || "",
   });
 
   const appUrl = config.appUrl;
 
-  const texTemplatePlaceholder = `%use square brackets as golang text templating delimiters
-\\documentclass{article}
-\\usepackage{graphicx}
-\\usepackage[margin=1in]{geometry}
+  const orientationOptions = [
+    { label: "Portrait", value: "portrait", icon: "gf-portrait" },
+    { label: "Landscape", value: "landscape", icon: "gf-landscape" },
+  ];
 
-\\graphicspath{ {images/} }
-\\begin{document}
-\\title{[[.Title]] [[if .VariableValues]] \\\\ \\large [[.VariableValues]] [[end]] [[if .Description]] \\\\ \\small [[.Description]] [[end]]}
-\\date{[[.FromFormatted]]\\to\\[[.ToFormatted]]}
-\\maketitle
-\\begin{center}
-[[range .Panels]][[if .IsSingleStat]]\\begin{minipage}{0.3\\textwidth}
-\\includegraphics[width=\\textwidth]{image[[.Id]]}
-\\end{minipage}
-[[else]]\\par
-\\vspace{0.5cm}
-\\includegraphics[width=\\textwidth]{image[[.Id]]}
-\\par
-\\vspace{0.5cm}
-[[end]][[end]]
+  const layoutOptions = [
+    { label: "Simple", value: "simple", icon: "gf-layout-simple" },
+    { label: "Grid", value: "grid", icon: "gf-grid" },
+  ];
 
-\\end{center}
-\\end{document}`
-
-  const onChangeTexTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+  const onChangeLayout = (value: string) => {
     setState({
       ...state,
-      texTemplate: event.target.value,
+      layout: value,
+      layoutChanged: true,
     });
   };
 
-  const onChangeGridLayout = (event: ChangeEvent<HTMLInputElement>) => {
+  const onChangeOrientation = (value: string) => {
     setState({
       ...state,
-      useGridLayout: event.target.checked,
+      orientation: value,
+      orientationChanged: true,
     });
   };
 
@@ -77,6 +91,14 @@ export const AppConfig = ({ plugin }: Props) => {
     setState({
       ...state,
       maxRenderWorkers: event.target.valueAsNumber,
+      maxRenderWorkersChanged: true,
+    });
+  };
+
+  const onChangeTexTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setState({
+      ...state,
+      texTemplate: event.target.value,
     });
   };
 
@@ -86,7 +108,9 @@ export const AppConfig = ({ plugin }: Props) => {
       <FieldSet label="Enable / Disable">
         {!enabled && (
           <>
-            <div className={s.colorWeak}>The plugin is currently not enabled.</div>
+            <div className={s.colorWeak}>
+              The plugin is currently not enabled.
+            </div>
             <Button
               className={s.marginTop}
               variant="primary"
@@ -97,7 +121,8 @@ export const AppConfig = ({ plugin }: Props) => {
                   jsonData: {
                     appUrl: appUrl,
                     maxRenderWorkers: state.maxRenderWorkers,
-                    useGridLayout: state.useGridLayout,
+                    orientation: state.orientation,
+                    layout: state.layout,
                     texTemplate: state.texTemplate,
                   },
                 })
@@ -122,7 +147,8 @@ export const AppConfig = ({ plugin }: Props) => {
                   jsonData: {
                     appUrl: appUrl,
                     maxRenderWorkers: state.maxRenderWorkers,
-                    useGridLayout: state.useGridLayout,
+                    orientation: state.orientation,
+                    layout: state.layout,
                     texTemplate: state.texTemplate,
                   },
                 })
@@ -136,8 +162,34 @@ export const AppConfig = ({ plugin }: Props) => {
 
       {/* CUSTOM SETTINGS */}
       <FieldSet label="Plugin Settings" className={s.marginTopXl}>
+        {/* Use Grid Layout */}
+        <Field
+          label="Layout"
+          description="Display the panels in their positions on the dashboard."
+          className={s.marginTop}
+        >
+          <RadioButtonGroup
+            options={layoutOptions}
+            value={state.layout}
+            onChange={onChangeLayout}
+          />
+        </Field>
+
+        {/* Report Orientation */}
+        <Field label="Report Orientation" className={s.marginTop}>
+          <RadioButtonGroup
+            options={orientationOptions}
+            value={state.orientation}
+            onChange={onChangeOrientation}
+          />
+        </Field>
+
         {/* Max workers */}
-        <Field label="Maximum Render Workers" description="Maximum number of workers for rendering panels into PNGs. Default is 2." className={s.marginTop}>
+        <Field
+          label="Maximum Render Workers"
+          description="Maximum number of workers for rendering panels into PNGs. Default is 2."
+          className={s.marginTop}
+        >
           <Input
             type="number"
             width={60}
@@ -149,24 +201,13 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
-        {/* Use Grid Layout */}
-        <Field label="Use Grid Layout" description="If custom template is defined, this option will be ignored" className={s.marginTop}>
-          <Switch
-            id="grid-layout"
-            label={`Use Grid Layout`}
-            value={state?.useGridLayout}
-            onChange={onChangeGridLayout}
-          />
-        </Field>
-
         {/* Tex Template */}
-        <Field label="TeX Template" description="" className={s.marginTop}>
+        <Field label="TeX Template" description="Custom TeX template to use." className={s.marginTop}>
           <TextArea
             type="text"
             aria-label="TeX Template"
             data-testid={testIds.appConfig.texTemplate}
             value={state?.texTemplate}
-            placeholder={texTemplatePlaceholder}
             rows={20}
             onChange={onChangeTexTemplate}
           />
@@ -183,12 +224,18 @@ export const AppConfig = ({ plugin }: Props) => {
                 jsonData: {
                   appUrl: appUrl,
                   maxRenderWorkers: state.maxRenderWorkers,
-                  useGridLayout: state.useGridLayout,
+                  orientation: state.orientation,
+                  layout: state.layout,
                   texTemplate: state.texTemplate,
                 },
               })
             }
-            disabled={Boolean(!state.texTemplate && !state.useGridLayout && state.maxRenderWorkers === 2)}
+            disabled={Boolean(
+                !state.texTemplate &&
+                !state.layoutChanged &&
+                !state.orientationChanged &&
+                !state.maxRenderWorkersChanged
+            )}
           >
             Save settings
           </Button>
