@@ -7,5 +7,6 @@ apps:
     disabled: false
     jsonData:
       appUrl: http://localhost:3000
-      useGridLayout: false
+      orientation: portrait
+      layout: simple
       maxRenderWorkers: 2
