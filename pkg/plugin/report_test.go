@@ -52,7 +52,7 @@ func TestReport(t *testing.T) {
 		variables := url.Values{}
 		variables.Add("var-test", "testvarvalue")
 		gClient := &mockGrafanaClient{0, variables}
-		rep := newReport(logger, gClient, &ReportConfig{timeRange: TimeRange{"1453206447000", "1453213647000"}, dashUID: "testDash", useGridLayout: false, stagingDir: t.TempDir(), maxRenderWorkers: 2})
+		rep := newReport(logger, gClient, &ReportConfig{timeRange: TimeRange{"1453206447000", "1453213647000"}, dashUID: "testDash", layout: "simple", stagingDir: t.TempDir(), maxRenderWorkers: 2})
 		defer rep.Clean()
 
 		Convey("When rendering images", func() {
@@ -145,7 +145,7 @@ func (e *errClient) GetDashboard(dashName string) (Dashboard, error) {
 	return NewDashboard([]byte(dashJSON), e.variables), nil
 }
 
-//Produce an error on the 2nd panel fetched
+// Produce an error on the 2nd panel fetched
 func (e *errClient) GetPanelPNG(p Panel, dashName string, t TimeRange) (io.ReadCloser, error) {
 	e.getPanelCallCount++
 	if e.getPanelCallCount == 2 {
@@ -158,7 +158,7 @@ func TestReportErrorHandling(t *testing.T) {
 	Convey("When generating a report where one panels gives an error", t, func() {
 		variables := url.Values{}
 		gClient := &errClient{0, variables}
-		rep := newReport(logger, gClient, &ReportConfig{timeRange: TimeRange{"1453206447000", "1453213647000"}, dashUID: "testDash", useGridLayout: false})
+		rep := newReport(logger, gClient, &ReportConfig{timeRange: TimeRange{"1453206447000", "1453213647000"}, dashUID: "testDash", layout: "simple"})
 		defer rep.Clean()
 
 		Convey("When rendering images", func() {

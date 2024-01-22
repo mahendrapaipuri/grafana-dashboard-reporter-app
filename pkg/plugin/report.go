@@ -26,8 +26,7 @@ type Report interface {
 // Data structures used inside TeX template
 type templateData struct {
 	Dashboard
-	TimeRange
-	GrafanaClient
+	ReportConfig
 }
 
 // Report config
@@ -38,7 +37,28 @@ type ReportConfig struct {
 	texTemplate      string
 	stagingDir       string
 	maxRenderWorkers int
-	useGridLayout    bool
+	layout           string
+	orientation      string
+}
+
+// Is layout grid?
+func (c ReportConfig) IsGridLayout() bool {
+	return (c.layout == "grid")
+}
+
+// Is orientation landscape?
+func (c ReportConfig) IsLandscapeOrientation() bool {
+	return (c.orientation == "landscape")
+}
+
+// Get from time string
+func (c ReportConfig) From() string {
+	return c.timeRange.FromFormatted()
+}
+
+// Get to time string
+func (c ReportConfig) To() string {
+	return c.timeRange.ToFormatted()
 }
 
 // report struct
@@ -55,13 +75,7 @@ const (
 )
 
 func newReport(logger log.Logger, client GrafanaClient, config *ReportConfig) *report {
-	if config.texTemplate == "" {
-		if config.useGridLayout {
-			config.texTemplate = defaultGridTemplate
-		} else {
-			config.texTemplate = defaultTemplate
-		}
-	}
+	config.texTemplate = defaultTemplate
 	config.stagingDir = filepath.Join(config.stagingDir, uuid.New().String())
 	return &report{logger, client, config}
 }
@@ -161,7 +175,7 @@ func (r *report) renderPNGsParallel(dash Dashboard) error {
 	}
 	wg.Wait()
 	close(errs)
-	
+
 	for err := range errs {
 		if err != nil {
 			return err
@@ -220,7 +234,9 @@ func (r *report) generateTeXFile(dash Dashboard) error {
 	}
 
 	// Render the template
-	if err = tmpl.Execute(file, templateData{dash, r.cfg.timeRange, r.client}); err != nil {
+	if err = tmpl.Execute(
+		file,
+		templateData{dash, *r.cfg}); err != nil {
 		return fmt.Errorf("error executing tex template: %v", err)
 	}
 	return nil

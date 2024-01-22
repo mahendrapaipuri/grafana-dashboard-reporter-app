@@ -72,7 +72,8 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Get custom TeX settings if provided in Plugin settings
 	var data map[string]interface{}
 	var texTemplate string = a.config.texTemplate
-	var useGridLayout = a.config.useGridLayout
+	var orientation = a.config.orientation
+	var layout = a.config.layout
 	var maxRenderWorkers = a.config.maxRenderWorkers
 	if config.AppInstanceSettings.JSONData != nil {
 		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &data); err == nil {
@@ -80,9 +81,13 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 				texTemplate = v.(string)
 				ctxLogger.Debug("custom TeX template", "template", texTemplate, "user", currentUser, "dashUID", dashboardUID)
 			}
-			if v, exists := data["useGridLayout"]; exists && v.(bool) != useGridLayout {
-				useGridLayout = v.(bool)
-				ctxLogger.Debug("custom grid layout setting", "useGridLayout", useGridLayout, "user", currentUser, "dashUID", dashboardUID)
+			if v, exists := data["orientation"]; exists && v.(string) != layout {
+				layout = v.(string)
+				ctxLogger.Debug("orientation setting", "orientation", orientation, "user", currentUser, "dashUID", dashboardUID)
+			}
+			if v, exists := data["layout"]; exists && v.(string) != layout {
+				layout = v.(string)
+				ctxLogger.Debug("layout setting", "layout", layout, "user", currentUser, "dashUID", dashboardUID)
 			}
 			if v, exists := data["maxRenderWorkers"]; exists && int(v.(float64)) != maxRenderWorkers {
 				maxRenderWorkers = int(v.(float64))
@@ -101,7 +106,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		a.grafanaAppUrl,
 		cookie,
 		variables,
-		useGridLayout,
+		layout,
 	)
 	// Make a new Report to put all PNGs into a LateX template and compile it into a PDF
 	report := a.newReport(
@@ -114,7 +119,8 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			texTemplate,
 			a.config.stagingDir,
 			maxRenderWorkers,
-			useGridLayout,
+			layout,
+			orientation,
 		},
 	)
 

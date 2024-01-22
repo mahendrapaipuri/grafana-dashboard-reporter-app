@@ -18,6 +18,7 @@ type GrafanaClient interface {
 	GetPanelPNG(p Panel, dashUID string, t TimeRange) (io.ReadCloser, error)
 }
 
+// grafanaClient is the struct that will implement required interfaces
 type grafanaClient struct {
 	client           *http.Client
 	url              string
@@ -25,15 +26,15 @@ type grafanaClient struct {
 	getPanelEndpoint func(dashUID string, vals url.Values) string
 	cookies          string
 	variables        url.Values
-	useGridLayout    bool
+	layout           string
 }
 
 var getPanelRetrySleepTime = time.Duration(10) * time.Second
 
-// NewClient creates a new Grafana Client. If apiToken is the empty string,
-// authorization headers will be omitted from requests.
+// NewClient creates a new Grafana Client. If cookies is the non-empty string,
+// cookie will be forwarded in the requests.
 // variables are Grafana template variable url values of the form var-{name}={value}, e.g. var-host=dev
-func NewGrafanaClient(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, useGridLayout bool) GrafanaClient {
+func NewGrafanaClient(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, layout string) GrafanaClient {
 	// Get dashboard URL
 	getDashEndpoint := func(dashUID string) string {
 		dashURL := grafanaAppURL + "/api/dashboards/uid/" + dashUID
@@ -47,7 +48,7 @@ func NewGrafanaClient(client *http.Client, grafanaAppURL string, cookie string, 
 	getPanelEndpoint := func(dashUID string, vals url.Values) string {
 		return fmt.Sprintf("%s/render/d-solo/%s/_?%s", grafanaAppURL, dashUID, vals.Encode())
 	}
-	return grafanaClient{client, grafanaAppURL, getDashEndpoint, getPanelEndpoint, cookie, variables, useGridLayout}
+	return grafanaClient{client, grafanaAppURL, getDashEndpoint, getPanelEndpoint, cookie, variables, layout}
 }
 
 func (g grafanaClient) GetDashboard(dashUID string) (Dashboard, error) {
@@ -129,7 +130,7 @@ func (g grafanaClient) getPanelURL(p Panel, dashUID string, t TimeRange) string 
 	values.Add("from", t.From)
 	values.Add("to", t.To)
 
-	if g.useGridLayout {
+	if g.layout == "grid" {
 		width := int(p.GridPos.W * 40)
 		height := int(p.GridPos.H * 40)
 		values.Add("width", strconv.Itoa(width))
