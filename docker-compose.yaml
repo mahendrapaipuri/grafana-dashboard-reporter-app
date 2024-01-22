@@ -34,5 +34,12 @@ services:
       - GF_LOG_FILTERS=rendering:debug
   renderer:
     image: grafana/grafana-image-renderer:latest
+    environment:
+      # Recommendation of grafana-image-renderer for optimal performance
+      # https://grafana.com/docs/grafana/latest/setup-grafana/image-rendering/#configuration
+      - RENDERING_MODE=clustered
+      - RENDERING_CLUSTERING_MODE=browser
+      - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
+      - RENDERING_CLUSTERING_TIMEOUT=60
     ports:
       - 8081

@@ -7,6 +7,7 @@ toolchain go1.21.3
 require (
 	github.com/google/uuid v1.5.0
 	github.com/grafana/grafana-plugin-sdk-go v0.199.0
+	github.com/magefile/mage v1.15.0
 	github.com/smartystreets/goconvey v1.8.1
 )
 
@@ -45,7 +46,6 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
-	github.com/magefile/mage v1.15.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattetti/filebuffer v1.0.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
