@@ -24,14 +24,6 @@ const (
 	Table
 )
 
-// Panel represents a Grafana dashboard panel
-type Panel struct {
-	Id      int     `json:"id"`
-	Type    string  `json:"type"`
-	Title   string  `json:"title"`
-	GridPos GridPos `json:"gridPos"`
-}
-
 // Panel represents a Grafana dashboard panel position
 type GridPos struct {
 	H float64 `json:"h"`
@@ -40,12 +32,53 @@ type GridPos struct {
 	Y float64 `json:"y"`
 }
 
+// Panel represents a Grafana dashboard panel
+type Panel struct {
+	Id      int     `json:"id"`
+	Type    string  `json:"type"`
+	Title   string  `json:"title"`
+	GridPos GridPos `json:"gridPos"`
+}
+
+// Is panel single stat?
+func (p Panel) IsSingleStat() bool {
+	return p.Is(SingleStat)
+}
+
+// If panel has width less than total allowable width
+func (p Panel) IsPartialWidth() bool {
+	return (p.GridPos.W < 24)
+}
+
+// Get panel width
+func (p Panel) Width() float64 {
+	return float64(p.GridPos.W) * 0.04
+}
+
+// Get panel height
+func (p Panel) Height() float64 {
+	return float64(p.GridPos.H) * 0.04
+}
+
+// If panel is of type
+func (p Panel) Is(t PanelType) bool {
+	if p.Type == t.string() {
+		return true
+	}
+	return false
+}
+
 // Row represents a container for Panels
 type Row struct {
 	Id        int
 	Collapsed bool
 	Title     string
 	Panels    []Panel
+}
+
+// If row is visible
+func (r Row) IsVisible() bool {
+	return r.Collapsed
 }
 
 // Dashboard represents a Grafana dashboard
@@ -117,37 +150,4 @@ func (dc dashContainer) NewDashboard(variables url.Values) Dashboard {
 	dash.Description = sanitizeLaTeXInput(dc.Dashboard.Description)
 	dash.VariableValues = sanitizeLaTeXInput(getVariablesValues(variables))
 	return populatePanelsFromJSON(dash, dc)
-}
-
-// Is panel single stat?
-func (p Panel) IsSingleStat() bool {
-	return p.Is(SingleStat)
-}
-
-// If panel has width less than PDF width
-func (p Panel) IsPartialWidth() bool {
-	return (p.GridPos.W < 24)
-}
-
-// Get panel width
-func (p Panel) Width() float64 {
-	return float64(p.GridPos.W) * 0.04
-}
-
-// Get panel height
-func (p Panel) Height() float64 {
-	return float64(p.GridPos.H) * 0.04
-}
-
-// If panel is of type
-func (p Panel) Is(t PanelType) bool {
-	if p.Type == t.string() {
-		return true
-	}
-	return false
-}
-
-// If row is visible
-func (r Row) IsVisible() bool {
-	return r.Collapsed
 }

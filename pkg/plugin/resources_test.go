@@ -58,9 +58,9 @@ func TestReportResource(t *testing.T) {
 	Convey("When the report handler is called", t, func() {
 		var clientVars url.Values
 		// mock new grafana client function to capture and validate its input parameters
-		app.newGrafanaClient = func(client *http.Client, url string, cookie string, variables url.Values, gridLayout bool) GrafanaClient {
+		app.newGrafanaClient = func(client *http.Client, url string, cookie string, variables url.Values, layout string) GrafanaClient {
 			clientVars = variables
-			return NewGrafanaClient(&testClient, url, "", clientVars, false)
+			return NewGrafanaClient(&testClient, url, "", clientVars, "simple")
 		}
 		//mock new report function to capture and validate its input parameters
 		var repDashName string
@@ -74,9 +74,9 @@ func TestReportResource(t *testing.T) {
 			var r mockCallResourceResponseSender
 			err = app.CallResource(context.Background(), &backend.CallResourceRequest{
 				PluginContext: backend.PluginContext{
-					OrgID:    3,
-					PluginID: "my-plugin",
-					User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
+					OrgID:               3,
+					PluginID:            "my-plugin",
+					User:                &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
 					AppInstanceSettings: &backend.AppInstanceSettings{},
 				},
 				Method: http.MethodGet,
@@ -89,9 +89,9 @@ func TestReportResource(t *testing.T) {
 			var r mockCallResourceResponseSender
 			err = app.CallResource(context.Background(), &backend.CallResourceRequest{
 				PluginContext: backend.PluginContext{
-					OrgID:    3,
-					PluginID: "my-plugin",
-					User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
+					OrgID:               3,
+					PluginID:            "my-plugin",
+					User:                &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
 					AppInstanceSettings: &backend.AppInstanceSettings{},
 				},
 				Method: http.MethodGet,
@@ -105,9 +105,9 @@ func TestReportResource(t *testing.T) {
 				var r mockCallResourceResponseSender
 				err = app.CallResource(context.Background(), &backend.CallResourceRequest{
 					PluginContext: backend.PluginContext{
-						OrgID:    3,
-						PluginID: "my-plugin",
-						User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
+						OrgID:               3,
+						PluginID:            "my-plugin",
+						User:                &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
 						AppInstanceSettings: &backend.AppInstanceSettings{},
 					},
 					Method: http.MethodGet,

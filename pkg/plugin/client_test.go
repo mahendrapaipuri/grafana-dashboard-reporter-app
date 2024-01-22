@@ -28,7 +28,7 @@ func TestGrafanaClientFetchesDashboard(t *testing.T) {
 		defer ts.Close()
 
 		Convey("When using the Grafana client", func() {
-			grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, false)
+			grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple")
 			grf.GetDashboard("rYy7Paekz")
 
 			Convey("It should use the v5 dashboards endpoint", func() {
@@ -59,46 +59,46 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			client      GrafanaClient
 			pngEndpoint string
 		}{
-			"v5": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, false), "/render/d-solo/testDash/_"},
+			"v5": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, "simple"), "/render/d-solo/testDash/_"},
 		}
-		for clientDesc, cl := range cases {
+		for _, cl := range cases {
 			grf := cl.client
 			grf.GetPanelPNG(Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now-1h", "now"})
 
-			Convey(fmt.Sprintf("The %s client should use the render endpoint with the dashboard name", clientDesc), func() {
+			Convey("The client should use the render endpoint with the dashboard name", func() {
 				So(requestURI, ShouldStartWith, cl.pngEndpoint)
 			})
 
-			Convey(fmt.Sprintf("The %s client should request the panel ID", clientDesc), func() {
+			Convey("The client should request the panel ID", func() {
 				So(requestURI, ShouldContainSubstring, "panelId=44")
 			})
 
-			Convey(fmt.Sprintf("The %s client should request the time", clientDesc), func() {
+			Convey("The client should request the time", func() {
 				So(requestURI, ShouldContainSubstring, "from=now-1h")
 				So(requestURI, ShouldContainSubstring, "to=now")
 			})
 
-			Convey(fmt.Sprintf("The %s client should insert auth token should in request header", clientDesc), func() {
+			Convey("The client should insert auth token should in request header", func() {
 				So(requestHeaders.Get("Cookie"), ShouldContainSubstring, cookies)
 			})
 
-			Convey(fmt.Sprintf("The %s client should pass variables in the request parameters", clientDesc), func() {
+			Convey("The client should pass variables in the request parameters", func() {
 				So(requestURI, ShouldContainSubstring, "var-host=servername")
 				So(requestURI, ShouldContainSubstring, "var-port=adapter")
 			})
 
-			Convey(fmt.Sprintf("The %s client should request singlestat panels at a smaller size", clientDesc), func() {
+			Convey("The client should request singlestat panels at a smaller size", func() {
 				So(requestURI, ShouldContainSubstring, "width=300")
 				So(requestURI, ShouldContainSubstring, "height=150")
 			})
 
-			Convey(fmt.Sprintf("The %s client should request text panels with a small height", clientDesc), func() {
+			Convey("The client should request text panels with a small height", func() {
 				grf.GetPanelPNG(Panel{44, "text", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
 				So(requestURI, ShouldContainSubstring, "width=1000")
 				So(requestURI, ShouldContainSubstring, "height=100")
 			})
 
-			Convey(fmt.Sprintf("The %s client should request other panels in a larger size", clientDesc), func() {
+			Convey("The client should request other panels in a larger size", func() {
 				grf.GetPanelPNG(Panel{44, "graph", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
 				So(requestURI, ShouldContainSubstring, "width=1000")
 				So(requestURI, ShouldContainSubstring, "height=500")
@@ -109,18 +109,18 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			client      GrafanaClient
 			pngEndpoint string
 		}{
-			"v5": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, true), "/render/d-solo/testDash/_"},
+			"v5": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, "grid"), "/render/d-solo/testDash/_"},
 		}
-		for clientDesc, cl := range casesGridLayout {
+		for _, cl := range casesGridLayout {
 			grf := cl.client
 
-			Convey(fmt.Sprintf("The %s client should request grid layout panels with width=1000 and height=240", clientDesc), func() {
+			Convey("The client should request grid layout panels with width=1000 and height=240", func() {
 				grf.GetPanelPNG(Panel{44, "graph", "title", GridPos{6, 24, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
 				So(requestURI, ShouldContainSubstring, "width=960")
 				So(requestURI, ShouldContainSubstring, "height=240")
 			})
 
-			Convey(fmt.Sprintf("The %s client should request grid layout panels with width=480 and height=120", clientDesc), func() {
+			Convey("The client should request grid layout panels with width=480 and height=120", func() {
 				grf.GetPanelPNG(Panel{44, "graph", "title", GridPos{3, 12, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
 				So(requestURI, ShouldContainSubstring, "width=480")
 				So(requestURI, ShouldContainSubstring, "height=120")
@@ -143,7 +143,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, false)
+		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple")
 
 		_, err := grf.GetPanelPNG(Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now-1h", "now"})
 
@@ -158,7 +158,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, false)
+		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple")
 
 		_, err := grf.GetPanelPNG(Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now-1h", "now"})
 

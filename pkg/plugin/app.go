@@ -29,7 +29,8 @@ var (
 
 // Plugin config settings
 type Config struct {
-	useGridLayout    bool
+	orientation      string
+	layout           string
 	texTemplate      string
 	maxRenderWorkers int
 	stagingDir       string
@@ -38,11 +39,11 @@ type Config struct {
 // App is the backend plugin which can respond to api queries.
 type App struct {
 	backend.CallResourceHandler
-	httpClient    *http.Client
-	grafanaAppUrl string
-	config        *Config
-	newGrafanaClient func(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, useGridLayout bool) GrafanaClient
-	newReport func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) Report
+	httpClient       *http.Client
+	grafanaAppUrl    string
+	config           *Config
+	newGrafanaClient func(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, layout string) GrafanaClient
+	newReport        func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) Report
 }
 
 // NewApp creates a new example *App instance.
@@ -73,21 +74,25 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	// Get Grafana App URL from plugin settings
 	var data map[string]interface{}
 	var grafanaAppUrl, texTemplate string
-	var useGridLayout bool
+	var orientation string
+	var layout string
 	var maxRenderWorkers int = 2
 	if settings.JSONData != nil {
 		if err := json.Unmarshal(settings.JSONData, &data); err == nil {
 			if v, exists := data["appUrl"]; exists {
 				grafanaAppUrl = strings.TrimRight(v.(string), "/")
 			}
-			if v, exists := data["texTemplate"]; exists {
-				texTemplate = v.(string)
+			if v, exists := data["orientation"]; exists {
+				orientation = v.(string)
 			}
-			if v, exists := data["useGridLayout"]; exists {
-				useGridLayout = v.(bool)
+			if v, exists := data["layout"]; exists {
+				layout = v.(string)
 			}
 			if v, exists := data["maxRenderWorkers"]; exists {
 				maxRenderWorkers = int(v.(float64))
+			}
+			if v, exists := data["texTemplate"]; exists {
+				texTemplate = v.(string)
 			}
 		}
 	}
@@ -110,7 +115,8 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	// Make config
 	app.config = &Config{
 		texTemplate:      texTemplate,
-		useGridLayout:    useGridLayout,
+		orientation:      orientation,
+		layout:           layout,
 		maxRenderWorkers: maxRenderWorkers,
 		stagingDir:       stagingDir,
 	}
