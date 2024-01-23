@@ -80,8 +80,8 @@ jobs:
       - name: Package plugin
         # Grafana Labs review needs the plugin file in zip format with sha1 checksum
         run: |
-          zip -r grafana-dashboard-reporter-app.zip dist
-          sha1sum grafana-dashboard-reporter-app.zip > grafana-dashboard-reporter-app.zip.sha1
+          zip -r mahendrapaipuri-dashboardreporter-app.zip dist
+          sha1sum mahendrapaipuri-dashboardreporter-app.zip > mahendrapaipuri-dashboardreporter-app.zip.sha1
 
       - name: Release nightly
         uses: softprops/action-gh-release@v1
@@ -90,8 +90,8 @@ jobs:
           name: review
           tag_name: review
           files: |
-            grafana-dashboard-reporter-app.zip
-            grafana-dashboard-reporter-app.zip.sha1
+            mahendrapaipuri-dashboardreporter-app.zip
+            mahendrapaipuri-dashboardreporter-app.zip.sha1
           fail_on_unmatched_files: true
           body: |
             # Latest Build Complete! :rocket:

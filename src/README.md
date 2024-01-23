@@ -31,7 +31,7 @@ TODO
 Download the [latest Grafana Dashboard Reporter]().
 
 Create a directory for grafana to access your custom-plugins 
-_e.g._ `/var/lib/grafana/plugins/dashboard-reporter-app`.
+_e.g._ `/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app`.
 
 The following shell script downloads and extracts the latest plugin source 
 code into the the current working directory. Run the following inside your grafana 
@@ -39,7 +39,7 @@ plugin directory:
 
 ```
 cd /var/lib/grafana/plugins
-./scripts/bootstrap-grafana-dashboard-reporter-app.sh
+./scripts/bootstrap-dashboard-reporter-app.sh
 ```
 
 The current example assumes the following configuration is set for Grafana
@@ -87,7 +87,7 @@ Following steps will configure a dashboard link to create PDF report for that da
 - Go to Settings of Dashboard
 - Go to Links in the side bar and click on `Add Dashboard Link`
 - Use Report for `Title` field, set `Type` to `Link`
-- Now set `URL` to `<grafanaAppUrl>/api/plugins/dashboard-reporter-app/resources/api?dashUid=<UID of dashboard>`
+- Now set `URL` to `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/api?dashUid=<UID of dashboard>`
 - Set `Tooltip` to `Create a PDF report` and set `Icon` to `doc`
 - By checking `Include current time range` and `Include current template variables values`, 
   time range and dashboard variables will be added to query parameters while creating 
