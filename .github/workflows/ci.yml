@@ -5,11 +5,9 @@ on:
   push:
     branches:
       - main
-      # Just until Grafana labs review plugin
-      - grafana_labs_review
-  # pull_request:
-  #   branches:
-  #     - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -78,6 +76,7 @@ jobs:
       - name: Stop grafana docker
         run: docker-compose down
 
+      # Remove this once plugin review has been submitted
       - name: Package plugin
         # Grafana Labs review needs the plugin file in zip format with sha1 checksum
         run: |

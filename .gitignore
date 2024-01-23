@@ -38,3 +38,4 @@ package-lock.json
 
 # Ignore zip files
 *.tar.gz
+*.zip
