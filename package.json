@@ -1,11 +1,11 @@
 {
-  "name": "dashboard-reporter-app",
+  "name": "mahendrapaipuri-dashboardreporter-app",
   "version": "1.0.0",
   "description": "A Grafana plugin app that generates PDF reports from Grafana dashboards",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
     "build:plugin": "yarn install --pure-lockfile && yarn build && mage -v",
-    "package": "yarn build:plugin && cd dist && tar -czvf ../grafana-dashboard-reporter-app.tar.gz * && cd ..",
+    "package": "yarn build:plugin && zip -r mahendrapaipuri-dashboardreporter-app.zip",
     "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development",
     "e2e:update": "npm exec cypress install && npm exec grafana-e2e run --update-screenshots",
     "e2e": "npm exec cypress install && npm exec grafana-e2e run",

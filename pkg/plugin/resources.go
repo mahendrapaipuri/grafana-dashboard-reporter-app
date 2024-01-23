@@ -37,7 +37,7 @@ func getDashboardVariables(r *http.Request) url.Values {
 	return variables
 }
 
-// /api/plugins/dashboard-reporter-app/resources/report
+// /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report
 // handleReport handles createing a PDF report from a given dashboard UID
 func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {

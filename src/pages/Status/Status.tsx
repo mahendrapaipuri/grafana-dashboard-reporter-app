@@ -9,7 +9,7 @@ export const Status = () => {
     const backendSrv = getBackendSrv();
 
     return Promise.all([
-      backendSrv.get(`api/plugins/dashboard-reporter-app/health`),
+      backendSrv.get(`api/plugins/mahendrapaipuri-dashboardreporter-app/health`),
     ]);
   });
 
