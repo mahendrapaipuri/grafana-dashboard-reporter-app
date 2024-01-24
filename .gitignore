@@ -27,6 +27,7 @@ ci/
 e2e-results/
 **/cypress/videos
 **/cypress/report.json
+mahendrapaipuri-dashboardreporter-app
 
 # Editor
 .idea
@@ -39,3 +40,7 @@ package-lock.json
 # Ignore zip files
 *.tar.gz
 *.zip
+*.sha1
+
+# Ignore plugin validator
+plugin-validator

@@ -4,7 +4,7 @@
   "name": "Grafana Dashboard Reporter",
   "id": "mahendrapaipuri-dashboardreporter-app",
   "backend": true,
-  "executable": "gpx_app-mahendrapaipuri-dashboardreporter-app",
+  "executable": "gpx_dashboardreporter-app",
   "info": {
     "keywords": ["report", "pdf", "dashboards", "api"],
     "description": "A Grafana plugin app that generates PDF reports from Grafana dashboards",
@@ -25,7 +25,10 @@
         "url": "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/LICENSE"
       }
     ],
-    "screenshots": [],
+    "screenshots": [
+      { "name": "Configuration (Dark)", "path": "img/dark.png" },
+      { "name": "Configuration (Light)", "path": "img/light.png" }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },

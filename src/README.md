@@ -104,8 +104,8 @@ this link will create a new PDF report of the dashboard.
 - `Use Grid Layout`: Use grid layout in the PDF report
 
 - `TeX Template`: The template that will be used to create PDF reports. Default templates 
-  are available in the [repo](../pkg/plugin/texTemplate.go).
+  are available in the [repo](https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/main/pkg/plugin/texTemplate.go).
 
 ## Development
 
-See [DEVELOPMENT.md](../DEVELOPMENT.md)
+See [DEVELOPMENT.md](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/DEVELOPMENT.md)
