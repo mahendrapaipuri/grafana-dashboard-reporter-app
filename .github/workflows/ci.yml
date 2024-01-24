@@ -80,8 +80,19 @@ jobs:
       - name: Package plugin
         # Grafana Labs review needs the plugin file in zip format with sha1 checksum
         run: |
-          zip -r mahendrapaipuri-dashboardreporter-app.zip dist
-          sha1sum mahendrapaipuri-dashboardreporter-app.zip > mahendrapaipuri-dashboardreporter-app.zip.sha1
+          mv dist mahendrapaipuri-dashboardreporter-app
+          zip mahendrapaipuri-dashboardreporter-app.zip mahendrapaipuri-dashboardreporter-app -r
+          sha1sum mahendrapaipuri-dashboardreporter-app.zip | cut -f1 -d' ' > mahendrapaipuri-dashboardreporter-app.zip.sha1
+
+      - name: Validate plugin
+        run: |
+          zip plugin-app.zip pkg/ src/ package.json -r
+          git clone https://github.com/grafana/plugin-validator
+          pushd ./plugin-validator/pkg/cmd/plugincheck2
+          go install
+          popd
+          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app.zip
+        shell: bash
 
       - name: Release nightly
         uses: softprops/action-gh-release@v1
