@@ -64,10 +64,10 @@ func TestReportResource(t *testing.T) {
 		}
 		//mock new report function to capture and validate its input parameters
 		var repDashName string
-		app.newReport = func(logger log.Logger, g GrafanaClient, config *ReportConfig) Report {
+		app.newReport = func(logger log.Logger, g GrafanaClient, config *ReportConfig) (Report, error) {
 			repDashName = config.dashUID
 			fmt.Println(repDashName)
-			return &mockReport{}
+			return &mockReport{}, nil
 		}
 
 		Convey("It should extract dashboard ID from the URL and forward it to the new reporter ", func() {

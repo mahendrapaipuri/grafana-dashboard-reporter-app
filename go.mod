@@ -1,4 +1,4 @@
-module github.com/grafana/app-with-backend
+module github.com/mahendrapaipuri/grafana-dashboard-reporter-app
 
 go 1.21
 
@@ -9,6 +9,7 @@ require (
 	github.com/grafana/grafana-plugin-sdk-go v0.199.0
 	github.com/magefile/mage v1.15.0
 	github.com/smartystreets/goconvey v1.8.1
+	github.com/spf13/afero v1.11.0
 )
 
 require (
@@ -88,9 +89,9 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-	google.golang.org/genproto v0.0.0-20231002182017-d307bd883b97 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
+	google.golang.org/genproto v0.0.0-20231106174013-bbf56f31fb17 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
 	google.golang.org/grpc v1.60.1 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
