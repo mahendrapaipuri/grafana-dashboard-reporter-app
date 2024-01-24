@@ -41,6 +41,7 @@ func (m mockReport) Title() string { return "title" }
 func TestReportResource(t *testing.T) {
 	// Set appURL env variable
 	t.Setenv("GF_APP_URL", "http://localhost:3000")
+	t.Setenv("GF_PATHS_DATA", t.TempDir())
 
 	// Initialize app
 	inst, err := NewApp(context.Background(), backend.AppInstanceSettings{})

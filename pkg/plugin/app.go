@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/spf13/afero"
 )
 
+const GF_PATHS_DATA = "/var/lib/grafana"
 const PLUGIN_NAME = "mahendrapaipuri-dashboardreporter-app"
 
 // Make sure App implements required interfaces. This is important to do
@@ -44,6 +46,7 @@ type App struct {
 	httpClient       *http.Client
 	grafanaAppUrl    string
 	config           *Config
+	pluginDir        string
 	newGrafanaClient func(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, layout string) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) (Report, error)
 }
@@ -103,9 +106,9 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	// Ref: https://github.com/grafana/plugin-validator/blob/eb71abbbead549fd7697371b25c226faba19b252/pkg/analysis/passes/coderules/semgrep-rules.yaml#L13-L28
 	//
 	// If appURL is not found in plugin settings attempt to get it from env var
-	// if grafanaAppUrl == "" && os.Getenv("GF_ENTERPRISE_APP_URL") != "" {
-	// 	grafanaAppUrl = strings.TrimRight(os.Getenv("GF_ENTERPRISE_APP_URL"), "/")
-	// }
+	if grafanaAppUrl == "" && os.Getenv("GF_APP_URL") != "" {
+		grafanaAppUrl = strings.TrimRight(os.Getenv("GF_APP_URL"), "/")
+	}
 
 	if grafanaAppUrl == "" {
 		return nil, fmt.Errorf("Grafana app URL not configured in JSONData")
@@ -126,7 +129,12 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		grafana-image-renderer which indirectly depends on chromium, we can leverage the
 		existing chromoium to generate PDFs instead of relying on pdflatex.
 	*/
-	pluginDir := filepath.Join("/var/lib/grafana/plugins", PLUGIN_NAME)
+	var pluginDir string
+	if os.Getenv("GF_PATHS_DATA") != "" {
+		pluginDir = filepath.Join(os.Getenv("GF_PATHS_DATA"), "plugins", PLUGIN_NAME)
+	} else {
+		pluginDir = filepath.Join(GF_PATHS_DATA, "plugins", PLUGIN_NAME)
+	}
 	vfs := afero.NewBasePathFs(afero.NewOsFs(), pluginDir).(*afero.BasePathFs)
 
 	// Create a staging dir inside this plugin folder
