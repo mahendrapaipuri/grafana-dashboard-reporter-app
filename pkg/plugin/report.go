@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/spf13/afero"
 )
 
 // Report groups functions related to genrating the report.
@@ -35,6 +35,7 @@ type ReportConfig struct {
 	dashUID          string
 	timeRange        TimeRange
 	texTemplate      string
+	vfs              *afero.BasePathFs
 	stagingDir       string
 	maxRenderWorkers int
 	layout           string
@@ -74,15 +75,19 @@ const (
 	reportPDF     = "report.pdf"
 )
 
-func newReport(logger log.Logger, client GrafanaClient, config *ReportConfig) *report {
+func newReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (*report, error) {
+	var err error
 	config.texTemplate = defaultTemplate
-	config.stagingDir = filepath.Join(config.stagingDir, uuid.New().String())
-	return &report{logger, client, config}
+	config.stagingDir = filepath.Join("staging", uuid.New().String())
+	if err = config.vfs.MkdirAll(config.stagingDir, 0750); err != nil {
+		return nil, err
+	}
+	return &report{logger, client, config}, nil
 }
 
 // New creates a new Report.
 // texTemplate is the content of a LaTex template file. If empty, a default tex template is used.
-func NewReport(logger log.Logger, client GrafanaClient, config *ReportConfig) Report {
+func NewReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (Report, error) {
 	return newReport(logger, client, config)
 }
 
@@ -125,7 +130,7 @@ func (r *report) Title() string {
 
 // Clean deletes the staging directory used during report generation
 func (r *report) Clean() {
-	err := os.RemoveAll(r.cfg.stagingDir)
+	err := r.cfg.vfs.RemoveAll(r.cfg.stagingDir)
 	if err != nil {
 		r.logger.Warn("error cleaning up staging dir", "err", err, "dashTitle", r.cfg.dashTitle)
 	}
@@ -187,7 +192,7 @@ func (r *report) renderPNGsParallel(dash Dashboard) error {
 // Render a single panel into PNG
 func (r *report) renderPNG(p Panel) error {
 	var body io.ReadCloser
-	var file *os.File
+	var file afero.File
 	var err error
 
 	// Get panel
@@ -197,11 +202,11 @@ func (r *report) renderPNG(p Panel) error {
 	defer body.Close()
 
 	// Create directory to store PNG files and get file handler
-	if err = os.MkdirAll(r.imgDirPath(), 0750); err != nil {
+	if err = r.cfg.vfs.MkdirAll(r.imgDirPath(), 0750); err != nil {
 		return fmt.Errorf("error creating img directory: %v", err)
 	}
 	imgFileName := fmt.Sprintf("image%d.png", p.Id)
-	if file, err = os.Create(filepath.Join(r.imgDirPath(), imgFileName)); err != nil {
+	if file, err = r.cfg.vfs.Create(filepath.Join(r.imgDirPath(), imgFileName)); err != nil {
 		return fmt.Errorf("error creating image file: %v", err)
 	}
 	defer file.Close()
@@ -215,15 +220,12 @@ func (r *report) renderPNG(p Panel) error {
 
 // Generate TeX file for dashboard
 func (r *report) generateTeXFile(dash Dashboard) error {
-	var file *os.File
+	var file afero.File
 	var tmpl *template.Template
 	var err error
 
-	// Make directory and file handle for TeX file
-	if err := os.MkdirAll(r.cfg.stagingDir, 0750); err != nil {
-		return fmt.Errorf("error creating temporary directory at %s: %v", r.cfg.stagingDir, err)
-	}
-	if file, err = os.Create(r.texPath()); err != nil {
+	// Make a file handle for TeX file
+	if file, err = r.cfg.vfs.Create(r.texPath()); err != nil {
 		return fmt.Errorf("error creating tex file at %v : %v", r.texPath(), err)
 	}
 	defer file.Close()
@@ -244,16 +246,23 @@ func (r *report) generateTeXFile(dash Dashboard) error {
 
 // Compile TeX into PDF
 func (r *report) runLaTeX() (io.ReadCloser, error) {
+	var realPath string
+	var err error
+	// Get real path on actual file system
+	if realPath, err = r.cfg.vfs.RealPath(r.cfg.stagingDir); err != nil {
+		return nil, err
+	}
+
 	// Execute pdflatex preprocessing
 	cmdPre := exec.Command("pdflatex", "-halt-on-error", "-draftmode", reportTeXFile)
-	cmdPre.Dir = r.cfg.stagingDir
+	cmdPre.Dir = realPath
 	if outBytesPre, errPre := cmdPre.CombinedOutput(); errPre != nil {
 		return nil, fmt.Errorf("error calling LaTeX preprocessing: %v. Latex preprocessing failed with output: %s ", errPre, string(outBytesPre))
 	}
 	cmd := exec.Command("pdflatex", "-halt-on-error", reportTeXFile)
-	cmd.Dir = r.cfg.stagingDir
+	cmd.Dir = realPath
 	if outBytes, err := cmd.CombinedOutput(); err != nil {
-		return nil, fmt.Errorf("error calling LaTeX: %q. Latex failed with output: %s ", err, string(outBytes))
+		return nil, fmt.Errorf("error calling LaTeX: %v. Latex failed with output: %s ", err, string(outBytes))
 	}
-	return os.Open(r.pdfPath())
+	return r.cfg.vfs.Open(r.pdfPath())
 }

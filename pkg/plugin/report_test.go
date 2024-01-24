@@ -10,6 +10,7 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/spf13/afero"
 )
 
 const dashJSON = `
@@ -52,7 +53,13 @@ func TestReport(t *testing.T) {
 		variables := url.Values{}
 		variables.Add("var-test", "testvarvalue")
 		gClient := &mockGrafanaClient{0, variables}
-		rep := newReport(logger, gClient, &ReportConfig{timeRange: TimeRange{"1453206447000", "1453213647000"}, dashUID: "testDash", layout: "simple", stagingDir: t.TempDir(), maxRenderWorkers: 2})
+		rep, _ := newReport(logger, gClient, &ReportConfig{
+			timeRange:        TimeRange{"1453206447000", "1453213647000"},
+			dashUID:          "testDash",
+			layout:           "simple",
+			vfs:              afero.NewBasePathFs(afero.NewOsFs(), t.TempDir()).(*afero.BasePathFs),
+			maxRenderWorkers: 2,
+		})
 		defer rep.Clean()
 
 		Convey("When rendering images", func() {
@@ -60,12 +67,12 @@ func TestReport(t *testing.T) {
 			rep.renderPNGsParallel(dashboard)
 
 			Convey("It should create a temporary folder", func() {
-				_, err := os.Stat(rep.cfg.stagingDir)
+				_, err := rep.cfg.vfs.Stat(rep.cfg.stagingDir)
 				So(err, ShouldBeNil)
 			})
 
 			Convey("It should copy the file to the image folder", func() {
-				_, err := os.Stat(rep.imgDirPath() + "/image1.png")
+				_, err := rep.cfg.vfs.Stat(rep.imgDirPath() + "/image1.png")
 				So(err, ShouldBeNil)
 			})
 
@@ -74,7 +81,7 @@ func TestReport(t *testing.T) {
 			})
 
 			Convey("It should create one file per panel", func() {
-				f, err := os.Open(rep.imgDirPath())
+				f, err := rep.cfg.vfs.Open(rep.imgDirPath())
 				defer f.Close()
 				files, err := f.Readdir(0)
 				So(files, ShouldHaveLength, 9)
@@ -85,7 +92,7 @@ func TestReport(t *testing.T) {
 		Convey("When genereting the Tex file", func() {
 			dashboard, _ := gClient.GetDashboard("")
 			rep.generateTeXFile(dashboard)
-			f, err := os.Open(rep.texPath())
+			f, err := rep.cfg.vfs.Open(rep.texPath())
 			defer f.Close()
 
 			Convey("It should create a file in the temporary folder", func() {
@@ -129,7 +136,7 @@ func TestReport(t *testing.T) {
 		Convey("Clean() should remove the temporary folder", func() {
 			rep.Clean()
 
-			_, err := os.Stat(rep.cfg.stagingDir)
+			_, err := rep.cfg.vfs.Stat(rep.cfg.stagingDir)
 			So(os.IsNotExist(err), ShouldBeTrue)
 		})
 	})
@@ -158,7 +165,12 @@ func TestReportErrorHandling(t *testing.T) {
 	Convey("When generating a report where one panels gives an error", t, func() {
 		variables := url.Values{}
 		gClient := &errClient{0, variables}
-		rep := newReport(logger, gClient, &ReportConfig{timeRange: TimeRange{"1453206447000", "1453213647000"}, dashUID: "testDash", layout: "simple"})
+		rep, _ := newReport(logger, gClient, &ReportConfig{
+			timeRange: TimeRange{"1453206447000", "1453213647000"},
+			vfs:       afero.NewBasePathFs(afero.NewOsFs(), t.TempDir()).(*afero.BasePathFs),
+			dashUID:   "testDash",
+			layout:    "simple",
+		})
 		defer rep.Clean()
 
 		Convey("When rendering images", func() {
@@ -170,10 +182,10 @@ func TestReportErrorHandling(t *testing.T) {
 			})
 
 			Convey("It should create one less image file than the total number of panels", func() {
-				f, err := os.Open(rep.imgDirPath())
+				f, err := rep.cfg.vfs.Open(rep.imgDirPath())
 				defer f.Close()
 				files, err := f.Readdir(0)
-				So(files, ShouldHaveLength, 8) //one less than the total number of im
+				So(files, ShouldHaveLength, 8) // one less than the total number of im
 				So(err, ShouldBeNil)
 			})
 
@@ -186,7 +198,7 @@ func TestReportErrorHandling(t *testing.T) {
 		Convey("Clean() should remove the temporary folder", func() {
 			rep.Clean()
 
-			_, err := os.Stat(rep.cfg.stagingDir)
+			_, err := rep.cfg.vfs.Stat(rep.cfg.stagingDir)
 			So(os.IsNotExist(err), ShouldBeTrue)
 		})
 	})

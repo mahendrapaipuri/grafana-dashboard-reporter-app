@@ -109,20 +109,24 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		layout,
 	)
 	// Make a new Report to put all PNGs into a LateX template and compile it into a PDF
-	report := a.newReport(
+	report, err := a.newReport(
 		ctxLogger,
 		grafanaClient,
 		&ReportConfig{
-			"",
-			dashboardUID,
-			timeRange,
-			texTemplate,
-			a.config.stagingDir,
-			maxRenderWorkers,
-			layout,
-			orientation,
+			dashUID:          dashboardUID,
+			timeRange:        timeRange,
+			texTemplate:      texTemplate,
+			vfs:              a.config.vfs,
+			maxRenderWorkers: maxRenderWorkers,
+			layout:           layout,
+			orientation:      orientation,
 		},
 	)
+	if err != nil {
+		ctxLogger.Error("error creating new Report instance", "err", err)
+		http.Error(w, "error generating report", http.StatusInternalServerError)
+		return
+	}
 
 	// Generate report
 	file, err := report.Generate()
