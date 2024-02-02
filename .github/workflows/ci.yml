@@ -98,8 +98,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           prerelease: true
-          name: review
-          tag_name: review
+          name: nightly
+          tag_name: nightly
           files: |
             mahendrapaipuri-dashboardreporter-app.zip
             mahendrapaipuri-dashboardreporter-app.zip.sha1
@@ -108,4 +108,4 @@ jobs:
             # Latest Build Complete! :rocket:
             
             For the public download links of these build artifacts, please see:
-            <https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/tag/review>
+            <https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/tag/nightly>

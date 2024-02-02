@@ -15,4 +15,4 @@ jobs:
       - uses: actions/checkout@v3
       - uses: grafana/plugin-actions/build-plugin@release
         with:
-          policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }} # Requires a Grafana access policy token from Grafana.com.
+          policy_token: '' # We cannot sign plugin as it will not be published in grafana catalog
