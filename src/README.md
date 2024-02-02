@@ -24,7 +24,18 @@ panels into PNG files
 
 ### Installation via `grafana-cli`
 
-TODO
+Grafana Enterprise offers a very similar plugin [reports](https://grafana.com/docs/grafana/latest/dashboards/create-reports/#export-dashboard-as-pdf) 
+and hence, their plugin policies do not allow to publish the current plugin in their
+official catalog. 
+
+It is important to note that the current plugin do not offer all the functionalities 
+offered by Enterprise plugin and it is only relevant if users would like to create a
+PDF report of a given dashboard. If users needs more advanced functionalities like 
+generating and sending reports automatically, they should look into official plugin.
+
+However, it is still possible to install this plugin on on-premise Grafana installations 
+as an unsigned plugin. The installation procedure is briefed in 
+[Local installation](#local-installation) section below.
 
 ### Local installation
 
@@ -39,8 +50,11 @@ plugin directory:
 
 ```
 cd /var/lib/grafana/plugins
-./scripts/bootstrap-dashboard-reporter-app.sh
+curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/grafana_labs_review/scripts/bootstrap-dashboard-reporter-app.sh | bash
 ```
+
+This will install the plugin in the `/var/lib/grafana/plugins` folder and upon Grafana
+restart, the plugin will be loaded.
 
 The current example assumes the following configuration is set for Grafana
 
@@ -75,7 +89,7 @@ want to create a PDF report. After the user authenticates with Grafana, creating
 dashboard report is done by visiting the following end point
 
 ```
-<grafanaAppUrl>/api/plugins/dashboard-reporter-app/resources/api?dashUid=<UID of dashboard>
+<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/api?dashUid=<UID of dashboard>
 ```
 
 In addition to `dashUid` query parameter, it is possible to pass time range query 

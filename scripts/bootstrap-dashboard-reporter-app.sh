@@ -24,5 +24,5 @@ fi
 
 echo "The latest release tag of $REPO_NAME is: $LATEST_RELEASE_TAG"
 
-curl -L https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/$LATEST_RELEASE_TAG/influxdata-flightsql-datasource-$VERSION.zip --output dashboard-reporter-app.zip
-unzip dashboard-reporter-app.zip -d . 
+curl -L https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/$LATEST_RELEASE_TAG/mahendrapaipuri-dashboardreporter-app.zip --output mahendrapaipuri-dashboardreporter-app.zip
+unzip mahendrapaipuri-dashboardreporter-app.zip -d . 
