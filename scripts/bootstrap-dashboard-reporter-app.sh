@@ -15,14 +15,13 @@ if [[ $ALL_RELEASES == *"Not Found"* ]]; then
 fi
 
 # Extract the latest pre-release tag from the release information
-LATEST_RELEASE_TAG=$(echo "$ALL_RELEASES" | grep -Eo '"tag_name": "[^"]*' | sed -E 's/"tag_name": "//' | head -n 1)
-VERSION=$(echo "$LATEST_RELEASE_TAG" | sed 's/^v//')
-if [[ -z "$LATEST_RELEASE_TAG" ]]; then
-    echo "No pre-release found for the $REPO_NAME repository."
-    exit 1
+if [[ -z "$NIGHTLY" ]]; then
+    LATEST_RELEASE_TAG=$(echo "$ALL_RELEASES" | grep -Eo '"tag_name": "v[^"]*' | sed -E 's/"tag_name": "//' | head -n 1)
+    echo "The latest release tag of $REPO_NAME is: $LATEST_RELEASE_TAG"
+else 
+    echo "Using latest nightly release"
+    LATEST_RELEASE_TAG="nightly"
 fi
-
-echo "The latest release tag of $REPO_NAME is: $LATEST_RELEASE_TAG"
 
 curl -L https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/$LATEST_RELEASE_TAG/mahendrapaipuri-dashboardreporter-app.zip --output mahendrapaipuri-dashboardreporter-app.zip
 unzip mahendrapaipuri-dashboardreporter-app.zip -d . 

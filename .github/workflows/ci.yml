@@ -96,6 +96,8 @@ jobs:
 
       - name: Release nightly
         uses: softprops/action-gh-release@v1
+        # Only run on main branch
+        if: github.ref == 'refs/heads/main'
         with:
           prerelease: true
           name: nightly

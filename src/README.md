@@ -50,11 +50,19 @@ plugin directory:
 
 ```
 cd /var/lib/grafana/plugins
-curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/grafana_labs_review/scripts/bootstrap-dashboard-reporter-app.sh | bash
+curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/main/scripts/bootstrap-dashboard-reporter-app.sh | bash
 ```
 
-This will install the plugin in the `/var/lib/grafana/plugins` folder and upon Grafana
-restart, the plugin will be loaded.
+This will install the latest release of plugin in the `/var/lib/grafana/plugins` folder 
+and upon Grafana restart, the plugin will be loaded.
+
+If user wants to install the latest nightly release, it is enough to add a environment
+variable `NIGHTLY` to `bash`
+
+```
+cd /var/lib/grafana/plugins
+curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/main/scripts/bootstrap-dashboard-reporter-app.sh | NIGHTLY=1 bash
+```
 
 The current example assumes the following configuration is set for Grafana
 
