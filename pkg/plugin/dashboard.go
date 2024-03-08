@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -62,18 +63,15 @@ func (p Panel) Height() float64 {
 
 // If panel is of type
 func (p Panel) Is(t PanelType) bool {
-	if p.Type == t.string() {
-		return true
-	}
-	return false
+	return p.Type == t.string()
 }
 
 // Row represents a container for Panels
 type Row struct {
-	Id        int
-	Collapsed bool
-	Title     string
-	Panels    []Panel
+	Id        int     `json:"id"`
+	Collapsed bool    `json:"collapsed"`
+	Title     string  `json:"title"`
+	Panels    []Panel `json:"panels"`
 }
 
 // If row is visible
@@ -85,69 +83,43 @@ func (r Row) IsVisible() bool {
 // This is both used to unmarshal the dashbaord JSON into
 // and then enriched (sanitize fields for TeX consumption and add VarialbeValues)
 type Dashboard struct {
-	Title          string
-	Description    string
-	VariableValues string // Not present in the Grafana JSON structure. Enriched data passed used by the Tex templating
-	Rows           []Row
-	Panels         []Panel
-}
-
-type dashContainer struct {
-	Dashboard Dashboard
-}
-
-// Populate panels from dashboard JSON model
-func populatePanelsFromJSON(dash Dashboard, dc dashContainer) Dashboard {
-	for _, p := range dc.Dashboard.Panels {
-		if p.Type == "row" {
-			continue
-		}
-		p.Title = sanitizeLaTeXInput(p.Title)
-		dash.Panels = append(dash.Panels, p)
-	}
-	return dash
+	Title          string  `json:"title"`
+	Description    string  `json:"description"`
+	VariableValues string  // Not present in the Grafana JSON structure. Enriched data passed used by the Tex templating
+	Rows           []Row   `json:"rows"`
+	Panels         []Panel `json:"panels"`
 }
 
 // Get dashboard variables
-func getVariablesValues(variables url.Values) string {
+func getVariablesValues(queryParams url.Values) string {
 	values := []string{}
-	for _, v := range variables {
-		values = append(values, strings.Join(v, ", "))
+	for n, v := range queryParams {
+		values = append(values, fmt.Sprintf("%s=%s", n, strings.Join(v, ",")))
 	}
-	return strings.Join(values, ", ")
-}
-
-// Escape LaTeX characters
-func sanitizeLaTeXInput(input string) string {
-	input = strings.Replace(input, "\\", "\\textbackslash ", -1)
-	input = strings.Replace(input, "&", "\\&", -1)
-	input = strings.Replace(input, "%", "\\%", -1)
-	input = strings.Replace(input, "$", "\\$", -1)
-	input = strings.Replace(input, "#", "\\#", -1)
-	input = strings.Replace(input, "_", "\\_", -1)
-	input = strings.Replace(input, "{", "\\{", -1)
-	input = strings.Replace(input, "}", "\\}", -1)
-	input = strings.Replace(input, "~", "\\textasciitilde ", -1)
-	input = strings.Replace(input, "^", "\\textasciicircum ", -1)
-	return input
+	return strings.Join(values, "; ")
 }
 
 // NewDashboard creates Dashboard from Grafana's internal JSON dashboard definition
-func NewDashboard(dashJSON []byte, variables url.Values) Dashboard {
-	var dash dashContainer
-	err := json.Unmarshal(dashJSON, &dash)
-	if err != nil {
+func NewDashboard(dashJSON []byte, queryParams url.Values) Dashboard {
+	var dash map[string]Dashboard
+	if err := json.Unmarshal(dashJSON, &dash); err != nil {
 		panic(err)
 	}
-	d := dash.NewDashboard(variables)
-	return d
-}
 
-// Create a new dashboard
-func (dc dashContainer) NewDashboard(variables url.Values) Dashboard {
-	var dash Dashboard
-	dash.Title = sanitizeLaTeXInput(dc.Dashboard.Title)
-	dash.Description = sanitizeLaTeXInput(dc.Dashboard.Description)
-	dash.VariableValues = sanitizeLaTeXInput(getVariablesValues(variables))
-	return populatePanelsFromJSON(dash, dc)
+	// Get dashboard from map
+	if dashboard, ok := dash["dashboard"]; !ok {
+		panic(fmt.Errorf("dashboard model missing"))
+	} else {
+		// Remove row panels from model
+		var filteredPanels []Panel
+		for _, p := range dashboard.Panels {
+			if p.Type == "row" {
+				continue
+			}
+			filteredPanels = append(filteredPanels, p)
+		}
+		dashboard.Panels = filteredPanels
+		dashboard.VariableValues = getVariablesValues(queryParams)
+		return dashboard
+	}
 }

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    *,
+    *::after,
+    *::before {
+        margin: 0;
+        padding: 0;
+        box-sizing: inherit;
+    }
+
+    @page { 
+        margin: 3cm 2px 1cm; 
+    }
+
+    html {
+        box-sizing: border-box;
+        font-size: 62.5%;
+    }
+
+    body {
+        font-family: "Nunito", sans-serif;
+        color: #333;
+        font-weight: 300;
+        line-height: 1.6;
+    }
+
+    .container {
+        width: 95%;
+        margin: auto;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(24, 1fr);
+        grid-template-rows: repeat(30, 1fr);
+        grid-column-gap: 5px;
+        grid-row-gap: 5px;
+    }
+
+    .grid-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    {{- if .IsGridLayout}} 
+        {{- range $i, $v := .Panels}} 
+    .grid-image-{{$i}} {
+        grid-column: {{inc $v.GridPos.X}} / span {{$v.GridPos.W}};
+        grid-row: {{inc $v.GridPos.Y}} / span {{$v.GridPos.H}};
+    }
+
+        {{end}}
+
+    {{else}}
+        {{- range $i, $v := .Panels}} 
+    .grid-image-{{$i}} {
+        grid-column: 1 / span 24;
+        grid-row: {{mult $i}} / span 30;
+    }
+
+        {{end}}
+
+    {{end}}
+</style>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Grafana Dashboard Report</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="grid">
+            {{- range $i, $v := .Panels}} 
+            <figure class="grid-image grid-image-{{$i}}">
+                <img src="images/image{{$v.Id}}.png" alt="Panel {{$i}}" class="grid-image">
+            </figure>
+            {{end}}
+        </div>
+    </div>
+</body>
+
+</html> 

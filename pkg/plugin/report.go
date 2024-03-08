@@ -1,32 +1,44 @@
 package plugin
 
 import (
+	"bytes"
+	"context"
+	"embed"
 	"fmt"
+	"html/template"
 	"io"
 	"math"
-	"os/exec"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
-	"text/template"
+	"time"
 
+	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/chromedp"
 	"github.com/google/uuid"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/spf13/afero"
 )
 
+// Embed the entire directory.
+//
+//go:embed templates
+var templateFS embed.FS
+
 // Report groups functions related to genrating the report.
 // After reading and closing the pdf returned by Generate(), call Clean() to delete the pdf file as well the temporary build files
 type Report interface {
-	Generate() (io.ReadCloser, error)
+	Generate() ([]byte, error)
 	Title() string
 	Clean()
 }
 
-// Data structures used inside TeX template
+// Data structures used inside HTML template
 type templateData struct {
 	Dashboard
 	ReportConfig
+	Date string
 }
 
 // Report config
@@ -34,12 +46,14 @@ type ReportConfig struct {
 	dashTitle        string
 	dashUID          string
 	timeRange        TimeRange
-	texTemplate      string
 	vfs              *afero.BasePathFs
 	stagingDir       string
 	maxRenderWorkers int
 	layout           string
 	orientation      string
+	persistData      bool
+	header           string
+	footer           string
 }
 
 // Is layout grid?
@@ -70,15 +84,18 @@ type report struct {
 }
 
 const (
-	imgDir        = "images"
-	reportTeXFile = "report.tex"
-	reportPDF     = "report.pdf"
+	imgDir     = "images"
+	reportHTML = "report.html"
+	reportPDF  = "report.pdf"
 )
 
 func newReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (*report, error) {
 	var err error
-	config.texTemplate = defaultTemplate
-	config.stagingDir = filepath.Join("staging", uuid.New().String())
+	if config.persistData {
+		config.stagingDir = filepath.Join("staging", "debug", uuid.New().String())
+	} else {
+		config.stagingDir = filepath.Join("staging", "production", uuid.New().String())
+	}
 	if err = config.vfs.MkdirAll(config.stagingDir, 0750); err != nil {
 		return nil, err
 	}
@@ -86,14 +103,13 @@ func newReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (*
 }
 
 // New creates a new Report.
-// texTemplate is the content of a LaTex template file. If empty, a default tex template is used.
 func NewReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (Report, error) {
 	return newReport(logger, client, config)
 }
 
 // Generate returns the report.pdf file.  After reading this file it should be Closed()
 // After closing the file, call report.Clean() to delete the file as well the temporary build files
-func (r *report) Generate() (io.ReadCloser, error) {
+func (r *report) Generate() ([]byte, error) {
 	// Get dashboard JSON model
 	dash, err := r.client.GetDashboard(r.cfg.dashUID)
 	if err != nil {
@@ -103,16 +119,16 @@ func (r *report) Generate() (io.ReadCloser, error) {
 
 	// Render panel PNGs in parallel using max workers configured in plugin
 	if err = r.renderPNGsParallel(dash); err != nil {
-		return nil, fmt.Errorf("error rendering PNGs in parallel for dash %s: %v", dash.Title, err)
+		return nil, fmt.Errorf("error rendering PNGs in parallel for dashboard %s: %v", dash.Title, err)
 	}
 
-	// Generate TeX file with fetched panel PNGs
-	if err = r.generateTeXFile(dash); err != nil {
-		return nil, fmt.Errorf("error generating TeX file for dash %s: %v", dash.Title, err)
+	// Generate HTML file with fetched panel PNGs
+	if err = r.generateHTMLFile(dash); err != nil {
+		return nil, fmt.Errorf("error generating HTML file for dashboard %s: %v", dash.Title, err)
 	}
 
-	// Compile TeX into PDF
-	return r.runLaTeX()
+	// Print HTML page into PDF
+	return r.renderPDF()
 }
 
 // Title returns the dashboard title parsed from the dashboard definition
@@ -141,14 +157,9 @@ func (r *report) imgDirPath() string {
 	return filepath.Join(r.cfg.stagingDir, imgDir)
 }
 
-// Get path to PDF
-func (r *report) pdfPath() string {
-	return filepath.Join(r.cfg.stagingDir, reportPDF)
-}
-
-// Get path to TeX file
-func (r *report) texPath() string {
-	return filepath.Join(r.cfg.stagingDir, reportTeXFile)
+// Get path to HTML file
+func (r *report) htmlPath() string {
+	return filepath.Join(r.cfg.stagingDir, reportHTML)
 }
 
 // Render panel PNGs in parallel using configured number of workers
@@ -218,51 +229,129 @@ func (r *report) renderPNG(p Panel) error {
 	return nil
 }
 
-// Generate TeX file for dashboard
-func (r *report) generateTeXFile(dash Dashboard) error {
+// Generate HTML file(s) for dashboard
+func (r *report) generateHTMLFile(dash Dashboard) error {
 	var file afero.File
 	var tmpl *template.Template
 	var err error
 
-	// Make a file handle for TeX file
-	if file, err = r.cfg.vfs.Create(r.texPath()); err != nil {
-		return fmt.Errorf("error creating tex file at %v : %v", r.texPath(), err)
+	// Template functions
+	funcMap := template.FuncMap{
+		// The name "inc" is what the function will be called in the template text.
+		"inc": func(i float64) float64 {
+			return i + 1
+		},
+
+		"mult": func(i int) int {
+			return i*30 + 5
+		},
+	}
+
+	// Make a file handle for HTML file
+	if file, err = r.cfg.vfs.Create(r.htmlPath()); err != nil {
+		return fmt.Errorf("error creating HTML file at %v : %v", r.htmlPath(), err)
 	}
 	defer file.Close()
 
-	// Make a new template
-	if tmpl, err = template.New("report").Delims("[[", "]]").Parse(r.cfg.texTemplate); err != nil {
-		return fmt.Errorf("error parsing template '%s': %v", r.cfg.texTemplate, err)
+	// Make a new template for body of the report
+	if tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml"); err != nil {
+		return fmt.Errorf("error parsing report template: %v", err)
 	}
 
-	// Render the template
-	if err = tmpl.Execute(
+	// Render the template for body of the report
+	if err = tmpl.ExecuteTemplate(
 		file,
-		templateData{dash, *r.cfg}); err != nil {
-		return fmt.Errorf("error executing tex template: %v", err)
+		"report.gohtml",
+		templateData{dash, *r.cfg, time.Now().Format(time.RFC850)}); err != nil {
+		return fmt.Errorf("error executing report template: %v", err)
 	}
+
+	// Make a new template for header of the report
+	if tmpl, err = template.New("header").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml"); err != nil {
+		return fmt.Errorf("error parsing header template: %v", err)
+	}
+
+	// Render the template for header of the report
+	bufHeader := &bytes.Buffer{}
+	if err = tmpl.ExecuteTemplate(
+		bufHeader,
+		"header.gohtml",
+		templateData{dash, *r.cfg, time.Now().Format(time.RFC850)}); err != nil {
+		return fmt.Errorf("error executing header template: %v", err)
+	}
+	r.cfg.header = bufHeader.String()
+
+	// Make a new template for footer of the report
+	if tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml"); err != nil {
+		return fmt.Errorf("error parsing footer template: %v", err)
+	}
+
+	// Render the template for footer of the report
+	bufFooter := &bytes.Buffer{}
+	if err = tmpl.ExecuteTemplate(
+		bufFooter,
+		"footer.gohtml",
+		templateData{dash, *r.cfg, time.Now().Format(time.RFC850)}); err != nil {
+		return fmt.Errorf("error executing footer template: %v", err)
+	}
+	r.cfg.footer = bufFooter.String()
 	return nil
 }
 
-// Compile TeX into PDF
-func (r *report) runLaTeX() (io.ReadCloser, error) {
+// Render HTML page into PDF using Chromium
+func (r *report) renderPDF() ([]byte, error) {
 	var realPath string
 	var err error
+
 	// Get real path on actual file system
 	if realPath, err = r.cfg.vfs.RealPath(r.cfg.stagingDir); err != nil {
 		return nil, err
 	}
 
-	// Execute pdflatex preprocessing
-	cmdPre := exec.Command("pdflatex", "-halt-on-error", "-draftmode", reportTeXFile)
-	cmdPre.Dir = realPath
-	if outBytesPre, errPre := cmdPre.CombinedOutput(); errPre != nil {
-		return nil, fmt.Errorf("error calling LaTeX preprocessing: %v. Latex preprocessing failed with output: %s ", errPre, string(outBytesPre))
+	// create context
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// capture pdf
+	var buf []byte
+	if err := chromedp.Run(
+		ctx, r.printToPDF(fmt.Sprintf("file://%s", filepath.Join(realPath, reportHTML)), &buf),
+	); err != nil {
+		return nil, fmt.Errorf("error rendering PDF: %v", err)
 	}
-	cmd := exec.Command("pdflatex", "-halt-on-error", reportTeXFile)
-	cmd.Dir = realPath
-	if outBytes, err := cmd.CombinedOutput(); err != nil {
-		return nil, fmt.Errorf("error calling LaTeX: %v. Latex failed with output: %s ", err, string(outBytes))
+
+	// If persistData is set to true, write buf to file
+	if r.cfg.persistData {
+		if err := os.WriteFile(filepath.Join(realPath, reportPDF), buf, 0o640); err != nil {
+			return nil, fmt.Errorf("error writing PDF: %v", err)
+		}
 	}
-	return r.cfg.vfs.Open(r.pdfPath())
+	return buf, err
+}
+
+// Print to PDF using headless Chromium
+func (r *report) printToPDF(url string, res *[]byte) chromedp.Tasks {
+	return chromedp.Tasks{
+		chromedp.Navigate(url),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			pageParams := page.PrintToPDF().
+				WithDisplayHeaderFooter(true).
+				WithHeaderTemplate(r.cfg.header).
+				WithFooterTemplate(r.cfg.footer).
+				WithPreferCSSPageSize(true)
+
+			// If landscape add it to page params
+			if r.cfg.IsLandscapeOrientation() {
+				pageParams = pageParams.WithLandscape(true)
+			}
+
+			// Finally execute and get PDF buffer
+			buf, _, err := pageParams.Do(ctx)
+			if err != nil {
+				return err
+			}
+			*res = buf
+			return nil
+		}),
+	}
 }

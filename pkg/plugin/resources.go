@@ -3,9 +3,9 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -29,8 +29,9 @@ func getDashboardVariables(r *http.Request) url.Values {
 	variables := url.Values{}
 	for k, v := range r.URL.Query() {
 		if strings.HasPrefix(k, "var-") {
+			n := strings.Split(k, "var-")[1]
 			for _, singleV := range v {
-				variables.Add(k, singleV)
+				variables.Add(n, singleV)
 			}
 		}
 	}
@@ -69,19 +70,15 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	timeRange := NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
 	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dashUID", dashboardUID)
 
-	// Get custom TeX settings if provided in Plugin settings
+	// Get custom settings if provided in Plugin settings
 	var data map[string]interface{}
-	var texTemplate string = a.config.texTemplate
 	var orientation = a.config.orientation
 	var layout = a.config.layout
 	var maxRenderWorkers = a.config.maxRenderWorkers
+	var persistData = a.config.persistData
 	if config.AppInstanceSettings.JSONData != nil {
 		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &data); err == nil {
-			if v, exists := data["texTemplate"]; exists && v.(string) != texTemplate {
-				texTemplate = v.(string)
-				ctxLogger.Debug("custom TeX template", "template", texTemplate, "user", currentUser, "dashUID", dashboardUID)
-			}
-			if v, exists := data["orientation"]; exists && v.(string) != layout {
+			if v, exists := data["orientation"]; exists && v.(string) != orientation {
 				layout = v.(string)
 				ctxLogger.Debug("orientation setting", "orientation", orientation, "user", currentUser, "dashUID", dashboardUID)
 			}
@@ -93,6 +90,26 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 				maxRenderWorkers = int(v.(float64))
 				ctxLogger.Debug("custom max render workers setting", "maxRenderWorkers", maxRenderWorkers, "user", currentUser, "dashUID", dashboardUID)
 			}
+			if v, exists := data["persistData"]; exists && v.(string) != strconv.FormatBool(persistData) {
+				if v.(string) == "true" {
+					persistData = true
+				} else {
+					persistData = false
+				}
+				ctxLogger.Debug("persistData setting", "persistData", persistData, "user", currentUser, "dashUID", dashboardUID)
+			}
+		}
+	}
+
+	// If layout and/or orientation is set in query params override existing
+	if queryLayouts, ok := req.URL.Query()["layout"]; ok {
+		if slices.Contains([]string{"simple", "grid"}, queryLayouts[len(queryLayouts)-1]) {
+			layout = queryLayouts[len(queryLayouts)-1]
+		}
+	}
+	if queryOrientations, ok := req.URL.Query()["orientation"]; ok {
+		if slices.Contains([]string{"landscape", "portrait"}, queryOrientations[len(queryOrientations)-1]) {
+			orientation = queryOrientations[len(queryOrientations)-1]
 		}
 	}
 
@@ -115,11 +132,11 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		&ReportConfig{
 			dashUID:          dashboardUID,
 			timeRange:        timeRange,
-			texTemplate:      texTemplate,
 			vfs:              a.config.vfs,
 			maxRenderWorkers: maxRenderWorkers,
 			layout:           layout,
 			orientation:      orientation,
+			persistData:      persistData,
 		},
 	)
 	if err != nil {
@@ -129,24 +146,22 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Generate report
-	file, err := report.Generate()
+	buf, err := report.Generate()
 	if err != nil {
 		ctxLogger.Error("error generating report", "err", err)
 		http.Error(w, "error generating report", http.StatusInternalServerError)
 		return
 	}
-	defer report.Clean()
-	defer file.Close()
+	if !persistData {
+		defer report.Clean()
+	}
 
 	// Add PDF file name to header
 	addFilenameHeader(w, report.Title())
 
-	if _, err = io.Copy(w, file); err != nil {
-		ctxLogger.Error("error copying data to response", "err", err)
-		http.Error(w, "error writing response", http.StatusInternalServerError)
-		return
-	}
-	ctxLogger.Info("report generated correctly", "user", currentUser, "dashUID", dashboardUID)
+	// Write buffered response to writer
+	w.Write(buf)
+	ctxLogger.Info("report generated", "user", currentUser, "dashUID", dashboardUID)
 	w.WriteHeader(http.StatusOK)
 }
 

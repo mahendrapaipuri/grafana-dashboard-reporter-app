@@ -1,0 +1,45 @@
+<html>
+    <style type="text/css">
+        .content-header {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            background-color: white;
+            color: black;
+            padding: 5px;
+            -webkit-print-color-adjust: exact;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: 20px;
+            margin-left: 20px;
+            margin-right: 20px;
+            display: inline-block;
+            text-align: start;
+            border-bottom: 1px solid lightgray;
+        }
+
+        .content-header-left {
+            font-weight: bold;
+            font-size: 8px;
+            float: left;
+        }
+
+        .content-header-right {
+            font-weight: bold;
+            font-size: 8px;
+            float: right;
+        }
+    </style>
+    <body>
+        <div class="content-header">
+            <div class="content-header-left">generated on {{.Date}}</div>
+            <div class="content-header-right">Datetime range: {{.From}} to {{.To}}</div>
+            <br />
+            {{.Title}} <span class="pageNumber"></span>/<span class="totalPages"></span>
+            {{- if .VariableValues}}
+            <br />
+            <div class="content-header-left">{{.VariableValues}}</div>
+            {{- end}}
+        </div>
+    </body>
+</html>

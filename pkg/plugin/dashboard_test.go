@@ -8,9 +8,9 @@ import (
 )
 
 func TestDashboard(t *testing.T) {
-	Convey("When creating a new dashboard from Grafana v5 dashboard JSON", t, func() {
-		const v5DashJSON = `
-{"Dashboard":
+	Convey("When creating a new dashboard from Grafana dashboard JSON", t, func() {
+		const dashJSON = `
+{"dashboard":
 	{
 		"Panels":
 			[{"type":"singlestat", "id":0},
@@ -25,7 +25,7 @@ func TestDashboard(t *testing.T) {
 "Meta":
 	{"Slug":"testDash"}
 }`
-		dash := NewDashboard([]byte(v5DashJSON), url.Values{})
+		dash := NewDashboard([]byte(dashJSON), url.Values{})
 
 		Convey("Panel Is(type) should work for all panels", func() {
 			So(dash.Panels[0].Is(SingleStat), ShouldBeTrue)
@@ -36,7 +36,7 @@ func TestDashboard(t *testing.T) {
 		})
 
 		Convey("Panel titles should be parsed and sanitised", func() {
-			So(dash.Panels[2].Title, ShouldEqual, "Panel3Title \\#")
+			So(dash.Panels[2].Title, ShouldEqual, "Panel3Title #")
 		})
 
 		Convey("Panels should contain all panels that have type != row", func() {
@@ -47,7 +47,7 @@ func TestDashboard(t *testing.T) {
 		})
 
 		Convey("The Title should be parsed", func() {
-			So(dash.Title, ShouldEqual, "DashTitle \\#")
+			So(dash.Title, ShouldEqual, "DashTitle #")
 		})
 
 		Convey("Panels should contain GridPos H & W", func() {
@@ -67,9 +67,7 @@ func TestVariableValues(t *testing.T) {
 	Convey("When creating a dashboard and passing url varialbes in", t, func() {
 		const v5DashJSON = `
 {
-	"Dashboard":
-		{
-		}
+	"dashboard": {}
 }`
 		vars := url.Values{}
 		vars.Add("var-one", "oneval")
