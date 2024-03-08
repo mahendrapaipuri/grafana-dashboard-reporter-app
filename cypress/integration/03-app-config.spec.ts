@@ -16,13 +16,9 @@ describe('configurating app', () => {
     // enter some configuration values
     appConfig.maxWorkers().clear();
     appConfig.maxWorkers().type('3');
-    appConfig.texTemplate().type(`test template
-multiline input`);
     appConfig.submit().click();
 
     // make sure it got updated successfully
     appConfig.maxWorkers().should('have.value', '3');
-    appConfig.texTemplate().should('have.value', `test template
-multiline input`);
   });
 });

@@ -6,7 +6,6 @@ import {
   useStyles2,
   Field,
   Input,
-  TextArea,
   FieldSet,
   RadioButtonGroup,
 } from "@grafana/ui";
@@ -24,7 +23,7 @@ export type JsonData = {
   orientation?: string;
   layout?: string;
   maxRenderWorkers?: number;
-  texTemplate?: string;
+  persistData?: string;
 };
 
 type State = {
@@ -40,8 +39,10 @@ type State = {
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
   maxRenderWorkersChanged: boolean;
-  // The custom TeX template.
-  texTemplate: string;
+  // Whether to persist templated files for debugging
+  persistData: string;
+  // If persistData has changed
+  persistDataChanged: boolean;
 };
 
 interface Props extends PluginConfigPageProps<AppPluginMeta<JsonData>> {}
@@ -56,7 +57,8 @@ export const AppConfig = ({ plugin }: Props) => {
     layoutChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
-    texTemplate: jsonData?.texTemplate || "",
+    persistData: jsonData?.persistData || "false",
+    persistDataChanged: false,
   });
 
   const appUrl = config.appUrl;
@@ -69,6 +71,11 @@ export const AppConfig = ({ plugin }: Props) => {
   const layoutOptions = [
     { label: "Simple", value: "simple", icon: "gf-layout-simple" },
     { label: "Grid", value: "grid", icon: "gf-grid" },
+  ];
+
+  const persistDataOptions = [
+    { label: "Enable", value: "true" },
+    { label: "Disable", value: "false" },
   ];
 
   const onChangeLayout = (value: string) => {
@@ -95,10 +102,11 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-  const onChangeTexTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+  const onChangePersistData = (value: string) => {
     setState({
       ...state,
-      texTemplate: event.target.value,
+      persistData: value,
+      persistDataChanged: true,
     });
   };
 
@@ -123,7 +131,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
-                    texTemplate: state.texTemplate,
+                    persistData: state.persistData,
                   },
                 })
               }
@@ -149,7 +157,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
-                    texTemplate: state.texTemplate,
+                    persistData: state.persistData,
                   },
                 })
               }
@@ -201,15 +209,16 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
-        {/* Tex Template */}
-        <Field label="TeX Template" description="Custom TeX template to use." className={s.marginTop}>
-          <TextArea
-            type="text"
-            aria-label="TeX Template"
-            data-testid={testIds.appConfig.texTemplate}
-            value={state?.texTemplate}
-            rows={20}
-            onChange={onChangeTexTemplate}
+        {/* Persist data */}
+        <Field
+          label="Persist Data"
+          description="Persist templated data files for debugging. Files will be kept at $PLUGIN_DIR/staging/debug folder on server."
+          className={s.marginTop}
+        >
+          <RadioButtonGroup
+            options={persistDataOptions}
+            value={state.persistData}
+            onChange={onChangePersistData}
           />
         </Field>
 
@@ -226,15 +235,15 @@ export const AppConfig = ({ plugin }: Props) => {
                   maxRenderWorkers: state.maxRenderWorkers,
                   orientation: state.orientation,
                   layout: state.layout,
-                  texTemplate: state.texTemplate,
+                  persistData: state.persistData,
                 },
               })
             }
             disabled={Boolean(
-                !state.texTemplate &&
-                !state.layoutChanged &&
+              !state.layoutChanged &&
                 !state.orientationChanged &&
-                !state.maxRenderWorkersChanged
+                !state.maxRenderWorkersChanged &&
+                !state.persistDataChanged
             )}
           >
             Save settings
