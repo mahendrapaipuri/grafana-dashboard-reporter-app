@@ -25,7 +25,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       # skip login page
-      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      # - GF_AUTH_DISABLE_LOGIN_FORM=true
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
