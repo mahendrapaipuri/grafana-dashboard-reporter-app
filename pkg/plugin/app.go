@@ -35,8 +35,8 @@ var (
 type Config struct {
 	orientation      string
 	layout           string
-	texTemplate      string
 	maxRenderWorkers int
+	persistData      bool
 	vfs              *afero.BasePathFs
 }
 
@@ -46,7 +46,6 @@ type App struct {
 	httpClient       *http.Client
 	grafanaAppUrl    string
 	config           *Config
-	pluginDir        string
 	newGrafanaClient func(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, layout string) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) (Report, error)
 }
@@ -78,10 +77,11 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 
 	// Get Grafana App URL from plugin settings
 	var data map[string]interface{}
-	var grafanaAppUrl, texTemplate string
+	var grafanaAppUrl string
 	var orientation string
 	var layout string
 	var maxRenderWorkers int = 2
+	var persistData bool = false
 	if settings.JSONData != nil {
 		if err := json.Unmarshal(settings.JSONData, &data); err == nil {
 			if v, exists := data["appUrl"]; exists {
@@ -96,8 +96,10 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 			if v, exists := data["maxRenderWorkers"]; exists {
 				maxRenderWorkers = int(v.(float64))
 			}
-			if v, exists := data["texTemplate"]; exists {
-				texTemplate = v.(string)
+			if v, exists := data["persistData"]; exists {
+				if v.(string) == "true" {
+					persistData = true
+				}
 			}
 		}
 	}
@@ -111,7 +113,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	}
 
 	if grafanaAppUrl == "" {
-		return nil, fmt.Errorf("Grafana app URL not configured in JSONData")
+		return nil, fmt.Errorf("grafana app URL not configured in JSONData")
 	}
 
 	/*
@@ -144,10 +146,10 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 
 	// Make config
 	app.config = &Config{
-		texTemplate:      texTemplate,
 		orientation:      orientation,
 		layout:           layout,
 		maxRenderWorkers: maxRenderWorkers,
+		persistData:      persistData,
 		vfs:              vfs,
 	}
 

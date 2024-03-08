@@ -1,10 +1,7 @@
 package plugin
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -29,8 +26,8 @@ func (s *mockCallResourceResponseSender) Send(response *backend.CallResourceResp
 type mockReport struct {
 }
 
-func (m mockReport) Generate() (pdf io.ReadCloser, err error) {
-	return io.NopCloser(bytes.NewReader(nil)), nil
+func (m mockReport) Generate() (pdf []byte, err error) {
+	return []byte("mock"), nil
 }
 
 func (m mockReport) Clean() {}
@@ -67,7 +64,6 @@ func TestReportResource(t *testing.T) {
 		var repDashName string
 		app.newReport = func(logger log.Logger, g GrafanaClient, config *ReportConfig) (Report, error) {
 			repDashName = config.dashUID
-			fmt.Println(repDashName)
 			return &mockReport{}, nil
 		}
 
@@ -99,7 +95,7 @@ func TestReportResource(t *testing.T) {
 				Path:   "report?dashUid=testDash&var-test=testValue",
 			}, &r)
 			expected := url.Values{}
-			expected.Add("var-test", "testValue")
+			expected.Add("test", "testValue")
 			So(clientVars, ShouldResemble, expected)
 
 			Convey("Variables should not contain other query parameters ", func() {
@@ -115,7 +111,7 @@ func TestReportResource(t *testing.T) {
 					Path:   "report?dashUid=testDash&var-test=testValue&apiToken=abcd",
 				}, &r)
 				expected := url.Values{}
-				expected.Add("var-test", "testValue")
+				expected.Add("test", "testValue")
 				So(clientVars, ShouldResemble, expected)
 			})
 		})

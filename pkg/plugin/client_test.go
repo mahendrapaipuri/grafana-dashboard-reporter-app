@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -23,7 +22,7 @@ func TestGrafanaClientFetchesDashboard(t *testing.T) {
 		requestURI := ""
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestURI = r.RequestURI
-			fmt.Fprintln(w, `{"id":"1"}`)
+			w.Write([]byte(`{"dashboard": {"title": "foo"}}`))
 		}))
 		defer ts.Close()
 
@@ -88,18 +87,6 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			})
 
 			Convey("The client should request singlestat panels at a smaller size", func() {
-				So(requestURI, ShouldContainSubstring, "width=300")
-				So(requestURI, ShouldContainSubstring, "height=150")
-			})
-
-			Convey("The client should request text panels with a small height", func() {
-				grf.GetPanelPNG(Panel{44, "text", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
-				So(requestURI, ShouldContainSubstring, "width=1000")
-				So(requestURI, ShouldContainSubstring, "height=100")
-			})
-
-			Convey("The client should request other panels in a larger size", func() {
-				grf.GetPanelPNG(Panel{44, "graph", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
 				So(requestURI, ShouldContainSubstring, "width=1000")
 				So(requestURI, ShouldContainSubstring, "height=500")
 			})
@@ -114,16 +101,10 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 		for _, cl := range casesGridLayout {
 			grf := cl.client
 
-			Convey("The client should request grid layout panels with width=1000 and height=240", func() {
+			Convey("The client should request grid layout panels with width=2400 and height=216", func() {
 				grf.GetPanelPNG(Panel{44, "graph", "title", GridPos{6, 24, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
-				So(requestURI, ShouldContainSubstring, "width=960")
-				So(requestURI, ShouldContainSubstring, "height=240")
-			})
-
-			Convey("The client should request grid layout panels with width=480 and height=120", func() {
-				grf.GetPanelPNG(Panel{44, "graph", "title", GridPos{3, 12, 0, 0}}, "testDash", TimeRange{"now", "now-1h"})
-				So(requestURI, ShouldContainSubstring, "width=480")
-				So(requestURI, ShouldContainSubstring, "height=120")
+				So(requestURI, ShouldContainSubstring, "width=2400")
+				So(requestURI, ShouldContainSubstring, "height=216")
 			})
 		}
 

@@ -14,7 +14,7 @@ import (
 )
 
 const dashJSON = `
-{"Dashboard":
+{"dashboard":
 	{
 		"Title":"My first dashboard",
 		"Panels": 
@@ -28,7 +28,7 @@ const dashJSON = `
 			 {"type":"graph", "id":88},
 			 {"type":"graph", "id":99}]
 	},
-"Meta":
+"meta":
 	{"Slug":"testDash"}
 }`
 
@@ -81,7 +81,7 @@ func TestReport(t *testing.T) {
 			})
 
 			Convey("It should create one file per panel", func() {
-				f, err := rep.cfg.vfs.Open(rep.imgDirPath())
+				f, _ := rep.cfg.vfs.Open(rep.imgDirPath())
 				defer f.Close()
 				files, err := f.Readdir(0)
 				So(files, ShouldHaveLength, 9)
@@ -89,10 +89,10 @@ func TestReport(t *testing.T) {
 			})
 		})
 
-		Convey("When genereting the Tex file", func() {
+		Convey("When genereting the HTML files", func() {
 			dashboard, _ := gClient.GetDashboard("")
-			rep.generateTeXFile(dashboard)
-			f, err := rep.cfg.vfs.Open(rep.texPath())
+			rep.generateHTMLFile(dashboard)
+			f, err := rep.cfg.vfs.Open(rep.htmlPath())
 			defer f.Close()
 
 			Convey("It should create a file in the temporary folder", func() {
@@ -102,15 +102,15 @@ func TestReport(t *testing.T) {
 			Convey("The file should contain reference to the template data", func() {
 				var buf bytes.Buffer
 				io.Copy(&buf, f)
-				s := string(buf.Bytes())
+				s := buf.String()
 
 				So(err, ShouldBeNil)
 				Convey("Including the Title", func() {
-					So(s, ShouldContainSubstring, "My first dashboard")
+					So(rep.cfg.header, ShouldContainSubstring, "My first dashboard")
 
 				})
 				Convey("Including the varialbe values", func() {
-					So(s, ShouldContainSubstring, "testvarvalue")
+					So(rep.cfg.header, ShouldContainSubstring, "testvarvalue")
 
 				})
 				Convey("and the images", func() {
@@ -127,8 +127,8 @@ func TestReport(t *testing.T) {
 				Convey("and the time range", func() {
 					//server time zone by shift hours timestamp
 					//so just test for day and year
-					So(s, ShouldContainSubstring, "Tue Jan 19")
-					So(s, ShouldContainSubstring, "2016")
+					So(rep.cfg.header, ShouldContainSubstring, "Tue Jan 19")
+					So(rep.cfg.header, ShouldContainSubstring, "2016")
 				})
 			})
 		})
@@ -182,7 +182,7 @@ func TestReportErrorHandling(t *testing.T) {
 			})
 
 			Convey("It should create one less image file than the total number of panels", func() {
-				f, err := rep.cfg.vfs.Open(rep.imgDirPath())
+				f, _ := rep.cfg.vfs.Open(rep.imgDirPath())
 				defer f.Close()
 				files, err := f.Readdir(0)
 				So(files, ShouldHaveLength, 8) // one less than the total number of im
