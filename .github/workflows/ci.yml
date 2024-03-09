@@ -80,9 +80,9 @@ jobs:
       - name: Package plugin
         # Grafana Labs review needs the plugin file in zip format with sha1 checksum
         run: |
-          mv dist mahendrapaipuri-dashboardreporter-app
-          zip mahendrapaipuri-dashboardreporter-app.zip mahendrapaipuri-dashboardreporter-app -r
-          sha1sum mahendrapaipuri-dashboardreporter-app.zip | cut -f1 -d' ' > mahendrapaipuri-dashboardreporter-app.zip.sha1
+          mv dist mahendrapaipuri-dashboardreporter-app-nightly
+          zip mahendrapaipuri-dashboardreporter-app-nightly.zip mahendrapaipuri-dashboardreporter-app-nightly -r
+          sha1sum mahendrapaipuri-dashboardreporter-app-nightly.zip | cut -f1 -d' ' > mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
 
       - name: Validate plugin
         run: |
@@ -91,7 +91,7 @@ jobs:
           pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
           popd
-          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app.zip
+          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
         shell: bash
 
       - name: Release nightly
@@ -103,8 +103,8 @@ jobs:
           name: nightly
           tag_name: nightly
           files: |
-            mahendrapaipuri-dashboardreporter-app.zip
-            mahendrapaipuri-dashboardreporter-app.zip.sha1
+            mahendrapaipuri-dashboardreporter-app-nightly.zip
+            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
           fail_on_unmatched_files: true
           body: |
             # Latest Build Complete! :rocket:
