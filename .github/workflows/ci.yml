@@ -80,8 +80,8 @@ jobs:
       - name: Package plugin
         # Grafana Labs review needs the plugin file in zip format with sha1 checksum
         run: |
-          mv dist mahendrapaipuri-dashboardreporter-app-nightly
-          zip mahendrapaipuri-dashboardreporter-app-nightly.zip mahendrapaipuri-dashboardreporter-app-nightly -r
+          mv dist mahendrapaipuri-dashboardreporter-app
+          zip mahendrapaipuri-dashboardreporter-app-nightly.zip mahendrapaipuri-dashboardreporter-app -r
           sha1sum mahendrapaipuri-dashboardreporter-app-nightly.zip | cut -f1 -d' ' > mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
 
       - name: Validate plugin

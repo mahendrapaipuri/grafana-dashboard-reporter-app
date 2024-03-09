@@ -27,7 +27,7 @@ ci/
 e2e-results/
 **/cypress/videos
 **/cypress/report.json
-mahendrapaipuri-dashboardreporter-app
+mahendrapaipuri-dashboardreporter-app*
 
 # Editor
 .idea

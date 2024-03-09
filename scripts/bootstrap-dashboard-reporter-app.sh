@@ -23,5 +23,5 @@ else
     LATEST_RELEASE_TAG="nightly"
 fi
 
-curl -L https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/$LATEST_RELEASE_TAG/mahendrapaipuri-dashboardreporter-app.zip --output mahendrapaipuri-dashboardreporter-app.zip
-unzip mahendrapaipuri-dashboardreporter-app.zip -d . 
+curl -L https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/$LATEST_RELEASE_TAG/mahendrapaipuri-dashboardreporter-app-$LATEST_RELEASE_TAG.zip --output mahendrapaipuri-dashboardreporter-app-$LATEST_RELEASE_TAG.zip
+unzip mahendrapaipuri-dashboardreporter-app-$LATEST_RELEASE_TAG.zip -d . 
