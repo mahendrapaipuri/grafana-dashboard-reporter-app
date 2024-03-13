@@ -308,8 +308,15 @@ func (r *report) renderPDF() ([]byte, error) {
 		return nil, err
 	}
 
+	// Chrome executor options
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.NoSandbox,
+	)
+	
 	// create context
-	ctx, cancel := chromedp.NewContext(context.Background())
+	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer allocCtxCancel()
+	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	// capture pdf
