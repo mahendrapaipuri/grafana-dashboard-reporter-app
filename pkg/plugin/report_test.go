@@ -16,8 +16,8 @@ import (
 const dashJSON = `
 {"dashboard":
 	{
-		"Title":"My first dashboard",
-		"Panels": 
+		"title":"My first dashboard",
+		"panels": 
 			[{"type":"singlestat", "id":1},
 			 {"type":"graph", "id":22},
 			 {"type":"singlestat", "id":33},

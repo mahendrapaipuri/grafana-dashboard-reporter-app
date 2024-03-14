@@ -12,14 +12,14 @@ func TestDashboard(t *testing.T) {
 		const dashJSON = `
 {"dashboard":
 	{
-		"Panels":
+		"panels":
 			[{"type":"singlestat", "id":0},
 			{"type":"graph", "id":1, "gridPos":{"H":6,"W":24,"X":0,"Y":0}},
-			{"type":"singlestat", "id":2, "Title":"Panel3Title #"},
+			{"type":"singlestat", "id":2, "title":"Panel3Title #"},
 			{"type":"text", "gridPos":{"H":6.5,"W":20.5,"X":0,"Y":0}, "id":3},
 			{"type":"table", "id":4},
 			{"type":"row", "id":5}],
-		"Title":"DashTitle #"
+		"title":"DashTitle #"
 	},
 
 "Meta":

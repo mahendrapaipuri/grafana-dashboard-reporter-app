@@ -67,27 +67,20 @@ func (p Panel) Is(t PanelType) bool {
 }
 
 // Row represents a container for Panels
-type Row struct {
-	Id        int     `json:"id"`
-	Collapsed bool    `json:"collapsed"`
-	Title     string  `json:"title"`
-	Panels    []Panel `json:"panels"`
-}
-
-// If row is visible
-func (r Row) IsVisible() bool {
-	return r.Collapsed
+type RowOrPanel struct {
+	Panel
+	Panels []Panel `json:"panels"`
 }
 
 // Dashboard represents a Grafana dashboard
 // This is both used to unmarshal the dashbaord JSON into
 // and then enriched (sanitize fields for TeX consumption and add VarialbeValues)
 type Dashboard struct {
-	Title          string  `json:"title"`
-	Description    string  `json:"description"`
-	VariableValues string  // Not present in the Grafana JSON structure. Enriched data passed used by the Tex templating
-	Rows           []Row   `json:"rows"`
-	Panels         []Panel `json:"panels"`
+	Title          string       `json:"title"`
+	Description    string       `json:"description"`
+	VariableValues string       // Not present in the Grafana JSON structure. Enriched data passed used by the Tex templating
+	RowOrPanels    []RowOrPanel `json:"panels"`
+	Panels         []Panel
 }
 
 // Get dashboard variables
@@ -112,11 +105,14 @@ func NewDashboard(dashJSON []byte, queryParams url.Values) Dashboard {
 	} else {
 		// Remove row panels from model
 		var filteredPanels []Panel
-		for _, p := range dashboard.Panels {
+		for _, p := range dashboard.RowOrPanels {
 			if p.Type == "row" {
+				if p.Panels != nil {
+					filteredPanels = append(filteredPanels, p.Panels...)
+				}
 				continue
 			}
-			filteredPanels = append(filteredPanels, p)
+			filteredPanels = append(filteredPanels, p.Panel)
 		}
 		dashboard.Panels = filteredPanels
 		dashboard.VariableValues = getVariablesValues(queryParams)
