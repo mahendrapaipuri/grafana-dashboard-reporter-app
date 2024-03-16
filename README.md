@@ -12,7 +12,7 @@ improvements and modernization.
   instead of LaTeX. `grafana-image-renderer` is a prerequisite for both current and 
   original plugins.
 
-- The current plugin app exposes the reporter as a custom API end point without 
+- The current plugin app exposes the reporter as a custom API end point of Grafana instance without 
   needing to run the [grafana-reporter](https://github.com/IzakMarais/reporter) 
   as a separate web service. The advantage of the plugin approach is the authenticated 
   access to the reporter app is guaranteed by Grafana auth.
