@@ -73,7 +73,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	var data map[string]interface{}
 	var orientation = a.config.orientation
 	var layout = a.config.layout
-	var panels = a.config.panels
+	var dashboardMode = a.config.dashboardMode
 	var maxRenderWorkers = a.config.maxRenderWorkers
 	var persistData = a.config.persistData
 	if config.AppInstanceSettings.JSONData != nil {
@@ -86,9 +86,9 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 				layout = v.(string)
 				ctxLogger.Debug("layout setting", "layout", layout, "user", currentUser, "dash_uid", dashboardUID)
 			}
-			if v, exists := data["panels"]; exists && v.(string) != panels {
-				panels = v.(string)
-				ctxLogger.Debug("panels setting", "panels", panels, "user", currentUser, "dash_uid", dashboardUID)
+			if v, exists := data["dashboardMode"]; exists && v.(string) != dashboardMode {
+				dashboardMode = v.(string)
+				ctxLogger.Debug("dashboardMode setting", "dashboardMode", dashboardMode, "user", currentUser, "dash_uid", dashboardUID)
 			}
 			if v, exists := data["maxRenderWorkers"]; exists && int(v.(float64)) != maxRenderWorkers {
 				maxRenderWorkers = int(v.(float64))
@@ -112,9 +112,9 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			orientation = queryOrientations[len(queryOrientations)-1]
 		}
 	}
-	if queryPanels, ok := req.URL.Query()["panels"]; ok {
-		if slices.Contains([]string{"default", "full"}, queryPanels[len(queryPanels)-1]) {
-			panels = queryPanels[len(queryPanels)-1]
+	if queryDashboardMode, ok := req.URL.Query()["dashboardMode"]; ok {
+		if slices.Contains([]string{"default", "full"}, queryDashboardMode[len(queryDashboardMode)-1]) {
+			dashboardMode = queryDashboardMode[len(queryDashboardMode)-1]
 		}
 	}
 
@@ -129,7 +129,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		cookie,
 		variables,
 		layout,
-		panels,
+		dashboardMode,
 	)
 	// Make a new Report to put all PNGs into a LateX template and compile it into a PDF
 	report, err := a.newReport(

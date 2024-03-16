@@ -3,7 +3,7 @@ export const testIds = {
     container: "data-testid ac-container",
     layout: "data-testid ac-layout",
     orientation: "data-testid ac-orientation",
-    panels: "data-testid ac-panels",
+    dashboardMode: "data-testid ac-dashboard-mode",
     persistData: "data-testid ac-persist-data",
     maxWorkers: "data-testid ac-max-workers",
     submit: "data-testid ac-submit-form",

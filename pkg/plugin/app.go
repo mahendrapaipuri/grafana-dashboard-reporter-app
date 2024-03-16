@@ -34,7 +34,7 @@ var (
 type Config struct {
 	orientation      string
 	layout           string
-	panels           string
+	dashboardMode    string
 	maxRenderWorkers int
 	persistData      bool
 	vfs              *afero.BasePathFs
@@ -80,7 +80,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	var grafanaAppUrl string
 	var orientation string
 	var layout string
-	var panels string
+	var dashboardMode string
 	var maxRenderWorkers int = 2
 	var persistData bool = false
 	if settings.JSONData != nil {
@@ -94,8 +94,8 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 			if v, exists := data["layout"]; exists {
 				layout = v.(string)
 			}
-			if v, exists := data["panels"]; exists {
-				panels = v.(string)
+			if v, exists := data["dashboardMode"]; exists {
+				dashboardMode = v.(string)
 			}
 			if v, exists := data["maxRenderWorkers"]; exists {
 				maxRenderWorkers = int(v.(float64))
@@ -145,7 +145,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	app.config = &Config{
 		orientation:      orientation,
 		layout:           layout,
-		panels:           panels,
+		dashboardMode:    dashboardMode,
 		maxRenderWorkers: maxRenderWorkers,
 		persistData:      persistData,
 		vfs:              vfs,

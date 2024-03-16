@@ -23,7 +23,7 @@ export type JsonData = {
   appUrl?: string;
   orientation?: string;
   layout?: string;
-  panels?: string;
+  dashboardMode?: string;
   maxRenderWorkers?: number;
   persistData?: boolean;
 };
@@ -37,10 +37,10 @@ type State = {
   layout: string;
   // If layout has changed
   layoutChanged: boolean;
-  // Panels in report (default or full)
-  panels: string;
-  // If panels has changed
-  panelsChanged: boolean;
+  // dashboardMode (default or full)
+  dashboardMode: string;
+  // If dashboardMode has changed
+  dashboardModeChanged: boolean;
   // Maximum rendering workers
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
@@ -61,8 +61,8 @@ export const AppConfig = ({ plugin }: Props) => {
     orientationChanged: false,
     layout: jsonData?.layout || "simple",
     layoutChanged: false,
-    panels: jsonData?.panels || "default",
-    panelsChanged: false,
+    dashboardMode: jsonData?.dashboardMode || "default",
+    dashboardModeChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
     persistData: jsonData?.persistData || false,
@@ -81,14 +81,14 @@ export const AppConfig = ({ plugin }: Props) => {
     { label: "Grid", value: "grid", icon: "gf-grid" },
   ];
 
-  const panelsOptions = [
+  const dashboardModeOptions = [
     { label: "Default", value: "default" },
     { label: "Full", value: "full" },
   ];
 
   const onChangeLayout = (value: string) => {
     setState({
-      ...state,
+     ...state,
       layout: value,
       layoutChanged: true,
     });
@@ -102,11 +102,11 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-  const onChangePanels = (value: string) => {
+  const onChangeDashboardMode = (value: string) => {
     setState({
       ...state,
-      panels: value,
-      panelsChanged: true,
+      dashboardMode: value,
+      dashboardModeChanged: true,
     });
   };
 
@@ -147,7 +147,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
-                    panels: state.panels,
+                    dashboardMode: state.dashboardMode,
                     persistData: state.persistData,
                   },
                 })
@@ -174,7 +174,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
-                    panels: state.panels,
+                    dashboardMode: state.dashboardMode,
                     persistData: state.persistData,
                   },
                 })
@@ -216,17 +216,17 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
-        {/* Report Penals */}
+        {/* Dashboard Mode */}
         <Field
-          label="Panels in Report"
+          label="Dashboard Mode"
           description="Whether to render full dashboard by uncollapsing panels in all rows or to render default dashboard without panels in collapsed rows."
-          data-testid={testIds.appConfig.panels}
+          data-testid={testIds.appConfig.dashboardMode}
           className={s.marginTop}
         >
           <RadioButtonGroup
-            options={panelsOptions}
-            value={state.panels}
-            onChange={onChangePanels}
+            options={dashboardModeOptions}
+            value={state.dashboardMode}
+            onChange={onChangeDashboardMode}
           />
         </Field>
 
@@ -274,7 +274,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   maxRenderWorkers: state.maxRenderWorkers,
                   orientation: state.orientation,
                   layout: state.layout,
-                  panels: state.panels,
+                  dashboardMode: state.dashboardMode,
                   persistData: state.persistData,
                 },
               })
@@ -282,7 +282,7 @@ export const AppConfig = ({ plugin }: Props) => {
             disabled={Boolean(
               !state.layoutChanged &&
                 !state.orientationChanged &&
-                !state.panelsChanged &&
+                !state.dashboardModeChanged &&
                 !state.maxRenderWorkersChanged &&
                 !state.persistDataChanged
             )}
