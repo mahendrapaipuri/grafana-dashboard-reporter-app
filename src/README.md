@@ -92,25 +92,6 @@ as follows:
 docker-compose -f docker-compose.yaml up
 ```
 
-## Configuring the plugin
-
-All the configuration options can only be modified by `Admin` role.
-
-- `Layout`: Layout of the report. Using grid layout renders the report as it is rendered
-  in the browser. A simple layout will render the report with one panel per row
-
-- `Orientation`: Portrait or Landscape
-
-### Advanced parameters
-
-- `Maximum Render Workers`: Number of concurrent workers to create PNGs of panels in the
-  dashboard. Do not use too high value as it starve the machine
-
-- `Persist Data`: Set it to `Enable` to inspect the generated HTML files from templates 
-  and dashboard data. Use it to only debug the issues. When this option is turned on,
-  the data files will be retained at `/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app/staging/debug`
-  folder.
-
 ## Using plugin
 
 The prerequisite is the user must have at least `Viewer` role on the dashboard that they 
@@ -143,6 +124,60 @@ Following steps will configure a dashboard link to create PDF report for that da
 
 Now there should be link in the right top corner of dashboard named `Report` and clicking
 this link will create a new PDF report of the dashboard.
+
+## Configuring the plugin
+
+### Report parameters
+
+All the configuration options can only be modified by `Admin` role.
+
+- `Layout`: Layout of the report. Using grid layout renders the report as it is rendered
+  in the browser. A simple layout will render the report with one panel per row
+
+- `Orientation`: Portrait or Landscape
+
+- `Dashboard Mode`: Whether to render default dashboard or full dashboard. In default 
+  mode, collapsed rows are ignored and only visible panels are included in the report.
+  Whereas in full mode, rows are uncollapsed and all the panels are included in the 
+  report
+
+Although these options can only be changed by users with `Admin` role for whole instance
+of Grafana, it is possible to override the global defaults for a particular report
+by using query parameters. It is enough to add query parameters to dashboard report URL
+to set these values.
+
+- Query field for layout is `layout` and it takes either `simple` or `grid` as value.
+  Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/report?dashUid=<UID of dashboard>&layout=grid`
+
+- Query field for orientation is `orientation` and it takes either `portrait` or `landscape`
+  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/report?dashUid=<UID of dashboard>&orientation=landscape`
+
+- Query field for dashboard mode is `dashboardMode` and it takes either `default` or `full`
+  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
+
+### Advanced parameters
+
+- `Maximum Render Workers`: Number of concurrent workers to create PNGs of panels in the
+  dashboard. Do not use too high value as it starve the machine
+
+- `Persist Data`: Set it to `Enable` to inspect the generated HTML files from templates 
+  and dashboard data. Use it to only debug the issues. When this option is turned on,
+  the data files will be retained at `/var/lib/grafana/plugins/reports/debug` folder.
+
+### Provisioning
+
+The plugin can be provisioned with default config using [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/).
+An example provision config is provided in the [repo](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
+
+## Examples
+
+Here are the example reports that are generated out of the test dashboards
+
+- [Report with portrait orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full.pdf)
+- [Report with landscape orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_simple_full.pdf)
+- [Report with portrait orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_full.pdf)
+- [Report with landscape orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_grid_full.pdf)
+- [Report with portrait orientation, grid layout and default dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_default.pdf)
 
 ## Development
 
