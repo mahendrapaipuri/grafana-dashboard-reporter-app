@@ -69,7 +69,8 @@ func (p Panel) Is(t PanelType) bool {
 // Row represents a container for Panels
 type RowOrPanel struct {
 	Panel
-	Panels []Panel `json:"panels"`
+	Collapsed bool    `json:"collapsed"`
+	Panels    []Panel `json:"panels"`
 }
 
 // Dashboard represents a Grafana dashboard
@@ -86,14 +87,17 @@ type Dashboard struct {
 // Get dashboard variables
 func getVariablesValues(queryParams url.Values) string {
 	values := []string{}
-	for n, v := range queryParams {
-		values = append(values, fmt.Sprintf("%s=%s", n, strings.Join(v, ",")))
+	for k, v := range queryParams {
+		if strings.HasPrefix(k, "var-") {
+			n := strings.Split(k, "var-")[1]
+			values = append(values, fmt.Sprintf("%s=%s", n, strings.Join(v, ",")))
+		}
 	}
 	return strings.Join(values, "; ")
 }
 
 // NewDashboard creates Dashboard from Grafana's internal JSON dashboard definition
-func NewDashboard(dashJSON []byte, queryParams url.Values) Dashboard {
+func NewDashboard(dashJSON []byte, queryParams url.Values, panels string) Dashboard {
 	var dash map[string]Dashboard
 	if err := json.Unmarshal(dashJSON, &dash); err != nil {
 		panic(err)
@@ -105,13 +109,54 @@ func NewDashboard(dashJSON []byte, queryParams url.Values) Dashboard {
 	} else {
 		// Remove row panels from model
 		var filteredPanels []Panel
+		// In the case of collapsed rows, the gridPos within the row will not be
+		// consistent with gridPos of dashboard. As rows are collapsed the "y" ordinate
+		// within row with have higher value than "y" ordinate of global dashboard.
+		// We will need to account it when report of "full" dashboard is requested.
+		var globalYPos float64
+		var globalYPosHeight float64
 		for _, p := range dashboard.RowOrPanels {
-			if p.Type == "row" {
-				if p.Panels != nil {
-					filteredPanels = append(filteredPanels, p.Panels...)
+			// If the panel is of type row and there are panels inside the row
+			if p.Type == "row" && len(p.Panels) > 0 {
+				// If default dashboard is requested and panels are collapsed in dashboard
+				// skip finding collpased panels
+				if panels == "default" && p.Collapsed {
+					continue
+				}
+
+				// In other cases, find all collapsed panels and add them to final panel list
+				var startYPos float64
+				for irp, rp := range p.Panels {
+					// State variable for the mark of start of row y position
+					if irp == 0 {
+						startYPos = rp.GridPos.Y
+					}
+
+					// If it is a collapsed row the gridPos of panels inside row will
+					// be relatively placed to gridPos of row.
+					// Here we transform those relative gridPos into absolute by using
+					// last y position of panel before row and start of first panel inside
+					// the rwo
+					if p.Collapsed {
+						rp.GridPos.Y = rp.GridPos.Y - startYPos + globalYPos + globalYPosHeight
+					}
+
+					// Update the y position using last panel of the row
+					if irp == len(p.Panels)-1 {
+						globalYPos = rp.GridPos.Y
+						globalYPosHeight = rp.GridPos.H
+					}
+					filteredPanels = append(filteredPanels, rp)
 				}
 				continue
 			}
+
+			// Once a row has been created, all the panels below the row will be
+			// encapsulated into row. So, there cant be standalone panels **after** rows.
+			// Hence get the **last** y position and height of last panel before we
+			// get rows.
+			globalYPos = p.Panel.GridPos.Y
+			globalYPosHeight = p.Panel.GridPos.H
 			filteredPanels = append(filteredPanels, p.Panel)
 		}
 		dashboard.Panels = filteredPanels

@@ -56,9 +56,9 @@ func TestReportResource(t *testing.T) {
 	Convey("When the report handler is called", t, func() {
 		var clientVars url.Values
 		// mock new grafana client function to capture and validate its input parameters
-		app.newGrafanaClient = func(client *http.Client, url string, cookie string, variables url.Values, layout string) GrafanaClient {
+		app.newGrafanaClient = func(client *http.Client, url string, cookie string, variables url.Values, layout string, panels string) GrafanaClient {
 			clientVars = variables
-			return NewGrafanaClient(&testClient, url, "", clientVars, "simple")
+			return NewGrafanaClient(&testClient, url, "", clientVars, "simple", "default")
 		}
 		//mock new report function to capture and validate its input parameters
 		var repDashName string

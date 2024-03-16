@@ -29,9 +29,8 @@ func getDashboardVariables(r *http.Request) url.Values {
 	variables := url.Values{}
 	for k, v := range r.URL.Query() {
 		if strings.HasPrefix(k, "var-") {
-			n := strings.Split(k, "var-")[1]
 			for _, singleV := range v {
-				variables.Add(n, singleV)
+				variables.Add(k, singleV)
 			}
 		}
 	}
@@ -63,45 +62,46 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Get Dashboard variables
 	variables := getDashboardVariables(req)
 	if len(variables) == 0 {
-		ctxLogger.Debug("no variables found", "user", currentUser, "dashUID", dashboardUID)
+		ctxLogger.Debug("no variables found", "user", currentUser, "dash_uid", dashboardUID)
 	}
 
 	// Get time range
 	timeRange := NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
-	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dashUID", dashboardUID)
+	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
 
 	// Get custom settings if provided in Plugin settings
 	var data map[string]interface{}
 	var orientation = a.config.orientation
 	var layout = a.config.layout
+	var panels = a.config.panels
 	var maxRenderWorkers = a.config.maxRenderWorkers
 	var persistData = a.config.persistData
 	if config.AppInstanceSettings.JSONData != nil {
 		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &data); err == nil {
 			if v, exists := data["orientation"]; exists && v.(string) != orientation {
 				layout = v.(string)
-				ctxLogger.Debug("orientation setting", "orientation", orientation, "user", currentUser, "dashUID", dashboardUID)
+				ctxLogger.Debug("orientation setting", "orientation", orientation, "user", currentUser, "dash_uid", dashboardUID)
 			}
 			if v, exists := data["layout"]; exists && v.(string) != layout {
 				layout = v.(string)
-				ctxLogger.Debug("layout setting", "layout", layout, "user", currentUser, "dashUID", dashboardUID)
+				ctxLogger.Debug("layout setting", "layout", layout, "user", currentUser, "dash_uid", dashboardUID)
+			}
+			if v, exists := data["panels"]; exists && v.(string) != panels {
+				panels = v.(string)
+				ctxLogger.Debug("panels setting", "panels", panels, "user", currentUser, "dash_uid", dashboardUID)
 			}
 			if v, exists := data["maxRenderWorkers"]; exists && int(v.(float64)) != maxRenderWorkers {
 				maxRenderWorkers = int(v.(float64))
-				ctxLogger.Debug("custom max render workers setting", "maxRenderWorkers", maxRenderWorkers, "user", currentUser, "dashUID", dashboardUID)
+				ctxLogger.Debug("custom max render workers setting", "maxRenderWorkers", maxRenderWorkers, "user", currentUser, "dash_uid", dashboardUID)
 			}
-			if v, exists := data["persistData"]; exists && v.(string) != strconv.FormatBool(persistData) {
-				if v.(string) == "true" {
-					persistData = true
-				} else {
-					persistData = false
-				}
-				ctxLogger.Debug("persistData setting", "persistData", persistData, "user", currentUser, "dashUID", dashboardUID)
+			if v, exists := data["persistData"]; exists && v.(bool) != persistData {
+				persistData = v.(bool)
+				ctxLogger.Debug("persistData setting", "persistData", persistData, "user", currentUser, "dash_uid", dashboardUID)
 			}
 		}
 	}
 
-	// If layout and/or orientation is set in query params override existing
+	// If layout and/or orientation and/or panels is set in query params override existing
 	if queryLayouts, ok := req.URL.Query()["layout"]; ok {
 		if slices.Contains([]string{"simple", "grid"}, queryLayouts[len(queryLayouts)-1]) {
 			layout = queryLayouts[len(queryLayouts)-1]
@@ -110,6 +110,11 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if queryOrientations, ok := req.URL.Query()["orientation"]; ok {
 		if slices.Contains([]string{"landscape", "portrait"}, queryOrientations[len(queryOrientations)-1]) {
 			orientation = queryOrientations[len(queryOrientations)-1]
+		}
+	}
+	if queryPanels, ok := req.URL.Query()["panels"]; ok {
+		if slices.Contains([]string{"default", "full"}, queryPanels[len(queryPanels)-1]) {
+			panels = queryPanels[len(queryPanels)-1]
 		}
 	}
 
@@ -124,6 +129,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		cookie,
 		variables,
 		layout,
+		panels,
 	)
 	// Make a new Report to put all PNGs into a LateX template and compile it into a PDF
 	report, err := a.newReport(
@@ -161,7 +167,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 	// Write buffered response to writer
 	w.Write(buf)
-	ctxLogger.Info("report generated", "user", currentUser, "dashUID", dashboardUID)
+	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
 	w.WriteHeader(http.StatusOK)
 }
 

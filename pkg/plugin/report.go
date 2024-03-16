@@ -47,7 +47,7 @@ type ReportConfig struct {
 	dashUID          string
 	timeRange        TimeRange
 	vfs              *afero.BasePathFs
-	stagingDir       string
+	reportsDir       string
 	maxRenderWorkers int
 	layout           string
 	orientation      string
@@ -92,11 +92,11 @@ const (
 func newReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (*report, error) {
 	var err error
 	if config.persistData {
-		config.stagingDir = filepath.Join("staging", "debug", uuid.New().String())
+		config.reportsDir = filepath.Join("reports", "debug", uuid.New().String())
 	} else {
-		config.stagingDir = filepath.Join("staging", "production", uuid.New().String())
+		config.reportsDir = filepath.Join("reports", "production", uuid.New().String())
 	}
-	if err = config.vfs.MkdirAll(config.stagingDir, 0750); err != nil {
+	if err = config.vfs.MkdirAll(config.reportsDir, 0750); err != nil {
 		return nil, err
 	}
 	return &report{logger, client, config}, nil
@@ -144,22 +144,22 @@ func (r *report) Title() string {
 	return r.cfg.dashTitle
 }
 
-// Clean deletes the staging directory used during report generation
+// Clean deletes the reports directory used during report generation
 func (r *report) Clean() {
-	err := r.cfg.vfs.RemoveAll(r.cfg.stagingDir)
+	err := r.cfg.vfs.RemoveAll(r.cfg.reportsDir)
 	if err != nil {
-		r.logger.Warn("error cleaning up staging dir", "err", err, "dashTitle", r.cfg.dashTitle)
+		r.logger.Warn("error cleaning up ephermal files", "err", err, "dash_title", r.cfg.dashTitle)
 	}
 }
 
 // Get path to images directory
 func (r *report) imgDirPath() string {
-	return filepath.Join(r.cfg.stagingDir, imgDir)
+	return filepath.Join(r.cfg.reportsDir, imgDir)
 }
 
 // Get path to HTML file
 func (r *report) htmlPath() string {
-	return filepath.Join(r.cfg.stagingDir, reportHTML)
+	return filepath.Join(r.cfg.reportsDir, reportHTML)
 }
 
 // Render panel PNGs in parallel using configured number of workers
@@ -304,7 +304,7 @@ func (r *report) renderPDF() ([]byte, error) {
 	var err error
 
 	// Get real path on actual file system
-	if realPath, err = r.cfg.vfs.RealPath(r.cfg.stagingDir); err != nil {
+	if realPath, err = r.cfg.vfs.RealPath(r.cfg.reportsDir); err != nil {
 		return nil, err
 	}
 
@@ -312,7 +312,7 @@ func (r *report) renderPDF() ([]byte, error) {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.NoSandbox,
 	)
-	
+
 	// create context
 	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer allocCtxCancel()
