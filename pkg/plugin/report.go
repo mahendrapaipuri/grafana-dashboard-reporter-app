@@ -311,6 +311,7 @@ func (r *report) renderPDF() ([]byte, error) {
 	// Chrome executor options
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.NoSandbox,
+		chromedp.DisableGPU,
 	)
 
 	// create context
