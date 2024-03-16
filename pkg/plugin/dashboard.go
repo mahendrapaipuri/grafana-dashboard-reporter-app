@@ -97,7 +97,7 @@ func getVariablesValues(queryParams url.Values) string {
 }
 
 // NewDashboard creates Dashboard from Grafana's internal JSON dashboard definition
-func NewDashboard(dashJSON []byte, queryParams url.Values, panels string) Dashboard {
+func NewDashboard(dashJSON []byte, queryParams url.Values, dashboardMode string) Dashboard {
 	var dash map[string]Dashboard
 	if err := json.Unmarshal(dashJSON, &dash); err != nil {
 		panic(err)
@@ -117,10 +117,10 @@ func NewDashboard(dashJSON []byte, queryParams url.Values, panels string) Dashbo
 		var globalYPosHeight float64
 		for _, p := range dashboard.RowOrPanels {
 			// If the panel is of type row and there are panels inside the row
-			if p.Type == "row" && len(p.Panels) > 0 {
+			if p.Type == "row" {
 				// If default dashboard is requested and panels are collapsed in dashboard
 				// skip finding collpased panels
-				if panels == "default" && p.Collapsed {
+				if dashboardMode == "default" && p.Collapsed {
 					continue
 				}
 

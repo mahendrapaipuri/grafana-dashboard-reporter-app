@@ -13,7 +13,7 @@ describe('configurating app', () => {
     appConfig.container().should("be.visible");
     appConfig.layout().should("be.visible");
     appConfig.orientation().should("be.visible");
-    appConfig.panels().should("be.visible");
+    appConfig.dashboardMode().should("be.visible");
     appConfig.persistData().should("be.visible");
 
     // Not sure why, seems like this element is not visible in tests

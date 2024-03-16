@@ -95,7 +95,7 @@ func TestReportResource(t *testing.T) {
 				Path:   "report?dashUid=testDash&var-test=testValue",
 			}, &r)
 			expected := url.Values{}
-			expected.Add("test", "testValue")
+			expected.Add("var-test", "testValue")
 			So(clientVars, ShouldResemble, expected)
 
 			Convey("Variables should not contain other query parameters ", func() {
@@ -111,7 +111,7 @@ func TestReportResource(t *testing.T) {
 					Path:   "report?dashUid=testDash&var-test=testValue&apiToken=abcd",
 				}, &r)
 				expected := url.Values{}
-				expected.Add("test", "testValue")
+				expected.Add("var-test", "testValue")
 				So(clientVars, ShouldResemble, expected)
 			})
 		})
