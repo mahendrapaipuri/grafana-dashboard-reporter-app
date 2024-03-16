@@ -9,4 +9,6 @@ apps:
       appUrl: http://localhost:3000
       orientation: portrait
       layout: simple
+      panels: default
       maxRenderWorkers: 2
+      persistData: false
