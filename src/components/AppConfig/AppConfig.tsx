@@ -7,6 +7,7 @@ import {
   Field,
   Input,
   FieldSet,
+  Switch,
   RadioButtonGroup,
 } from "@grafana/ui";
 import {
@@ -22,8 +23,9 @@ export type JsonData = {
   appUrl?: string;
   orientation?: string;
   layout?: string;
+  panels?: string;
   maxRenderWorkers?: number;
-  persistData?: string;
+  persistData?: boolean;
 };
 
 type State = {
@@ -35,12 +37,16 @@ type State = {
   layout: string;
   // If layout has changed
   layoutChanged: boolean;
+  // Panels in report (default or full)
+  panels: string;
+  // If panels has changed
+  panelsChanged: boolean;
   // Maximum rendering workers
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
   maxRenderWorkersChanged: boolean;
   // Whether to persist templated files for debugging
-  persistData: string;
+  persistData: boolean;
   // If persistData has changed
   persistDataChanged: boolean;
 };
@@ -55,9 +61,11 @@ export const AppConfig = ({ plugin }: Props) => {
     orientationChanged: false,
     layout: jsonData?.layout || "simple",
     layoutChanged: false,
+    panels: jsonData?.panels || "default",
+    panelsChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
-    persistData: jsonData?.persistData || "false",
+    persistData: jsonData?.persistData || false,
     persistDataChanged: false,
   });
 
@@ -73,9 +81,9 @@ export const AppConfig = ({ plugin }: Props) => {
     { label: "Grid", value: "grid", icon: "gf-grid" },
   ];
 
-  const persistDataOptions = [
-    { label: "Enable", value: "true" },
-    { label: "Disable", value: "false" },
+  const panelsOptions = [
+    { label: "Default", value: "default" },
+    { label: "Full", value: "full" },
   ];
 
   const onChangeLayout = (value: string) => {
@@ -94,6 +102,14 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangePanels = (value: string) => {
+    setState({
+      ...state,
+      panels: value,
+      panelsChanged: true,
+    });
+  };
+
   const onChangeMaxWorkers = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
@@ -102,10 +118,10 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-  const onChangePersistData = (value: string) => {
+  const onChangePersistData = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
-      persistData: value,
+      persistData: event.target.checked,
       persistDataChanged: true,
     });
   };
@@ -131,6 +147,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
+                    panels: state.panels,
                     persistData: state.persistData,
                   },
                 })
@@ -157,6 +174,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
+                    panels: state.panels,
                     persistData: state.persistData,
                   },
                 })
@@ -174,6 +192,7 @@ export const AppConfig = ({ plugin }: Props) => {
         <Field
           label="Layout"
           description="Display the panels in their positions on the dashboard."
+          data-testid={testIds.appConfig.layout}
           className={s.marginTop}
         >
           <RadioButtonGroup
@@ -184,11 +203,44 @@ export const AppConfig = ({ plugin }: Props) => {
         </Field>
 
         {/* Report Orientation */}
-        <Field label="Report Orientation" className={s.marginTop}>
+        <Field
+          label="Report Orientation"
+          description="Orientation of the report."
+          data-testid={testIds.appConfig.orientation}
+          className={s.marginTop}
+        >
           <RadioButtonGroup
             options={orientationOptions}
             value={state.orientation}
             onChange={onChangeOrientation}
+          />
+        </Field>
+
+        {/* Report Penals */}
+        <Field
+          label="Panels in Report"
+          description="Whether to render full dashboard by uncollapsing panels in all rows or to render default dashboard without panels in collapsed rows."
+          data-testid={testIds.appConfig.panels}
+          className={s.marginTop}
+        >
+          <RadioButtonGroup
+            options={panelsOptions}
+            value={state.panels}
+            onChange={onChangePanels}
+          />
+        </Field>
+
+        {/* Persist data */}
+        <Field
+          label="Persist Data Files"
+          description="Persist templated data files for debugging. Files will be kept at $GF_DATA_PATH/reports/debug folder on server."
+          data-testid={testIds.appConfig.persistData}
+          className={s.marginTop}
+        >
+          <Switch
+            id="persit-data"
+            value={state.persistData}
+            onChange={onChangePersistData}
           />
         </Field>
 
@@ -209,19 +261,6 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
-        {/* Persist data */}
-        <Field
-          label="Persist Data"
-          description="Persist templated data files for debugging. Files will be kept at $PLUGIN_DIR/staging/debug folder on server."
-          className={s.marginTop}
-        >
-          <RadioButtonGroup
-            options={persistDataOptions}
-            value={state.persistData}
-            onChange={onChangePersistData}
-          />
-        </Field>
-
         <div className={s.marginTop}>
           <Button
             type="submit"
@@ -235,6 +274,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   maxRenderWorkers: state.maxRenderWorkers,
                   orientation: state.orientation,
                   layout: state.layout,
+                  panels: state.panels,
                   persistData: state.persistData,
                 },
               })
@@ -242,6 +282,7 @@ export const AppConfig = ({ plugin }: Props) => {
             disabled={Boolean(
               !state.layoutChanged &&
                 !state.orientationChanged &&
+                !state.panelsChanged &&
                 !state.maxRenderWorkersChanged &&
                 !state.persistDataChanged
             )}
