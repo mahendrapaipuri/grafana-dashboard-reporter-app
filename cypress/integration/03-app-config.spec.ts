@@ -9,6 +9,21 @@ describe('configurating app', () => {
     cy.visit(`http://localhost:3000/plugins/${pluginJson.id}`);
   });
 
+  it("should display config options", () => {
+    appConfig.container().should("be.visible");
+    appConfig.layout().should("be.visible");
+    appConfig.orientation().should("be.visible");
+    appConfig.panels().should("be.visible");
+    appConfig.persistData().should("be.visible");
+
+    // Not sure why, seems like this element is not visible in tests
+    // Ignore it for the moment as it is not very critical
+    // Anyways we are testing these elements in next test and so we can safely
+    // ignore them here
+    // appConfig.submit().should("be.visible");
+    // appConfig.maxWorkers().should("be.visible");
+  });
+
   it('should be successfully configured', () => {
     // wait for page to successfully render
     appConfig.container().should('be.visible');

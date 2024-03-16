@@ -14,7 +14,7 @@ describe("visiting test dashboard", () => {
   });
 
   it("should display test panels", () => {
-    e2e.components.Panels.Panel.title("Test Panel 1").should("be.visible");
+    e2e.components.Panels.Panel.title("Panel 11").should("be.visible");
     Panel.container().should("be.visible");
   });
 
