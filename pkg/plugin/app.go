@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -35,6 +34,7 @@ var (
 type Config struct {
 	orientation      string
 	layout           string
+	panels           string
 	maxRenderWorkers int
 	persistData      bool
 	vfs              *afero.BasePathFs
@@ -46,7 +46,7 @@ type App struct {
 	httpClient       *http.Client
 	grafanaAppUrl    string
 	config           *Config
-	newGrafanaClient func(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, layout string) GrafanaClient
+	newGrafanaClient func(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, layout string, panels string) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) (Report, error)
 }
 
@@ -80,6 +80,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	var grafanaAppUrl string
 	var orientation string
 	var layout string
+	var panels string
 	var maxRenderWorkers int = 2
 	var persistData bool = false
 	if settings.JSONData != nil {
@@ -93,13 +94,14 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 			if v, exists := data["layout"]; exists {
 				layout = v.(string)
 			}
+			if v, exists := data["panels"]; exists {
+				panels = v.(string)
+			}
 			if v, exists := data["maxRenderWorkers"]; exists {
 				maxRenderWorkers = int(v.(float64))
 			}
 			if v, exists := data["persistData"]; exists {
-				if v.(string) == "true" {
-					persistData = true
-				}
+				persistData = v.(bool)
 			}
 		}
 	}
@@ -122,32 +124,28 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		on /tmp as containers started in read-only mode will not be able to write to
 		/tmp.
 
-		We need a staging directory to save ephermeral files and images, compile TeX
+		We need a reports directory to save ephermeral files and images, print HTML
 		into PDF. We will clean them up after each request and so we will use this
-		staging directory to store these files.
-
-		In future, we can improve this by using directly chromium to create PDFs from
-		web pages and replace TeX template with a HTML template. As we are dependent on
-		grafana-image-renderer which indirectly depends on chromium, we can leverage the
-		existing chromoium to generate PDFs instead of relying on pdflatex.
+		reports directory to store these files.
 	*/
 	var pluginDir string
 	if os.Getenv("GF_PATHS_DATA") != "" {
-		pluginDir = filepath.Join(os.Getenv("GF_PATHS_DATA"), "plugins", PLUGIN_NAME)
+		pluginDir = os.Getenv("GF_PATHS_DATA")
 	} else {
-		pluginDir = filepath.Join(GF_PATHS_DATA, "plugins", PLUGIN_NAME)
+		pluginDir = GF_PATHS_DATA
 	}
 	vfs := afero.NewBasePathFs(afero.NewOsFs(), pluginDir).(*afero.BasePathFs)
 
-	// Create a staging dir inside this plugin folder
-	if err = vfs.MkdirAll("staging", 0750); err != nil {
-		return nil, fmt.Errorf("failed to create a staging directory in %s: %w", pluginDir, err)
+	// Create a reports dir inside this GF_PATHS_DATA folder
+	if err = vfs.MkdirAll("reports", 0750); err != nil {
+		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", pluginDir, err)
 	}
 
 	// Make config
 	app.config = &Config{
 		orientation:      orientation,
 		layout:           layout,
+		panels:           panels,
 		maxRenderWorkers: maxRenderWorkers,
 		persistData:      persistData,
 		vfs:              vfs,
@@ -165,8 +163,8 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created.
 func (a *App) Dispose() {
-	// cleanup staging dir
-	// a.config.vfs.RemoveAll("staging")
+	// cleanup reports dir
+	// a.config.vfs.RemoveAll("reports")
 }
 
 // CheckHealth handles health checks sent from Grafana to the plugin.

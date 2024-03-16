@@ -27,7 +27,7 @@ func TestGrafanaClientFetchesDashboard(t *testing.T) {
 		defer ts.Close()
 
 		Convey("When using the Grafana client", func() {
-			grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple")
+			grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple", "default")
 			grf.GetDashboard("rYy7Paekz")
 
 			Convey("It should use the v5 dashboards endpoint", func() {
@@ -58,7 +58,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			client      GrafanaClient
 			pngEndpoint string
 		}{
-			"v5": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, "simple"), "/render/d-solo/testDash/_"},
+			"client": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, "simple", "default"), "/render/d-solo/testDash/_"},
 		}
 		for _, cl := range cases {
 			grf := cl.client
@@ -96,7 +96,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			client      GrafanaClient
 			pngEndpoint string
 		}{
-			"v5": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, "grid"), "/render/d-solo/testDash/_"},
+			"client": {NewGrafanaClient(&testClient, ts.URL, cookies, variables, "grid", "default"), "/render/d-solo/testDash/_"},
 		}
 		for _, cl := range casesGridLayout {
 			grf := cl.client
@@ -124,7 +124,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple")
+		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple", "default")
 
 		_, err := grf.GetPanelPNG(Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now-1h", "now"})
 
@@ -139,7 +139,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple")
+		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple", "default")
 
 		_, err := grf.GetPanelPNG(Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}}, "testDash", TimeRange{"now-1h", "now"})
 

@@ -25,7 +25,7 @@ func TestDashboard(t *testing.T) {
 "Meta":
 	{"Slug":"testDash"}
 }`
-		dash := NewDashboard([]byte(dashJSON), url.Values{})
+		dash := NewDashboard([]byte(dashJSON), url.Values{}, "default")
 
 		Convey("Panel Is(type) should work for all panels", func() {
 			So(dash.Panels[0].Is(SingleStat), ShouldBeTrue)
@@ -72,7 +72,7 @@ func TestVariableValues(t *testing.T) {
 		vars := url.Values{}
 		vars.Add("var-one", "oneval")
 		vars.Add("var-two", "twoval")
-		dash := NewDashboard([]byte(v5DashJSON), vars)
+		dash := NewDashboard([]byte(v5DashJSON), vars, "default")
 
 		Convey("The dashboard should contain the variable values in a random order", func() {
 			So(dash.VariableValues, ShouldContainSubstring, "oneval")

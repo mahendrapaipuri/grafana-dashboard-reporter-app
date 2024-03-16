@@ -40,7 +40,7 @@ type mockGrafanaClient struct {
 }
 
 func (m *mockGrafanaClient) GetDashboard(dashName string) (Dashboard, error) {
-	return NewDashboard([]byte(dashJSON), m.variables), nil
+	return NewDashboard([]byte(dashJSON), m.variables, "default"), nil
 }
 
 func (m *mockGrafanaClient) GetPanelPNG(p Panel, dashName string, t TimeRange) (io.ReadCloser, error) {
@@ -67,7 +67,7 @@ func TestReport(t *testing.T) {
 			rep.renderPNGsParallel(dashboard)
 
 			Convey("It should create a temporary folder", func() {
-				_, err := rep.cfg.vfs.Stat(rep.cfg.stagingDir)
+				_, err := rep.cfg.vfs.Stat(rep.cfg.reportsDir)
 				So(err, ShouldBeNil)
 			})
 
@@ -136,7 +136,7 @@ func TestReport(t *testing.T) {
 		Convey("Clean() should remove the temporary folder", func() {
 			rep.Clean()
 
-			_, err := rep.cfg.vfs.Stat(rep.cfg.stagingDir)
+			_, err := rep.cfg.vfs.Stat(rep.cfg.reportsDir)
 			So(os.IsNotExist(err), ShouldBeTrue)
 		})
 	})
@@ -149,7 +149,7 @@ type errClient struct {
 }
 
 func (e *errClient) GetDashboard(dashName string) (Dashboard, error) {
-	return NewDashboard([]byte(dashJSON), e.variables), nil
+	return NewDashboard([]byte(dashJSON), e.variables, "default"), nil
 }
 
 // Produce an error on the 2nd panel fetched
@@ -198,7 +198,7 @@ func TestReportErrorHandling(t *testing.T) {
 		Convey("Clean() should remove the temporary folder", func() {
 			rep.Clean()
 
-			_, err := rep.cfg.vfs.Stat(rep.cfg.stagingDir)
+			_, err := rep.cfg.vfs.Stat(rep.cfg.reportsDir)
 			So(os.IsNotExist(err), ShouldBeTrue)
 		})
 	})
