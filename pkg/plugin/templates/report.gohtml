@@ -33,7 +33,7 @@
     .grid {
         display: grid;
         grid-template-columns: repeat(24, 1fr);
-        grid-template-rows: repeat(30, 1fr);
+        grid-auto-flow: row;
         grid-column-gap: 5px;
         grid-row-gap: 5px;
     }
@@ -76,7 +76,7 @@
         <div class="grid">
             {{- range $i, $v := .Panels}} 
             <figure class="grid-image grid-image-{{$i}}">
-                <img src="images/image{{$v.Id}}.png" alt="Panel {{$i}}" class="grid-image">
+                <img src="images/image{{$v.Id}}.png" alt="{{$v.Title}}" class="grid-image">
             </figure>
             {{end}}
         </div>

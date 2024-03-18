@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -38,6 +41,7 @@ type Config struct {
 	maxRenderWorkers int
 	persistData      bool
 	vfs              *afero.BasePathFs
+	chromeOpts       []func(*chromedp.ExecAllocator)
 }
 
 // App is the backend plugin which can respond to api queries.
@@ -55,7 +59,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	var app App
 
 	// Get context logger for debugging
-	// ctxLogger := log.DefaultLogger.FromContext(ctx)
+	ctxLogger := log.DefaultLogger.FromContext(ctx)
 
 	// Use a httpadapter (provided by the SDK) for resource calls. This allows us
 	// to use a *http.ServeMux for resource calls, so we can map multiple routes
@@ -104,6 +108,11 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 				persistData = v.(bool)
 			}
 		}
+		ctxLogger.Debug(
+			"provisioned config", "appUrl", grafanaAppUrl, "orientation", orientation,
+			"layout", layout, "dashboardMode", dashboardMode, "maxRenderWorkers", maxRenderWorkers,
+			"persistData", persistData,
+		)
 	}
 
 	// Seems like accessing env vars is not encouraged
@@ -141,6 +150,48 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", pluginDir, err)
 	}
 
+	// Set chrome options
+	chromeOpts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.NoSandbox,
+		chromedp.DisableGPU,
+	)
+
+	/*
+		Attempt to use chrome shipped from grafana-image-renderer. If not found,
+		use the chromium browser installed on the host.
+
+		We check for the GF_DATA_PATH env variable and if not found we use default
+		/var/lib/grafana. We do a walk dir in $GR_DATA_PATH/plugins/grafana-image-render
+		and try to find `chrome` executable. If we find it, we use it as chrome
+		executable for rendering the PDF report.
+	*/
+
+	// Chrome executable path
+	var chromeExec string
+
+	// Walk through grafana-image-renderer plugin dir to find chrome executable
+	err = filepath.Walk(filepath.Join(pluginDir, "plugins", "grafana-image-renderer"),
+		func(path string, info fs.FileInfo, err error) error {
+			// prevent panic by handling failure accessing a path
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && info.Name() == "chrome" {
+				chromeExec = path
+				return nil
+			}
+			return nil
+		})
+	if err != nil {
+		ctxLogger.Warn("failed to walk through grafana-image-renderer plugin dir", "err", err)
+	}
+
+	// If chrome is found in grafana-image-renderer plugin dir, use it
+	if chromeExec != "" {
+		ctxLogger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
+		chromeOpts = append(chromeOpts, chromedp.ExecPath(chromeExec))
+	}
+
 	// Make config
 	app.config = &Config{
 		orientation:      orientation,
@@ -149,6 +200,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		maxRenderWorkers: maxRenderWorkers,
 		persistData:      persistData,
 		vfs:              vfs,
+		chromeOpts:       chromeOpts,
 	}
 
 	// Add Grafana App URL

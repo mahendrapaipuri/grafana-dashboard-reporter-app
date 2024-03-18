@@ -80,7 +80,15 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &data); err == nil {
 			if v, exists := data["orientation"]; exists && v.(string) != orientation {
 				layout = v.(string)
-				ctxLogger.Debug("orientation setting", "orientation", orientation, "user", currentUser, "dash_uid", dashboardUID)
+				ctxLogger.Debug(
+					"orientation setting",
+					"orientation",
+					orientation,
+					"user",
+					currentUser,
+					"dash_uid",
+					dashboardUID,
+				)
 			}
 			if v, exists := data["layout"]; exists && v.(string) != layout {
 				layout = v.(string)
@@ -88,15 +96,39 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			}
 			if v, exists := data["dashboardMode"]; exists && v.(string) != dashboardMode {
 				dashboardMode = v.(string)
-				ctxLogger.Debug("dashboardMode setting", "dashboardMode", dashboardMode, "user", currentUser, "dash_uid", dashboardUID)
+				ctxLogger.Debug(
+					"dashboardMode setting",
+					"dashboardMode",
+					dashboardMode,
+					"user",
+					currentUser,
+					"dash_uid",
+					dashboardUID,
+				)
 			}
 			if v, exists := data["maxRenderWorkers"]; exists && int(v.(float64)) != maxRenderWorkers {
 				maxRenderWorkers = int(v.(float64))
-				ctxLogger.Debug("custom max render workers setting", "maxRenderWorkers", maxRenderWorkers, "user", currentUser, "dash_uid", dashboardUID)
+				ctxLogger.Debug(
+					"custom max render workers setting",
+					"maxRenderWorkers",
+					maxRenderWorkers,
+					"user",
+					currentUser,
+					"dash_uid",
+					dashboardUID,
+				)
 			}
 			if v, exists := data["persistData"]; exists && v.(bool) != persistData {
 				persistData = v.(bool)
-				ctxLogger.Debug("persistData setting", "persistData", persistData, "user", currentUser, "dash_uid", dashboardUID)
+				ctxLogger.Debug(
+					"persistData setting",
+					"persistData",
+					persistData,
+					"user",
+					currentUser,
+					"dash_uid",
+					dashboardUID,
+				)
 			}
 		}
 	}
@@ -143,6 +175,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			layout:           layout,
 			orientation:      orientation,
 			persistData:      persistData,
+			chromeOpts:       a.config.chromeOpts,
 		},
 	)
 	if err != nil {

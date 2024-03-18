@@ -34,7 +34,14 @@ var getPanelRetrySleepTime = time.Duration(10) * time.Second
 // NewClient creates a new Grafana Client. If cookies is the non-empty string,
 // cookie will be forwarded in the requests.
 // queryParams are Grafana template variable url values of the form var-{name}={value}, e.g. var-host=dev
-func NewGrafanaClient(client *http.Client, grafanaAppURL string, cookie string, queryParams url.Values, layout string, dashboardMode string) GrafanaClient {
+func NewGrafanaClient(
+	client *http.Client,
+	grafanaAppURL string,
+	cookie string,
+	queryParams url.Values,
+	layout string,
+	dashboardMode string,
+) GrafanaClient {
 	// Get dashboard URL
 	getDashEndpoint := func(dashUID string) string {
 		dashURL := fmt.Sprintf("%s/api/dashboards/uid/%s", grafanaAppURL, dashUID)
@@ -48,7 +55,16 @@ func NewGrafanaClient(client *http.Client, grafanaAppURL string, cookie string, 
 	getPanelEndpoint := func(dashUID string, vals url.Values) string {
 		return fmt.Sprintf("%s/render/d-solo/%s/_?%s", grafanaAppURL, dashUID, vals.Encode())
 	}
-	return grafanaClient{client, grafanaAppURL, getDashEndpoint, getPanelEndpoint, cookie, queryParams, layout, dashboardMode}
+	return grafanaClient{
+		client,
+		grafanaAppURL,
+		getDashEndpoint,
+		getPanelEndpoint,
+		cookie,
+		queryParams,
+		layout,
+		dashboardMode,
+	}
 }
 
 func (g grafanaClient) GetDashboard(dashUID string) (Dashboard, error) {
@@ -78,7 +94,12 @@ func (g grafanaClient) GetDashboard(dashUID string) (Dashboard, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		return Dashboard{}, fmt.Errorf("error obtaining dashboard from %s. Got Status %v, message: %v ", dashURL, resp.Status, string(body))
+		return Dashboard{}, fmt.Errorf(
+			"error obtaining dashboard from %s. Got Status %v, message: %v ",
+			dashURL,
+			resp.Status,
+			string(body),
+		)
 	}
 	return NewDashboard(body, g.queryParams, g.dashboardMode), nil
 }

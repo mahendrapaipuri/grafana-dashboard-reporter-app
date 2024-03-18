@@ -20,7 +20,7 @@ This plugin app depends on following:
 [`grafana-image-renderer`](https://github.com/grafana/grafana-image-renderer) to render
 panels into PNG files
 
-- `chromium` must be installed on the host.
+- If `grafana-image-renderer` is installed as Grafana plugin, no other external dependencies are required for the plugin to work. `grafana-image-renderer` ships the plugin with a standalone instance of `chromium` and the same `chromium` will be used to render PDF reports. If `grafana-image-renderer` is deployed as a service on a different host, `chromium` must be installed on the host where Grafana is installed.
 
 ## Installation
 
@@ -160,7 +160,7 @@ to set these values.
 - `Maximum Render Workers`: Number of concurrent workers to create PNGs of panels in the
   dashboard. Do not use too high value as it starve the machine
 
-- `Persist Data`: Set it to `Enable` to inspect the generated HTML files from templates 
+- `Persist Data`: Enable it to inspect the generated HTML files from templates 
   and dashboard data. Use it to only debug the issues. When this option is turned on,
   the data files will be retained at `/var/lib/grafana/plugins/reports/debug` folder.
 
@@ -182,3 +182,10 @@ Here are the example reports that are generated out of the test dashboards
 ## Development
 
 See [DEVELOPMENT.md](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/DEVELOPMENT.md)
+
+## Troubleshooting
+
+- If `chromium` fails to run, it suggests that there are missing dependent libraries on the host. In that case, we advise to install `chromium` on the machine which will install all the dependent libraries.
+
+- If the generated report is malformed, we suggest to turn on `Persist Data Files` config option of the plugin from Grafana UI and re-run the report generation. Now, the files created by the plugin will be persisted at `$GF_DATA_PATH/reports/debug` folder. While reporting bugs, please attach the found `report.html` along with JSON
+model of dashboard.

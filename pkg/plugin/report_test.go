@@ -189,10 +189,13 @@ func TestReportErrorHandling(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 
-			Convey("If any panels return errors, renderPNGsParralel should return the error message from one panel", func() {
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "The second panel has some problem")
-			})
+			Convey(
+				"If any panels return errors, renderPNGsParralel should return the error message from one panel",
+				func() {
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldContainSubstring, "The second panel has some problem")
+				},
+			)
 		})
 
 		Convey("Clean() should remove the temporary folder", func() {

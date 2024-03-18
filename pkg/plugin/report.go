@@ -54,6 +54,7 @@ type ReportConfig struct {
 	persistData      bool
 	header           string
 	footer           string
+	chromeOpts       []func(*chromedp.ExecAllocator)
 }
 
 // Is layout grid?
@@ -308,19 +309,18 @@ func (r *report) renderPDF() ([]byte, error) {
 		return nil, err
 	}
 
-	// Chrome executor options
-	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.NoSandbox,
-		chromedp.DisableGPU,
-	)
-
 	// create context
-	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), r.cfg.chromeOpts...)
 	defer allocCtxCancel()
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	// capture pdf
+	// NOTE: We can improve this by using in memory base64 encoded PNG images and
+	// using SetDocumentContent of chromedp without having to have access to underlying
+	// filesystem.
+	// This will need a bit of refactoring of the code tho
+	// Ref: https://github.com/chromedp/chromedp/issues/941#issuecomment-961181348
 	var buf []byte
 	if err := chromedp.Run(
 		ctx, r.printToPDF(fmt.Sprintf("file://%s", filepath.Join(realPath, reportHTML)), &buf),
