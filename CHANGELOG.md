@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+
+- Support rendering full dashboards [#7](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/7)
+- Using chromium to generate PDF reports [#6](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/6)
+
 ## 0.1.0
 
 - Grafana Labs Review [#4](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/4)
