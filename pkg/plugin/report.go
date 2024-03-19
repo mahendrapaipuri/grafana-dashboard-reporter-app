@@ -172,7 +172,7 @@ func (r *report) renderPNGsParallel(dash Dashboard) error {
 	}
 	close(panels)
 
-	// fetch images in parrallel form Grafana sever.
+	// fetch images in parallel form Grafana sever.
 	// limit concurrency using a worker pool to avoid overwhelming grafana
 	// for dashboards with many panels.
 	var wg sync.WaitGroup

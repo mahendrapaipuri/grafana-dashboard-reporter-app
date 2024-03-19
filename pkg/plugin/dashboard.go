@@ -74,7 +74,7 @@ type RowOrPanel struct {
 }
 
 // Dashboard represents a Grafana dashboard
-// This is both used to unmarshal the dashbaord JSON into
+// This is both used to unmarshal the dashboard JSON into
 // and then enriched (sanitize fields for TeX consumption and add VarialbeValues)
 type Dashboard struct {
 	Title          string       `json:"title"`
@@ -119,7 +119,7 @@ func NewDashboard(dashJSON []byte, queryParams url.Values, dashboardMode string)
 			// If the panel is of type row and there are panels inside the row
 			if p.Type == "row" {
 				// If default dashboard is requested and panels are collapsed in dashboard
-				// skip finding collpased panels
+				// skip finding collapsed panels
 				if dashboardMode == "default" && p.Collapsed {
 					continue
 				}
