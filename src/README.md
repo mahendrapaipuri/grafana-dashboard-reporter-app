@@ -20,7 +20,15 @@ This plugin app depends on following:
 [`grafana-image-renderer`](https://github.com/grafana/grafana-image-renderer) to render
 panels into PNG files
 
-- If `grafana-image-renderer` is installed as Grafana plugin, no other external dependencies are required for the plugin to work. `grafana-image-renderer` ships the plugin with a standalone instance of `chromium` and the same `chromium` will be used to render PDF reports. If `grafana-image-renderer` is deployed as a service on a different host, `chromium` must be installed on the host where Grafana is installed.
+- If `grafana-image-renderer` is installed as Grafana plugin, no other external 
+dependencies are required for the plugin to work. `grafana-image-renderer` ships the 
+plugin with a standalone instance of `chromium` and the same `chromium` will be used 
+to render PDF reports. If `grafana-image-renderer` is deployed as a service on a 
+different host, `chromium` must be installed on the host where Grafana is installed. 
+
+> [!IMPORTANT] 
+> `grafana-image-renderer` advises to install `chromium` to ensure that all the 
+dependent libraries of the `chromium` are available on the host.
 
 ## Installation
 
@@ -41,7 +49,7 @@ as an unsigned plugin. The installation procedure is briefed in
 
 ### Local installation
 
-Download the [latest Grafana Dashboard Reporter]().
+Download the [latest Grafana Dashboard Reporter](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/latest).
 
 Create a directory for grafana to access your custom-plugins 
 _e.g._ `/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app`.
@@ -72,13 +80,31 @@ The current example assumes the following configuration is set for Grafana
 
 ```
 [paths]
-plugins = /var/lib/grafana/plugins
+data = /var/lib/grafana
 ```
 
 - **OR** set the relevant environment variable where Grafana is started:
 
 ```
-GF_PATHS_PLUGINS=/var/lib/grafana/plugins
+GF_PATHS_DATA=/var/lib/grafana
+```
+> [!IMPORTANT] 
+> The final step is to _whitelist_ the plugin as it is an unsigned plugin and Grafana,
+by default, does not load any unsigned plugins even if they are installed. In order to
+whitelist the plugin, we need to add following to the Grafana configuration file
+
+```
+[plugins]
+allow_loading_unsigned_plugins = mahendrapaipuri-dashboardreporter-app
+```
+
+Once this configuration is added, restart the Grafana server and it should load the 
+plugin. The loading of plugin can be verified by the following log lines
+
+```
+logger=plugin.signature.validator t=2024-03-21T11:16:54.738077851Z level=warn msg="Permitting unsigned plugin. This is not recommended" pluginID=mahendrapaipuri-dashboardreporter-app
+logger=plugin.loader t=2024-03-21T11:16:54.738166325Z level=info msg="Plugin registered" pluginID=mahendrapaipuri-dashboardreporter-app
+
 ```
 
 ### Install with Docker-compose
@@ -92,40 +118,27 @@ as follows:
 docker-compose -f docker-compose.yaml up
 ```
 
-## Using plugin
-
-The prerequisite is the user must have at least `Viewer` role on the dashboard that they 
-want to create a PDF report. After the user authenticates with Grafana, creating a 
-dashboard report is done by visiting the following end point
-
-```
-<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/report?dashUid=<UID of dashboard>
-```
-
-In addition to `dashUid` query parameter, it is possible to pass time range query 
-parameters `from`, `to` and also dashboard variables that have `var-` prefix. This 
-permits to integrate the dashboard reporter app into Dashboard links. 
-
-The layout and orientation options can be passed by query parameters which will override 
-the global values set by admins in the plugin configuration. `layout` will take either 
-`simple` or `grid` as query parameter and `orientation` will take `portrait` or 
-`landscape` as parameters.
-
-Following steps will configure a dashboard link to create PDF report for that dashboard
-
-- Go to Settings of Dashboard
-- Go to Links in the side bar and click on `Add Dashboard Link`
-- Use Report for `Title` field, set `Type` to `Link`
-- Now set `URL` to `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>`
-- Set `Tooltip` to `Create a PDF report` and set `Icon` to `doc`
-- By checking `Include current time range` and `Include current template variables values`, 
-  time range and dashboard variables will be added to query parameters while creating 
-  PDF report.
-
-Now there should be link in the right top corner of dashboard named `Report` and clicking
-this link will create a new PDF report of the dashboard.
-
 ## Configuring the plugin
+
+After successful installation of the plugin, it will be, by default, disabled. We can 
+enable it in different ways.
+
+- From Grafana UI, navigating to `Apps > Dashboard Reporter App > Configuration` will
+show [this page](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/src/img/light.png) 
+and plugin can be enabled there. The configuration page can also be
+accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`. **NOTE** 
+that the warning about `Invalid plugin signature` is not fatal and it is simply saying
+that plugin has not been signed by Grafana Labs.
+
+- By using [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/).
+An example provision config is provided in the [repo](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
+and it can be installed at `/etc/grafana/provisioning/plugins/reporter.yml`. After installing
+this YAML file, by restarting Grafana server, the plugin will be enabled with config
+options set in the `reporter.yml` file.
+
+Grafana Provisioning is a programatic way of configuring the plugin app. However, it is 
+possible to configure the app from Grafana UI as well as explained in the first option.
+Different configuration options are explained below:
 
 ### Report parameters
 
@@ -164,10 +177,39 @@ to set these values.
   and dashboard data. Use it to only debug the issues. When this option is turned on,
   the data files will be retained at `/var/lib/grafana/plugins/reports/debug` folder.
 
-### Provisioning
 
-The plugin can be provisioned with default config using [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/).
-An example provision config is provided in the [repo](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
+## Using plugin
+
+The prerequisite is the user must have at least `Viewer` role on the dashboard that they 
+want to create a PDF report. After the user authenticates with Grafana, creating a 
+dashboard report is done by visiting the following end point
+
+```
+<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>
+```
+
+In addition to `dashUid` query parameter, it is possible to pass time range query 
+parameters `from`, `to` and also dashboard variables that have `var-` prefix. This 
+permits to integrate the dashboard reporter app into Dashboard links. 
+
+The layout and orientation options can be passed by query parameters which will override 
+the global values set by admins in the plugin configuration. `layout` will take either 
+`simple` or `grid` as query parameter and `orientation` will take `portrait` or 
+`landscape` as parameters.
+
+Following steps will configure a dashboard link to create PDF report for that dashboard
+
+- Go to Settings of Dashboard
+- Go to Links in the side bar and click on `Add Dashboard Link`
+- Use Report for `Title` field, set `Type` to `Link`
+- Now set `URL` to `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>`
+- Set `Tooltip` to `Create a PDF report` and set `Icon` to `doc`
+- By checking `Include current time range` and `Include current template variables values`, 
+  time range and dashboard variables will be added to query parameters while creating 
+  PDF report.
+
+Now there should be link in the right top corner of dashboard named `Report` and clicking
+this link will create a new PDF report of the dashboard.
 
 ## Examples
 
