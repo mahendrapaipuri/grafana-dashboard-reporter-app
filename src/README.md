@@ -126,8 +126,9 @@ enable it in different ways.
 - From Grafana UI, navigating to `Apps > Dashboard Reporter App > Configuration` will
 show [this page](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/src/img/light.png) 
 and plugin can be enabled there. The configuration page can also be
-accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`. **NOTE** 
-that the warning about `Invalid plugin signature` is not fatal and it is simply saying
+accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`. 
+> [!NOTE]
+> The warning about `Invalid plugin signature` is not fatal and it is simply saying
 that plugin has not been signed by Grafana Labs.
 
 - By using [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/).
