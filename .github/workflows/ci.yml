@@ -94,6 +94,15 @@ jobs:
           plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
         shell: bash
 
+      - name: Upload plugin artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: plugin-artifacts
+          path: |
+            mahendrapaipuri-dashboardreporter-app-nightly.zip
+            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
+          retention-days: 3
+
       - name: Release nightly
         uses: softprops/action-gh-release@v1
         # Only run on main branch
