@@ -74,19 +74,22 @@ cd /var/lib/grafana/plugins
 curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/main/scripts/bootstrap-dashboard-reporter-app.sh | NIGHTLY=1 bash
 ```
 
-The current example assumes the following configuration is set for Grafana
-
-- Edit the `paths.plugins` directive in your `grafana.ini`:
+The plugin uses Grafana data path as a ephemeral directory to generate reports. If 
+default value for `paths.data` in `grafana.ini`, there is nothing to do, the plugin 
+should work out-of-the-box. However, if a custom directory is used for `paths.data`,
+it is **compulsory** to set an environment variable `GF_PATHS_DATA` that points to the
+same directory as `paths.data` in `grafana.ini`. For example, if your `grafana.ini`
+looks like below
 
 ```
 [paths]
-data = /var/lib/grafana
+data = /path/to/grafana/data
 ```
 
-- **OR** set the relevant environment variable where Grafana is started:
+the following environment variable must be set when Grafana is started:
 
 ```
-GF_PATHS_DATA=/var/lib/grafana
+GF_PATHS_DATA=/path/to/grafana/data
 ```
 > [!IMPORTANT] 
 > The final step is to _whitelist_ the plugin as it is an unsigned plugin and Grafana,
@@ -126,7 +129,8 @@ enable it in different ways.
 - From Grafana UI, navigating to `Apps > Dashboard Reporter App > Configuration` will
 show [this page](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/src/img/light.png) 
 and plugin can be enabled there. The configuration page can also be
-accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`. 
+accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`.
+
 > [!NOTE]
 > The warning about `Invalid plugin signature` is not fatal and it is simply saying
 that plugin has not been signed by Grafana Labs.
@@ -135,15 +139,32 @@ that plugin has not been signed by Grafana Labs.
 An example provision config is provided in the [repo](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
 and it can be installed at `/etc/grafana/provisioning/plugins/reporter.yml`. After installing
 this YAML file, by restarting Grafana server, the plugin will be enabled with config
-options set in the `reporter.yml` file.
+parameters set in the `reporter.yml` file.
 
-Grafana Provisioning is a programatic way of configuring the plugin app. However, it is 
+Grafana Provisioning is a programmatic way of configuring the plugin app. However, it is 
 possible to configure the app from Grafana UI as well as explained in the first option.
-Different configuration options are explained below:
+
+
+Different configuration parameters are explained below:
+
+### Grafana related parameters
+
+The following configuration parameters are directly tied to Grafana instance
+
+- `appUrl`: The URL at which Grafana is running. By default, `http://localhost:3000` is
+  used which should work for most of the deployments. 
+
+- `skipTlsCheck`: If Grafana instance is configured to use TLS with self signed certificates
+  set this parameter to `true` to skip TLS certificate check. 
+
+> [!IMPORTANT] 
+> These config parameters are dependent on Grafana instance 
+and cannot be changed without restarting Grafana instance. Hence, these config parameters 
+can only be set using provisioning method and **it is not possible to configure them in Grafana UI**.
 
 ### Report parameters
 
-All the configuration options can only be modified by `Admin` role.
+All the configuration parameters can only be modified by `Admin` role.
 
 - `Layout`: Layout of the report. Using grid layout renders the report as it is rendered
   in the browser. A simple layout will render the report with one panel per row
@@ -155,7 +176,7 @@ All the configuration options can only be modified by `Admin` role.
   Whereas in full mode, rows are uncollapsed and all the panels are included in the 
   report
 
-Although these options can only be changed by users with `Admin` role for whole instance
+Although these parameters can only be changed by users with `Admin` role for whole instance
 of Grafana, it is possible to override the global defaults for a particular report
 by using query parameters. It is enough to add query parameters to dashboard report URL
 to set these values.
@@ -177,7 +198,6 @@ to set these values.
 - `Persist Data`: Enable it to inspect the generated HTML files from templates 
   and dashboard data. Use it to only debug the issues. When this option is turned on,
   the data files will be retained at `/var/lib/grafana/plugins/reports/debug` folder.
-
 
 ## Using plugin
 

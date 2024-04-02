@@ -68,20 +68,10 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	app.registerRoutes(mux)
 	app.CallResourceHandler = httpadapter.New(mux)
 
-	opts, err := settings.HTTPClientOptions(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error in http client options: %w", err)
-	}
-
-	cl, err := httpclient.New(opts)
-	if err != nil {
-		return nil, fmt.Errorf("error in httpclient new: %w", err)
-	}
-	app.httpClient = cl
-
 	// Get Grafana App URL from plugin settings
 	var data map[string]interface{}
 	var grafanaAppUrl string
+	var skipTLSCheck bool = false
 	var orientation string
 	var layout string
 	var dashboardMode string
@@ -91,6 +81,9 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		if err := json.Unmarshal(settings.JSONData, &data); err == nil {
 			if v, exists := data["appUrl"]; exists {
 				grafanaAppUrl = strings.TrimRight(v.(string), "/")
+			}
+			if v, exists := data["skipTlsCheck"]; exists {
+				skipTLSCheck = v.(bool)
 			}
 			if v, exists := data["orientation"]; exists {
 				orientation = v.(string)
@@ -108,12 +101,29 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 				persistData = v.(bool)
 			}
 		}
-		ctxLogger.Debug(
-			"provisioned config", "appUrl", grafanaAppUrl, "orientation", orientation,
-			"layout", layout, "dashboardMode", dashboardMode, "maxRenderWorkers", maxRenderWorkers,
-			"persistData", persistData,
+		ctxLogger.Info(
+			"provisioned config", "appUrl", grafanaAppUrl, "skipTlsCheck", skipTLSCheck,
+			"orientation", orientation, "layout", layout, "dashboardMode", dashboardMode,
+			"maxRenderWorkers", maxRenderWorkers, "persistData", persistData,
 		)
 	}
+
+	// Make HTTP client
+	opts, err := settings.HTTPClientOptions(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error in http client options: %w", err)
+	}
+
+	// If skip verify is set to true configure it for Grafana HTTP client
+	if skipTLSCheck {
+		opts.TLS = &httpclient.TLSOptions{InsecureSkipVerify: true}
+	}
+
+	cl, err := httpclient.New(opts)
+	if err != nil {
+		return nil, fmt.Errorf("error in httpclient new: %w", err)
+	}
+	app.httpClient = cl
 
 	// Seems like accessing env vars is not encouraged
 	// Ref: https://github.com/grafana/plugin-validator/blob/eb71abbbead549fd7697371b25c226faba19b252/pkg/analysis/passes/coderules/semgrep-rules.yaml#L13-L28
