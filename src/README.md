@@ -161,13 +161,13 @@ by using query parameters. It is enough to add query parameters to dashboard rep
 to set these values.
 
 - Query field for layout is `layout` and it takes either `simple` or `grid` as value.
-  Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/report?dashUid=<UID of dashboard>&layout=grid`
+  Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&layout=grid`
 
 - Query field for orientation is `orientation` and it takes either `portrait` or `landscape`
-  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/report?dashUid=<UID of dashboard>&orientation=landscape`
+  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&orientation=landscape`
 
 - Query field for dashboard mode is `dashboardMode` and it takes either `default` or `full`
-  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-reporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
+  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
 
 ### Advanced parameters
 
