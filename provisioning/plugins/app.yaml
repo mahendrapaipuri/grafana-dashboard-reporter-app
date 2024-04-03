@@ -6,10 +6,84 @@ apps:
     org_name: Main Org.
     disabled: false
     jsonData:
+      # appUrl is at which Grafana can be accessible. The plugin will make API requests
+      # to Grafana to get individual panel in each dashboard to generate reports. These API
+      # requests will be made to this URL. For most of the deployments the default value 
+      # will work. 
+      # 
+      # If the Grafana is configured to use cookie_samesite "strict", the default localhost:3000
+      # will not work as the plugin will forward cookie in the API requests and "strict" policy
+      # will not make cookie set on URL Grafana is exposed (eg mygrafana.example.com) on 
+      # localhost:3000. In this case, please use appUrl as `mygrafana.example.com`
+      # 
+      # The app URL set in GF_APP_URL env variable will always have the highest precedence
+      # and will override the value set here
+      #
       appUrl: http://localhost:3000
+
+      # If Grafana is using HTTPS with self signed certificates, set this parameter to true
+      # to skip TLS certificate verification
+      #
       skipTlsCheck: false
+
+      # The plugin uses Grafana data path to discover grafana-image-renderer plugin and also
+      # to stage the generated PDF files before serving them. In a classic deployment,
+      # default /var/lib/grafana should work. If the `paths.data` in `grafana.ini` is set
+      # to custom path, use the same path here
+      #
+      # In the windows machines, please set it to the path corresponding to `install_dir/data`
+      # eg C:\grafana-10.1.0\data
+      #
+      # The data path set in GF_PATHS_DATA env variable will always have the highest precedence
+      # and will override the value set here
+      #
+      dataPath: /var/lib/grafana
+
+      # Orientation of the report. Possible values are portrait and landscape
+      #
+      # This can be changed from Grafana UI as well and this configuration parameter
+      # applies globally to all generated reports
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?orientation=portrait or ?orientation=landscape during report generation process
+      #
       orientation: portrait
+
+      # Layout of the report. Possible values are simple and grid
+      #
+      # This can be changed from Grafana UI as well and this configuration parameter
+      # applies globally to all generated reports
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?layout=simple or ?layout=grid during report generation process
+      #
       layout: simple
+
+      # Dashboard mode in the report. Possible values are default and full. In default
+      # mode collapsed rows will be ignored in the report and only Panels visible in 
+      # dashboard by default will be rendered in the report. In the full mode, all the
+      # rows will be expanded and all the panels in the dashboard will be included in
+      # the report.
+      #
+      # This can be changed from Grafana UI as well and this configuration parameter
+      # applies globally to all generated reports
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?dashboardMode=default or ?dashboardMode=full during report generation process
+      #
       dashboardMode: default
+
+      # Maximum number of workers for generating panel PNGs.
+      #
+      # This can be changed from Grafana UI as well and this configuration parameter
+      # applies globally to all generated reports
+      #
       maxRenderWorkers: 2
+
+      # Persist PNG files, generated HTML files and PDF for debugging. These files can
+      # be found at $GF_PATHS_DATA/reports/debug folder
+      #
+      # This can be changed from Grafana UI as well and this configuration parameter
+      # applies globally to all generated reports
+      #
       persistData: false

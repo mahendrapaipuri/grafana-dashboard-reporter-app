@@ -20,7 +20,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-const GF_PATHS_DATA = "/var/lib/grafana"
 const PLUGIN_NAME = "mahendrapaipuri-dashboardreporter-app"
 
 // Make sure App implements required interfaces. This is important to do
@@ -72,6 +71,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	var data map[string]interface{}
 	var grafanaAppUrl string
 	var skipTLSCheck bool = false
+	var grafanaDataPath string
 	var orientation string
 	var layout string
 	var dashboardMode string
@@ -84,6 +84,9 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 			}
 			if v, exists := data["skipTlsCheck"]; exists {
 				skipTLSCheck = v.(bool)
+			}
+			if v, exists := data["dataPath"]; exists {
+				grafanaDataPath = v.(string)
 			}
 			if v, exists := data["orientation"]; exists {
 				orientation = v.(string)
@@ -103,6 +106,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		}
 		ctxLogger.Info(
 			"provisioned config", "appUrl", grafanaAppUrl, "skipTlsCheck", skipTLSCheck,
+			"dataPath", grafanaDataPath,
 			"orientation", orientation, "layout", layout, "dashboardMode", dashboardMode,
 			"maxRenderWorkers", maxRenderWorkers, "persistData", persistData,
 		)
@@ -128,13 +132,20 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	// Seems like accessing env vars is not encouraged
 	// Ref: https://github.com/grafana/plugin-validator/blob/eb71abbbead549fd7697371b25c226faba19b252/pkg/analysis/passes/coderules/semgrep-rules.yaml#L13-L28
 	//
-	// If appURL is not found in plugin settings attempt to get it from env var
-	if grafanaAppUrl == "" && os.Getenv("GF_APP_URL") != "" {
+	// appURL set from the env var will always take the highest precedence
+	if os.Getenv("GF_APP_URL") != "" {
 		grafanaAppUrl = strings.TrimRight(os.Getenv("GF_APP_URL"), "/")
+		ctxLogger.Debug("Using Grafana app URL from environment variable", "GF_APP_URL", grafanaAppUrl)
 	}
 
 	if grafanaAppUrl == "" {
 		return nil, fmt.Errorf("grafana app URL not configured in JSONData")
+	}
+
+	// Similarly GF_PATHS_DATA set from the env var will always have the highest precedence
+	if os.Getenv("GF_PATHS_DATA") != "" {
+		grafanaDataPath = os.Getenv("GF_PATHS_DATA")
+		ctxLogger.Debug("Using Grafana data path from environment variable", "GF_PATHS_DATA", grafanaDataPath)
 	}
 
 	/*
@@ -147,17 +158,24 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		into PDF. We will clean them up after each request and so we will use this
 		reports directory to store these files.
 	*/
-	var pluginDir string
-	if os.Getenv("GF_PATHS_DATA") != "" {
-		pluginDir = os.Getenv("GF_PATHS_DATA")
-	} else {
-		pluginDir = GF_PATHS_DATA
+	if grafanaDataPath == "" {
+		// If grafanaDataPath is still not set, attempt to get it from current executable path
+		// Get path of current executable
+		pluginExe, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+
+		// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
+		// Now we attempt to get install_dir directory which is Grafana data path
+		grafanaDataPath = filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
+		ctxLogger.Info("Grafana data path found", "GF_PATHS_DATA", grafanaDataPath)
 	}
-	vfs := afero.NewBasePathFs(afero.NewOsFs(), pluginDir).(*afero.BasePathFs)
+	vfs := afero.NewBasePathFs(afero.NewOsFs(), grafanaDataPath).(*afero.BasePathFs)
 
 	// Create a reports dir inside this GF_PATHS_DATA folder
 	if err = vfs.MkdirAll("reports", 0750); err != nil {
-		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", pluginDir, err)
+		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", grafanaDataPath, err)
 	}
 
 	// Set chrome options
@@ -170,8 +188,8 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		Attempt to use chrome shipped from grafana-image-renderer. If not found,
 		use the chromium browser installed on the host.
 
-		We check for the GF_DATA_PATH env variable and if not found we use default
-		/var/lib/grafana. We do a walk dir in $GR_DATA_PATH/plugins/grafana-image-render
+		We check for the GF_PATHS_DATA env variable and if not found we use default
+		/var/lib/grafana. We do a walk dir in $GF_PATHS_DATA/plugins/grafana-image-render
 		and try to find `chrome` executable. If we find it, we use it as chrome
 		executable for rendering the PDF report.
 	*/
@@ -180,7 +198,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	var chromeExec string
 
 	// Walk through grafana-image-renderer plugin dir to find chrome executable
-	err = filepath.Walk(filepath.Join(pluginDir, "plugins", "grafana-image-renderer"),
+	err = filepath.Walk(filepath.Join(grafanaDataPath, "plugins", "grafana-image-renderer"),
 		func(path string, info fs.FileInfo, err error) error {
 			// prevent panic by handling failure accessing a path
 			if err != nil {
@@ -193,7 +211,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 			return nil
 		})
 	if err != nil {
-		ctxLogger.Warn("failed to walk through grafana-image-renderer plugin dir", "err", err)
+		ctxLogger.Warn("failed to walk through grafana-image-renderer data dir", "err", err)
 	}
 
 	// If chrome is found in grafana-image-renderer plugin dir, use it
