@@ -74,23 +74,6 @@ cd /var/lib/grafana/plugins
 curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/main/scripts/bootstrap-dashboard-reporter-app.sh | NIGHTLY=1 bash
 ```
 
-The plugin uses Grafana data path as a ephemeral directory to generate reports. If 
-default value for `paths.data` in `grafana.ini`, there is nothing to do, the plugin 
-should work out-of-the-box. However, if a custom directory is used for `paths.data`,
-it is **compulsory** to set an environment variable `GF_PATHS_DATA` that points to the
-same directory as `paths.data` in `grafana.ini`. For example, if your `grafana.ini`
-looks like below
-
-```
-[paths]
-data = /path/to/grafana/data
-```
-
-the following environment variable must be set when Grafana is started:
-
-```
-GF_PATHS_DATA=/path/to/grafana/data
-```
 > [!IMPORTANT] 
 > The final step is to _whitelist_ the plugin as it is an unsigned plugin and Grafana,
 by default, does not load any unsigned plugins even if they are installed. In order to
@@ -152,7 +135,13 @@ Different configuration parameters are explained below:
 The following configuration parameters are directly tied to Grafana instance
 
 - `appUrl`: The URL at which Grafana is running. By default, `http://localhost:3000` is
-  used which should work for most of the deployments. 
+  used which should work for most of the deployments. If environment variable `GF_APP_URL`
+  is set, that will take the precedence over the value configured in the provisioning file. 
+
+- `dataPath`: Grafana data path. By default on Linux deployment, it is `/var/lib/grafana`.
+  If a custom directory is used for `paths.data` in `grafana.ini`, the same path should be
+  used for the `dataPath`. If environment variable `GF_PATHS_DATA` is set, that will 
+  take the precedence over the value configured in the provisioning file. 
 
 - `skipTlsCheck`: If Grafana instance is configured to use TLS with self signed certificates
   set this parameter to `true` to skip TLS certificate check. 
