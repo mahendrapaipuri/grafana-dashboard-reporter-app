@@ -97,8 +97,15 @@ jobs:
       # Check if bootstrap script is working for latest release and nightly release
       - name: Check bootstrap script
         run: |
-          ./scripts/bootstrap-dashboard-reporter-app.sh
-          NIGHTLY=1 ./scripts/bootstrap-dashboard-reporter-app.sh
+          mkdir -p latest
+          cd latest
+          ../scripts/bootstrap-dashboard-reporter-app.sh
+          cd ..
+
+          mkdir -p nightly
+          cd nightly
+          NIGHTLY=1 ../scripts/bootstrap-dashboard-reporter-app.sh
+          cd ..
         shell: bash
 
       - name: Upload plugin artifacts
