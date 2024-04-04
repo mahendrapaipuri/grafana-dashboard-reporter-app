@@ -94,6 +94,13 @@ jobs:
           plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
         shell: bash
 
+      # Check if bootstrap script is working for latest release and nightly release
+      - name: Check bootstrap script
+        run: |
+          ./scripts/bootstrap-dashboard-reporter-app.sh
+          NIGHTLY=1 ./scripts/bootstrap-dashboard-reporter-app.sh
+        shell: bash
+
       - name: Upload plugin artifacts
         uses: actions/upload-artifact@v3
         with:
