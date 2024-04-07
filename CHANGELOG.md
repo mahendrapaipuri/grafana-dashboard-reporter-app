@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+- Correct download URL in bootstrap script [#22](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/22)
+- Configure grafana data path from provisioning [#18](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/18)
+- Add skip TLS config option [#17](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/17)
+- docs: fix plugin name in example urls [#13](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/13)
+- docs: Add missing installation steps in README [#10](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/10)
+
 ## 1.0.0
 
 - Support rendering full dashboards [#7](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/7)
