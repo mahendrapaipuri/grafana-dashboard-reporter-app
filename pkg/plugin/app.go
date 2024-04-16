@@ -49,7 +49,7 @@ type App struct {
 	httpClient       *http.Client
 	grafanaAppUrl    string
 	config           *Config
-	newGrafanaClient func(client *http.Client, grafanaAppURL string, cookie string, variables url.Values, layout string, panels string) GrafanaClient
+	newGrafanaClient func(client *http.Client, grafanaAppURL string, headers http.Header, variables url.Values, layout string, panels string) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) (Report, error)
 }
 

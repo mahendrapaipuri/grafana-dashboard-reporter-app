@@ -23,7 +23,7 @@ type grafanaClient struct {
 	url              string
 	getDashEndpoint  func(dashUID string) string
 	getPanelEndpoint func(dashUID string, vals url.Values) string
-	cookies          string
+	headers          http.Header
 	queryParams      url.Values
 	layout           string
 	dashboardMode    string
@@ -31,13 +31,13 @@ type grafanaClient struct {
 
 var getPanelRetrySleepTime = time.Duration(10) * time.Second
 
-// NewClient creates a new Grafana Client. If cookies is the non-empty string,
-// cookie will be forwarded in the requests.
+// NewClient creates a new Grafana Client. Cookies and Authorization headers, if found,
+// will be forwarded in the requests
 // queryParams are Grafana template variable url values of the form var-{name}={value}, e.g. var-host=dev
 func NewGrafanaClient(
 	client *http.Client,
 	grafanaAppURL string,
-	cookie string,
+	headers http.Header,
 	queryParams url.Values,
 	layout string,
 	dashboardMode string,
@@ -60,11 +60,23 @@ func NewGrafanaClient(
 		grafanaAppURL,
 		getDashEndpoint,
 		getPanelEndpoint,
-		cookie,
+		headers,
 		queryParams,
 		layout,
 		dashboardMode,
 	}
+}
+
+// Add auth specific header to request
+func (g grafanaClient) forwardAuthHeader(r *http.Request) *http.Request {
+	// If incoming request has cookies formward them
+	// If cookie is not foun, try Authorization header that is used in API requests
+	if g.headers.Get(backend.CookiesHeaderName) != "" {
+		r.Header.Set(backend.CookiesHeaderName, g.headers.Get(backend.CookiesHeaderName))
+	} else if g.headers.Get("Authorization") != "" {
+		r.Header.Set("Authorization", g.headers.Get("Authorization"))
+	}
+	return r
 }
 
 func (g grafanaClient) GetDashboard(dashUID string) (Dashboard, error) {
@@ -76,10 +88,8 @@ func (g grafanaClient) GetDashboard(dashUID string) (Dashboard, error) {
 		return Dashboard{}, fmt.Errorf("error creating request for %s: %v", dashURL, err)
 	}
 
-	// If incoming request has cookies formward them
-	if g.cookies != "" {
-		req.Header.Set(backend.CookiesHeaderName, g.cookies)
-	}
+	// Forward auth headers
+	req = g.forwardAuthHeader(req)
 
 	// Make request
 	resp, err := g.client.Do(req)
@@ -113,10 +123,8 @@ func (g grafanaClient) GetPanelPNG(p Panel, dashUID string, t TimeRange) (io.Rea
 		return nil, fmt.Errorf("error creating request for %s: %v", panelURL, err)
 	}
 
-	// Forward cookies from incoming request
-	if g.cookies != "" {
-		req.Header.Set(backend.CookiesHeaderName, g.cookies)
-	}
+	// Forward auth headers
+	req = g.forwardAuthHeader(req)
 
 	// Make request
 	resp, err := g.client.Do(req)

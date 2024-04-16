@@ -190,6 +190,8 @@ to set these values.
 
 ## Using plugin
 
+### Using Grafana web UI
+
 The prerequisite is the user must have at least `Viewer` role on the dashboard that they 
 want to create a PDF report. After the user authenticates with Grafana, creating a 
 dashboard report is done by visiting the following end point
@@ -220,6 +222,23 @@ Following steps will configure a dashboard link to create PDF report for that da
 
 Now there should be link in the right top corner of dashboard named `Report` and clicking
 this link will create a new PDF report of the dashboard.
+
+### Using Grafana API
+
+The plugin can generate reports programmatically using Grafana API by using 
+[Grafana service accounts](https://grafana.com/docs/grafana/latest/administration/service-accounts/).
+
+Once a service account is created with appropriate permissions by following 
+[Grafana docs](https://grafana.com/docs/grafana/latest/administration/service-accounts/#to-create-a-service-account), 
+generate an [API token](https://grafana.com/docs/grafana/latest/administration/service-accounts/#add-a-token-to-a-service-account-in-grafana) 
+from the service account. Once the token has been generated, reports can be created using
+
+```
+$ curl --output=report.pdf -H "Authorization: Bearer <supersecrettoken>" "https://example.grafana.com/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>"
+```
+
+The above example shows on how to generate report using `curl` but this can be done with
+any HTTP client of your favorite programming language.
 
 ## Examples
 

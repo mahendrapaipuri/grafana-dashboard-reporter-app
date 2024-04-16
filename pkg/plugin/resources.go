@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 )
@@ -150,15 +149,11 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// Get current user cookie and we will use this cookie in API request to get
-	// dashboard JSON models and panel PNGs
-	cookie := req.Header.Get(backend.CookiesHeaderName)
-
 	// Make a new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := a.newGrafanaClient(
 		a.httpClient,
 		a.grafanaAppUrl,
-		cookie,
+		req.Header,
 		variables,
 		layout,
 		dashboardMode,
