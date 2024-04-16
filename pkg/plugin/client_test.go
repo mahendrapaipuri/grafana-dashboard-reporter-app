@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -20,18 +21,25 @@ func init() {
 func TestGrafanaClientFetchesDashboard(t *testing.T) {
 	Convey("When fetching a Dashboard", t, func() {
 		requestURI := ""
+		requestCookie := ""
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestURI = r.RequestURI
+			requestCookie = r.Header.Get(backend.CookiesHeaderName)
 			w.Write([]byte(`{"dashboard": {"title": "foo"}}`))
 		}))
 		defer ts.Close()
 
 		Convey("When using the Grafana client", func() {
-			grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple", "default")
+			headers := http.Header{}
+			headers.Add(backend.CookiesHeaderName, "cookie")
+			grf := NewGrafanaClient(&testClient, ts.URL, headers, url.Values{}, "simple", "default")
 			grf.GetDashboard("rYy7Paekz")
 
 			Convey("It should use the v5 dashboards endpoint", func() {
 				So(requestURI, ShouldEqual, "/api/dashboards/uid/rYy7Paekz")
+			})
+			Convey("It should use cookie", func() {
+				So(requestCookie, ShouldEqual, "cookie")
 			})
 		})
 
@@ -49,7 +57,8 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		cookies := "1234"
+		headers := http.Header{}
+		headers.Add("Authorization", "token")
 		variables := url.Values{}
 		variables.Add("var-host", "servername")
 		variables.Add("var-port", "adapter")
@@ -59,7 +68,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, ts.URL, cookies, variables, "simple", "default"),
+				NewGrafanaClient(&testClient, ts.URL, headers, variables, "simple", "default"),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -85,7 +94,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			})
 
 			Convey("The client should insert auth token should in request header", func() {
-				So(requestHeaders.Get("Cookie"), ShouldContainSubstring, cookies)
+				So(requestHeaders.Get("Authorization"), ShouldEqual, "token")
 			})
 
 			Convey("The client should pass variables in the request parameters", func() {
@@ -104,7 +113,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, ts.URL, cookies, variables, "grid", "default"),
+				NewGrafanaClient(&testClient, ts.URL, headers, variables, "grid", "default"),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -138,7 +147,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple", "default")
+		grf := NewGrafanaClient(&testClient, ts.URL, http.Header{}, url.Values{}, "simple", "default")
 
 		_, err := grf.GetPanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
@@ -157,7 +166,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, "", url.Values{}, "simple", "default")
+		grf := NewGrafanaClient(&testClient, ts.URL, http.Header{}, url.Values{}, "simple", "default")
 
 		_, err := grf.GetPanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
