@@ -3,6 +3,7 @@
   "videoCompression": false,
   "screenshotOnRunFailure": true,
   "reporter": "spec",
+  "chromeWebSecurity": false,
   "retries": {
     "runMode": 3
   }

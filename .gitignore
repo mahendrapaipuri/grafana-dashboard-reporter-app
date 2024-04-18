@@ -44,3 +44,6 @@ package-lock.json
 
 # Ignore plugin validator
 plugin-validator
+
+# Ignore ci folder
+.ci

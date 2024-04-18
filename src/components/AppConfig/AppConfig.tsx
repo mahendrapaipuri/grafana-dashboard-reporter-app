@@ -21,6 +21,7 @@ import { testIds } from "../testIds";
 
 export type JsonData = {
   appUrl?: string;
+  skipTlsCheck?: boolean;
   orientation?: string;
   layout?: string;
   dashboardMode?: string;
@@ -70,6 +71,7 @@ export const AppConfig = ({ plugin }: Props) => {
   });
 
   const appUrl = config.appUrl;
+  const skipTlsCheck = jsonData?.skipTlsCheck || false;
 
   const orientationOptions = [
     { label: "Portrait", value: "portrait", icon: "gf-portrait" },
@@ -88,7 +90,7 @@ export const AppConfig = ({ plugin }: Props) => {
 
   const onChangeLayout = (value: string) => {
     setState({
-     ...state,
+      ...state,
       layout: value,
       layoutChanged: true,
     });
@@ -144,6 +146,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: true,
                   jsonData: {
                     appUrl: appUrl,
+                    skipTlsCheck: skipTlsCheck,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
@@ -171,6 +174,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: false,
                   jsonData: {
                     appUrl: appUrl,
+                    skipTlsCheck: skipTlsCheck,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
@@ -271,6 +275,7 @@ export const AppConfig = ({ plugin }: Props) => {
                 pinned,
                 jsonData: {
                   appUrl: appUrl,
+                  skipTlsCheck: skipTlsCheck,
                   maxRenderWorkers: state.maxRenderWorkers,
                   orientation: state.orientation,
                   layout: state.layout,

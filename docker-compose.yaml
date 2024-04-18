@@ -8,12 +8,13 @@ services:
       context: ./.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
-        grafana_version: ${GRAFANA_VERSION:-10.0.3}
+        grafana_version: ${GRAFANA_VERSION:-10.4.2}
     ports:
       - 3000:3000/tcp
     volumes:
       - ./dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
       - ./provisioning:/etc/grafana/provisioning
+      # - ./.ci/certs:/etc/certs
     environment:
       # basic settings
       # output to terminal
@@ -32,6 +33,10 @@ services:
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
       - GF_LOG_FILTERS=rendering:debug
+      # # TLS
+      # - GF_SERVER_PROTOCOL=https
+      # - GF_SERVER_CERT_KEY=/etc/certs/localhost.key
+      # - GF_SERVER_CERT_FILE=/etc/certs/localhost.crt
   renderer:
     image: grafana/grafana-image-renderer:latest
     environment:
@@ -41,5 +46,6 @@ services:
       - RENDERING_CLUSTERING_MODE=browser
       - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
       - RENDERING_CLUSTERING_TIMEOUT=60
+      - IGNORE_HTTPS_ERRORS=true
     ports:
       - 8081
