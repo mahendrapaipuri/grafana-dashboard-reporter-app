@@ -70,7 +70,9 @@ export const AppConfig = ({ plugin }: Props) => {
     persistDataChanged: false,
   });
 
-  const appUrl = config.appUrl;
+  // appUrl and skipTlsCheck configured from provisioning will
+  // always have higher precedence to default values
+  const appUrl = jsonData?.appUrl || config.appUrl;
   const skipTlsCheck = jsonData?.skipTlsCheck || false;
 
   const orientationOptions = [
