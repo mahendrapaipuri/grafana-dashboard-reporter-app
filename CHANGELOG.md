@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- Support API requests from service accounts [#25](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/25)
+
 ## 1.1.0
 
 - Correct download URL in bootstrap script [#22](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/22)
