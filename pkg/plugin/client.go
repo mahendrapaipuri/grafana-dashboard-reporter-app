@@ -11,6 +11,11 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
+// Authorization header name
+const (
+	authHeaderName = "Authorization"
+)
+
 // Client is a Grafana API client
 type GrafanaClient interface {
 	GetDashboard(dashUID string) (Dashboard, error)
@@ -73,8 +78,8 @@ func (g grafanaClient) forwardAuthHeader(r *http.Request) *http.Request {
 	// If cookie is not foun, try Authorization header that is used in API requests
 	if g.headers.Get(backend.CookiesHeaderName) != "" {
 		r.Header.Set(backend.CookiesHeaderName, g.headers.Get(backend.CookiesHeaderName))
-	} else if g.headers.Get("Authorization") != "" {
-		r.Header.Set("Authorization", g.headers.Get("Authorization"))
+	} else if g.headers.Get(authHeaderName) != "" {
+		r.Header.Set(authHeaderName, g.headers.Get(authHeaderName))
 	}
 	return r
 }
