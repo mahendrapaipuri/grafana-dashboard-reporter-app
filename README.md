@@ -8,7 +8,9 @@
 | Meta    | [![GitHub License](https://img.shields.io/github/license/mahendrapaipuri/grafana-dashboard-reporter-app)](https://gitlab.com/mahendrapaipuri/grafana-dashboard-reporter-app) [![Go Report Card](https://goreportcard.com/badge/github.com/mahendrapaipuri/grafana-dashboard-reporter-app)](https://goreportcard.com/report/github.com/mahendrapaipuri/grafana-dashboard-reporter-app) [![code style](https://img.shields.io/badge/code%20style-gofmt-blue.svg)](https://pkg.go.dev/cmd/gofmt) |
 
 This Grafana plugin app can create PDF reports of a given dashboard using headless `chromium` 
-and [`grafana-image-renderer`](https://github.com/grafana/grafana-image-renderer). 
+and [`grafana-image-renderer`](https://github.com/grafana/grafana-image-renderer).
+
+![Sample report](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/pngs/sample_report.png)
 
 This plugin is based on the original work 
 [grafana-reporter](https://github.com/IzakMarais/reporter). 
