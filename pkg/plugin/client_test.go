@@ -30,9 +30,9 @@ func TestGrafanaClientFetchesDashboard(t *testing.T) {
 		defer ts.Close()
 
 		Convey("When using the Grafana client", func() {
-			headers := http.Header{}
-			headers.Add(backend.CookiesHeaderName, "cookie")
-			grf := NewGrafanaClient(&testClient, ts.URL, headers, url.Values{}, "simple", "default")
+			secrets := &Secrets{}
+			secrets.cookie = "cookie"
+			grf := NewGrafanaClient(&testClient, ts.URL, secrets, url.Values{}, "simple", "default")
 			grf.GetDashboard("rYy7Paekz")
 
 			Convey("It should use the v5 dashboards endpoint", func() {
@@ -57,8 +57,8 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		headers := http.Header{}
-		headers.Add("Authorization", "token")
+		secrets := &Secrets{}
+		secrets.token = "token"
 		variables := url.Values{}
 		variables.Add("var-host", "servername")
 		variables.Add("var-port", "adapter")
@@ -68,7 +68,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, ts.URL, headers, variables, "simple", "default"),
+				NewGrafanaClient(&testClient, ts.URL, secrets, variables, "simple", "default"),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -113,7 +113,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, ts.URL, headers, variables, "grid", "default"),
+				NewGrafanaClient(&testClient, ts.URL, secrets, variables, "grid", "default"),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -147,7 +147,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, http.Header{}, url.Values{}, "simple", "default")
+		grf := NewGrafanaClient(&testClient, ts.URL, &Secrets{}, url.Values{}, "simple", "default")
 
 		_, err := grf.GetPanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
@@ -166,7 +166,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, http.Header{}, url.Values{}, "simple", "default")
+		grf := NewGrafanaClient(&testClient, ts.URL, &Secrets{}, url.Values{}, "simple", "default")
 
 		_, err := grf.GetPanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},

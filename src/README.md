@@ -231,7 +231,10 @@ The plugin can generate reports programmatically using Grafana API by using
 Once a service account is created with appropriate permissions by following 
 [Grafana docs](https://grafana.com/docs/grafana/latest/administration/service-accounts/#to-create-a-service-account), 
 generate an [API token](https://grafana.com/docs/grafana/latest/administration/service-accounts/#add-a-token-to-a-service-account-in-grafana) 
-from the service account. Once the token has been generated, reports can be created using
+from the service account. This API token must be set in the plugin configuration as well 
+and this can be done either by [provisioning](#configuring-the-plugin) or from the 
+Grafana UI. Once the token has been generated and configured in the plugin, reports 
+can be created using
 
 ```
 $ curl --output=report.pdf -H "Authorization: Bearer <supersecrettoken>" "https://example.grafana.com/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>"
@@ -239,6 +242,32 @@ $ curl --output=report.pdf -H "Authorization: Bearer <supersecrettoken>" "https:
 
 The above example shows on how to generate report using `curl` but this can be done with
 any HTTP client of your favorite programming language.
+
+> [!IMPORTANT] 
+> If you are using Grafana >= 10.3.0, there is a feature flag called `externalServiceAccounts`
+that can create a service account and provision a service account token automatically for
+the plugin. Hence, there is no need to configure the service account token to the plugin. 
+However, the user will still need to create a service account and token to make the API
+requests to generate report. To enable this feature, it is necessary to set 
+`enable = externalServiceAccounts` in `feature_toggles` section of Grafana configuration.
+
+### Security
+
+When reports are generated from browser, there is minimal to no security risks as the 
+plugin forward the current Grafana cookie in the request to make API requests to other
+Grafana resources. This ensures that user will not be able to generate reports for 
+the dashboards that contains data sources that they do not have permissions to query. The 
+plugin _always_ prioritizes the cookie for authentication when found.
+
+In the case, when the cookie is not found and a service account token is either configured 
+with the plugin or `externalServiceAccounts` feature is enabled (for Grafana >= 10.3.0),
+the plugin will use the service account token to make API requests to Grafana. In this 
+case, the user _may_ generate reports of dashboards on the data sources that they do not
+have permissions to. 
+
+In order to avoid such a situation, disable the basic auth for Grafana. This will prevent
+regular users from making API requests to generate reports and force them to always
+use cookie for authentication. 
 
 ## Examples
 
