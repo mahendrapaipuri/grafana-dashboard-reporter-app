@@ -66,15 +66,21 @@ jobs:
         with:
           version: latest
           args: build
-
-      - name: Start grafana docker
-        run: yarn server -d
   
       - name: Run e2e tests
-        run: yarn e2e
+        run: |
+          docker-compose up --build -d
+          sleep 10
+          yarn e2e
+          docker-compose down
 
-      - name: Stop grafana docker
-        run: docker-compose down
+      - name: Run API test
+        run: |
+          GF_AUTH_BASIC_ENABLED=true GF_AUTH_ANONYMOUS_ENABLED=false docker-compose up --build -d
+          sleep 10
+          # Generate report from API request using basic auth
+          curl -f -o report.pdf "http://admin:admin@localhost:3000/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=e472bbf0-140c-4852-a74b-1a4c32202659&from=now-5m&to=now&var-testvar0=0&var-testvar1=foo&var-testvar2=1"
+          docker-compose down
 
       # Remove this once plugin review has been submitted
       - name: Package plugin
