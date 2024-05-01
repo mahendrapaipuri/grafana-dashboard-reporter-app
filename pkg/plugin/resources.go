@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 )
@@ -56,6 +57,24 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if dashboardUID == "" {
 		http.Error(w, "Query parameter dashUid not found", http.StatusBadRequest)
 		return
+	}
+
+	// Get Grafana config from context
+	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
+	if saToken, err := grafanaConfig.PluginAppClientSecret(); err != nil {
+		ctxLogger.Warn("Failed to get plugin app secret", "err", err)
+	} else {
+		// If we are on Grafana >= 10.3.0 and externalServiceAccounts are enabled
+		// always prefer this token over the one that is configured in plugin config
+		if saToken != "" {
+			a.secrets.token = saToken
+		}
+	}
+
+	// If cookie is found in request headers, add it to secrets as well
+	if req.Header.Get(backend.CookiesHeaderName) != "" {
+		ctxLogger.Debug("Cookie found in the request", "user", currentUser, "dash_uid", dashboardUID)
+		a.secrets.cookie = req.Header.Get(backend.CookiesHeaderName)
 	}
 
 	// Get Dashboard variables
@@ -153,7 +172,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	grafanaClient := a.newGrafanaClient(
 		a.httpClient,
 		a.grafanaAppUrl,
-		req.Header,
+		a.secrets,
 		variables,
 		layout,
 		dashboardMode,

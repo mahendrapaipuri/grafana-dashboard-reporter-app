@@ -53,5 +53,12 @@
   "dependencies": {
     "grafanaDependency": ">=10.0.3",
     "plugins": []
+  },
+  "iam": {
+    "permissions": [
+      { "action": "dashboards:read", "scope": "folders:uid:*" },
+      { "action": "annotations:read", "scope": "annotations:type:*" },
+      { "action": "datasources:query", "scope": "datasources:*" }
+    ]
   }
 }

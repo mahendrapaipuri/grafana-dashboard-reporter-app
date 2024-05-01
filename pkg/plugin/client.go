@@ -11,11 +11,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
-// Authorization header name
-const (
-	authHeaderName = "Authorization"
-)
-
 // Client is a Grafana API client
 type GrafanaClient interface {
 	GetDashboard(dashUID string) (Dashboard, error)
@@ -28,7 +23,7 @@ type grafanaClient struct {
 	url              string
 	getDashEndpoint  func(dashUID string) string
 	getPanelEndpoint func(dashUID string, vals url.Values) string
-	headers          http.Header
+	secrets          *Secrets
 	queryParams      url.Values
 	layout           string
 	dashboardMode    string
@@ -42,7 +37,7 @@ var getPanelRetrySleepTime = time.Duration(10) * time.Second
 func NewGrafanaClient(
 	client *http.Client,
 	grafanaAppURL string,
-	headers http.Header,
+	secrets *Secrets,
 	queryParams url.Values,
 	layout string,
 	dashboardMode string,
@@ -65,25 +60,39 @@ func NewGrafanaClient(
 		grafanaAppURL,
 		getDashEndpoint,
 		getPanelEndpoint,
-		headers,
+		secrets,
 		queryParams,
 		layout,
 		dashboardMode,
 	}
 }
 
-// Add auth specific header to request
+// Forward auth header in the client request
+// We fetch secrets from different sources
+//  - From plugin config where users can configure a service account token either by
+//    provisioning or set it iun UI
+//  - If Grafana >= 10.3.0 is used and externalServiceAccounts is enabled, a token
+//    will be generated for the plugin to use in API requests to Grafana. This token,
+//    if found, will always have higher precendence to the one configured in the plugin
+//  - Finally, if the request is coming from the browser, cookie will be retrieved.
+//
+// We should always prefer cookie to auth tokens as cookie will have correct permissions
+// and scopes based on the user who is making the request. On the other hand, service
+// account tokens, either configured from plugin or the one that is provisioned automatically
+// for the plugin will always have broader scopes and permissions. 
 func (g grafanaClient) forwardAuthHeader(r *http.Request) *http.Request {
 	// If incoming request has cookies formward them
-	// If cookie is not foun, try Authorization header that is used in API requests
-	if g.headers.Get(backend.CookiesHeaderName) != "" {
-		r.Header.Set(backend.CookiesHeaderName, g.headers.Get(backend.CookiesHeaderName))
-	} else if g.headers.Get(authHeaderName) != "" {
-		r.Header.Set(authHeaderName, g.headers.Get(authHeaderName))
+	// If cookie is not found, try Authorization header that is either configured
+	// in config or fetched from externalServiceAccount
+	if g.secrets.cookie != "" {
+		r.Header.Set(backend.CookiesHeaderName, g.secrets.cookie)
+	} else if g.secrets.token != "" {
+		r.Header.Set(backend.OAuthIdentityTokenHeaderName, fmt.Sprintf("Bearer %s", g.secrets.token))
 	}
 	return r
 }
 
+// GetDashboard fetches dashboard from Grafana
 func (g grafanaClient) GetDashboard(dashUID string) (Dashboard, error) {
 	dashURL := g.getDashEndpoint(dashUID)
 

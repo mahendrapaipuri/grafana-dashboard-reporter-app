@@ -43,13 +43,20 @@ type Config struct {
 	chromeOpts       []func(*chromedp.ExecAllocator)
 }
 
+// Plugin secret settings
+type Secrets struct {
+	cookie string
+	token string
+}
+
 // App is the backend plugin which can respond to api queries.
 type App struct {
 	backend.CallResourceHandler
 	httpClient       *http.Client
 	grafanaAppUrl    string
 	config           *Config
-	newGrafanaClient func(client *http.Client, grafanaAppURL string, headers http.Header, variables url.Values, layout string, panels string) GrafanaClient
+	secrets          *Secrets
+	newGrafanaClient func(client *http.Client, grafanaAppURL string, secrets *Secrets, variables url.Values, layout string, panels string) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) (Report, error)
 }
 
@@ -105,11 +112,22 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 			}
 		}
 		ctxLogger.Info(
-			"provisioned config", "appUrl", grafanaAppUrl, "skipTlsCheck", skipTLSCheck,
+			"Provisioned config", "appUrl", grafanaAppUrl, "skipTlsCheck", skipTLSCheck,
 			"dataPath", grafanaDataPath,
 			"orientation", orientation, "layout", layout, "dashboardMode", dashboardMode,
 			"maxRenderWorkers", maxRenderWorkers, "persistData", persistData,
 		)
+	}
+
+	// Fetch token, if configured in SecureJSONData
+	var secrets Secrets
+	if settings.DecryptedSecureJSONData != nil {
+		if saToken, ok := settings.DecryptedSecureJSONData["saToken"]; ok {
+			if saToken != "" {
+				secrets = Secrets{token: saToken}
+				ctxLogger.Info("Service account token configured")
+			}
+		}
 	}
 
 	// Make HTTP client
@@ -230,6 +248,9 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		vfs:              vfs,
 		chromeOpts:       chromeOpts,
 	}
+
+	// Add secrets to app
+	app.secrets = &secrets
 
 	// Add Grafana App URL
 	app.grafanaAppUrl = grafanaAppUrl
