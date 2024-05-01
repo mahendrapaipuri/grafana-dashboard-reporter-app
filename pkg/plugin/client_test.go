@@ -94,7 +94,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			})
 
 			Convey("The client should insert auth token should in request header", func() {
-				So(requestHeaders.Get("Authorization"), ShouldEqual, "token")
+				So(requestHeaders.Get("Authorization"), ShouldEqual, "Bearer token")
 			})
 
 			Convey("The client should pass variables in the request parameters", func() {
