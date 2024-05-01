@@ -5,6 +5,23 @@ apps:
     org_id: 1
     org_name: Main Org.
     disabled: false
+    
+    secureJsonData:
+      # If operators want to generate reports programatically using API requests with 
+      # clients like, say `curl`, using service account tokens it is necessary to configure
+      # that **same** service account token in the plugin's config.
+      #
+      # Grafana will use this token to make API requests to Grafana
+      # to fetch dashboards and panels. The token must have appropriate permissions
+      # and roles to be able to generate reports.
+      #
+      # This token can be configured from the Grafana UI as well.
+      #
+      # In Grafana >= 10.3.0, by enabling `externalServiceAccounts` feature flag, this
+      # provisioning of the service account token is done automatically and there is
+      # no need to set the token in the config
+      saToken: ""
+
     jsonData:
       # appUrl is at which Grafana can be accessible. The plugin will make API requests
       # to Grafana to get individual panel in each dashboard to generate reports. These API
