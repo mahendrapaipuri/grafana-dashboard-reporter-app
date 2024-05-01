@@ -23,10 +23,14 @@ services:
       # - GF_LOG_LEVEL=debug
       - GF_DATAPROXY_LOGGING=true
       # allow anonymous admin so we don't have to set up a password to start testing
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=${GF_AUTH_ANONYMOUS_ENABLED:-true}
+      - GF_AUTH_BASIC_ENABLED=${GF_AUTH_BASIC_ENABLED:-false}
+      #- GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       # skip login page
       # - GF_AUTH_DISABLE_LOGIN_FORM=true
+      # We need to toggle external service accounts so that Grafana will get
+      # the token from a service account to read dashboards
+      - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-externalServiceAccounts}
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
