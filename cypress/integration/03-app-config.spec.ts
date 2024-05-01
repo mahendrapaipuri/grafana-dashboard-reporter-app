@@ -11,15 +11,16 @@ describe('configurating app', () => {
 
   it("should display config options", () => {
     appConfig.container().should("be.visible");
+    appConfig.saToken().should("be.visible");
     appConfig.layout().should("be.visible");
     appConfig.orientation().should("be.visible");
     appConfig.dashboardMode().should("be.visible");
-    appConfig.persistData().should("be.visible");
 
     // Not sure why, seems like this element is not visible in tests
     // Ignore it for the moment as it is not very critical
     // Anyways we are testing these elements in next test and so we can safely
     // ignore them here
+    // appConfig.persistData().should("be.visible");
     // appConfig.submit().should("be.visible");
     // appConfig.maxWorkers().should("be.visible");
   });

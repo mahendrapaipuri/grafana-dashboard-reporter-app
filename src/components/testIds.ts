@@ -1,5 +1,6 @@
 export const testIds = {
   appConfig: {
+    saToken: "data-testid ac-sa-token",
     container: "data-testid ac-container",
     layout: "data-testid ac-layout",
     orientation: "data-testid ac-orientation",

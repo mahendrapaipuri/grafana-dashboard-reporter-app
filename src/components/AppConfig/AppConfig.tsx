@@ -9,6 +9,7 @@ import {
   FieldSet,
   Switch,
   RadioButtonGroup,
+  SecretInput,
 } from "@grafana/ui";
 import {
   PluginConfigPageProps,
@@ -50,13 +51,19 @@ type State = {
   persistData: boolean;
   // If persistData has changed
   persistDataChanged: boolean;
+  // Tells us if the Service Account's token is set.
+  // Set to `true` ONLY if it has already been set and haven't been changed.
+  // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
+  isSaTokenSet: boolean;
+  // A Service account's token used to make requests to Grafana API.
+  saToken: string;
 };
 
 interface Props extends PluginConfigPageProps<AppPluginMeta<JsonData>> {}
 
 export const AppConfig = ({ plugin }: Props) => {
   const s = useStyles2(getStyles);
-  const { enabled, pinned, jsonData } = plugin.meta;
+  const { enabled, pinned, jsonData, secureJsonFields } = plugin.meta;
   const [state, setState] = useState<State>({
     orientation: jsonData?.orientation || "portrait",
     orientationChanged: false,
@@ -68,6 +75,8 @@ export const AppConfig = ({ plugin }: Props) => {
     maxRenderWorkersChanged: false,
     persistData: jsonData?.persistData || false,
     persistDataChanged: false,
+    saToken: "",
+    isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
 
   // appUrl and skipTlsCheck configured from provisioning will
@@ -127,6 +136,20 @@ export const AppConfig = ({ plugin }: Props) => {
       ...state,
       persistData: event.target.checked,
       persistDataChanged: true,
+    });
+  };
+
+  const onResetSaToken = () =>
+    setState({
+      ...state,
+      saToken: "",
+      isSaTokenSet: false,
+    });
+
+  const onChangeSaToken = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      saToken: event.target.value.trim(),
     });
   };
 
@@ -194,6 +217,27 @@ export const AppConfig = ({ plugin }: Props) => {
 
       {/* CUSTOM SETTINGS */}
       <FieldSet label="Plugin Settings" className={s.marginTopXl}>
+        {/* Service account token */}
+        <Field
+          label="Service Account Token"
+          description="This token will be used to make API requests to Grafana for generating reports."
+          data-testid={testIds.appConfig.saToken}
+        >
+          <SecretInput
+            width={60}
+            id="sa-token"
+            value={state.saToken}
+            isConfigured={state.isSaTokenSet}
+            placeholder={
+              state.isSaTokenSet
+                ? "configured"
+                : "Your service account token here"
+            }
+            onChange={onChangeSaToken}
+            onReset={onResetSaToken}
+          />
+        </Field>
+
         {/* Use Grid Layout */}
         <Field
           label="Layout"
@@ -284,6 +328,13 @@ export const AppConfig = ({ plugin }: Props) => {
                   dashboardMode: state.dashboardMode,
                   persistData: state.persistData,
                 },
+                // This cannot be queried later by the frontend.
+                // We don't want to override it in case it was set previously and left untouched now.
+                secureJsonData: state.isSaTokenSet
+                  ? undefined
+                  : {
+                      saToken: state.saToken,
+                    },
               })
             }
             disabled={Boolean(
@@ -291,7 +342,8 @@ export const AppConfig = ({ plugin }: Props) => {
                 !state.orientationChanged &&
                 !state.dashboardModeChanged &&
                 !state.maxRenderWorkersChanged &&
-                !state.persistDataChanged
+                !state.persistDataChanged &&
+                !state.saToken
             )}
           >
             Save settings
