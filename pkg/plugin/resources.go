@@ -189,6 +189,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			layout:           layout,
 			orientation:      orientation,
 			persistData:      persistData,
+			encodedLogo:      a.config.encodedLogo,
 			chromeOpts:       a.config.chromeOpts,
 		},
 	)

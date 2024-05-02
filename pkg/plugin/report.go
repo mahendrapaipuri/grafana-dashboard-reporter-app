@@ -52,6 +52,7 @@ type ReportConfig struct {
 	layout           string
 	orientation      string
 	persistData      bool
+	encodedLogo      string
 	header           string
 	footer           string
 	chromeOpts       []func(*chromedp.ExecAllocator)
@@ -75,6 +76,11 @@ func (c ReportConfig) From() string {
 // Get to time string
 func (c ReportConfig) To() string {
 	return c.timeRange.ToFormatted()
+}
+
+// Get logo
+func (c ReportConfig) Logo() string {
+	return c.encodedLogo
 }
 
 // report struct
