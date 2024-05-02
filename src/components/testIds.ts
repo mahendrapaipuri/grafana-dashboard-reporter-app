@@ -5,6 +5,7 @@ export const testIds = {
     layout: "data-testid ac-layout",
     orientation: "data-testid ac-orientation",
     dashboardMode: "data-testid ac-dashboard-mode",
+    logo: "data-testid ac-logo",
     persistData: "data-testid ac-persist-data",
     maxWorkers: "data-testid ac-max-workers",
     submit: "data-testid ac-submit-form",
