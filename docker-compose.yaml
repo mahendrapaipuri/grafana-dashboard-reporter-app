@@ -7,10 +7,10 @@ services:
     build:
       context: ./.config
       args:
-        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
+        grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
         grafana_version: ${GRAFANA_VERSION:-10.4.2}
     ports:
-      - 3000:3000/tcp
+      - 3000:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
       - ./dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
       - ./provisioning:/etc/grafana/provisioning
@@ -20,6 +20,7 @@ services:
       # output to terminal
       - TERM=linux
       - GF_DEFAULT_APP_MODE=development
+      - GF_SERVER_HTTP_PORT=${GF_SERVER_HTTP_PORT:-3000}
       # - GF_LOG_LEVEL=debug
       - GF_DATAPROXY_LOGGING=true
       # allow anonymous admin so we don't have to set up a password to start testing
@@ -35,7 +36,7 @@ services:
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
-      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_RENDERING_CALLBACK_URL=http://grafana:${GF_SERVER_HTTP_PORT:-3000}/
       - GF_LOG_FILTERS=rendering:debug
       # # TLS
       # - GF_SERVER_PROTOCOL=https
