@@ -181,6 +181,10 @@ to set these values.
 
 ### Advanced parameters
 
+- `Branding Logo`: This parameter takes a base64 encoded png image that will be included
+  in the footer of each page in the report. Typically, operators can include their 
+  organization logos to have "customized" reports.
+
 - `Maximum Render Workers`: Number of concurrent workers to create PNGs of panels in the
   dashboard. Do not use too high value as it starve the machine
 
@@ -267,7 +271,7 @@ have permissions to.
 
 In order to avoid such a situation, disable the basic auth for Grafana. This will prevent
 regular users from making API requests to generate reports and force them to always
-use cookie for authentication. 
+use cookie for authentication.
 
 ## Examples
 
@@ -279,13 +283,24 @@ Here are the example reports that are generated out of the test dashboards
 - [Report with landscape orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_grid_full.pdf)
 - [Report with portrait orientation, grid layout and default dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_default.pdf)
 
-## Development
+## Limitations
 
-See [DEVELOPMENT.md](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/DEVELOPMENT.md)
+- Currently, the reporter app will not be able to included the repeated panels/rows 
+in the report "natively". A workaround is to _save_ the dashboard with repeated rows/panels
+before generating the report.
 
 ## Troubleshooting
 
-- If `chromium` fails to run, it suggests that there are missing dependent libraries on the host. In that case, we advise to install `chromium` on the machine which will install all the dependent libraries.
+- If `chromium` fails to run, it suggests that there are missing dependent libraries on 
+the host. In that case, we advise to install `chromium` on the machine which will 
+install all the dependent libraries.
 
-- If the generated report is malformed, we suggest to turn on `Persist Data Files` config option of the plugin from Grafana UI and re-run the report generation. Now, the files created by the plugin will be persisted at `$GF_DATA_PATH/reports/debug` folder. While reporting bugs, please attach the found `report.html` along with JSON
-model of dashboard.
+- If the generated report is malformed, we suggest to turn on `Persist Data Files` 
+config option of the plugin from Grafana UI and re-run the report generation. Now, 
+the files created by the plugin will be persisted at `$GF_DATA_PATH/reports/debug` folder. 
+While reporting bugs, please attach the found `report.html` along with JSON model of 
+dashboard.
+
+## Development
+
+See [DEVELOPMENT.md](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/DEVELOPMENT.md)
