@@ -37,6 +37,7 @@ type Config struct {
 	orientation      string
 	layout           string
 	dashboardMode    string
+	encodedLogo      string
 	maxRenderWorkers int
 	persistData      bool
 	vfs              *afero.BasePathFs
@@ -82,6 +83,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	var orientation string
 	var layout string
 	var dashboardMode string
+	var encodedLogo string
 	var maxRenderWorkers int = 2
 	var persistData bool = false
 	if settings.JSONData != nil {
@@ -103,6 +105,9 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 			}
 			if v, exists := data["dashboardMode"]; exists {
 				dashboardMode = v.(string)
+			}
+			if v, exists := data["logo"]; exists {
+				encodedLogo = v.(string)
 			}
 			if v, exists := data["maxRenderWorkers"]; exists {
 				maxRenderWorkers = int(v.(float64))
@@ -243,6 +248,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		orientation:      orientation,
 		layout:           layout,
 		dashboardMode:    dashboardMode,
+		encodedLogo:      encodedLogo,
 		maxRenderWorkers: maxRenderWorkers,
 		persistData:      persistData,
 		vfs:              vfs,
