@@ -26,6 +26,7 @@ export type JsonData = {
   orientation?: string;
   layout?: string;
   dashboardMode?: string;
+  logo?: string;
   maxRenderWorkers?: number;
   persistData?: boolean;
 };
@@ -43,6 +44,10 @@ type State = {
   dashboardMode: string;
   // If dashboardMode has changed
   dashboardModeChanged: boolean;
+  // base64 encoded logo
+  logo: string;
+  // If logo has changed
+  logoChanged: boolean;
   // Maximum rendering workers
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
@@ -71,6 +76,8 @@ export const AppConfig = ({ plugin }: Props) => {
     layoutChanged: false,
     dashboardMode: jsonData?.dashboardMode || "default",
     dashboardModeChanged: false,
+    logo: jsonData?.logo || "",
+    logoChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
     persistData: jsonData?.persistData || false,
@@ -120,6 +127,14 @@ export const AppConfig = ({ plugin }: Props) => {
       ...state,
       dashboardMode: value,
       dashboardModeChanged: true,
+    });
+  };
+
+  const onChangeLogo = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      logo: event.target.value,
+      logoChanged: true,
     });
   };
 
@@ -176,8 +191,16 @@ export const AppConfig = ({ plugin }: Props) => {
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
+                    logo: state.logo,
                     persistData: state.persistData,
                   },
+                  // This cannot be queried later by the frontend.
+                  // We don't want to override it in case it was set previously and left untouched now.
+                  secureJsonData: state.isSaTokenSet
+                    ? undefined
+                    : {
+                        saToken: state.saToken,
+                      },
                 })
               }
             >
@@ -204,8 +227,16 @@ export const AppConfig = ({ plugin }: Props) => {
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
+                    logo: state.logo,
                     persistData: state.persistData,
                   },
+                  // This cannot be queried later by the frontend.
+                  // We don't want to override it in case it was set previously and left untouched now.
+                  secureJsonData: state.isSaTokenSet
+                    ? undefined
+                    : {
+                        saToken: state.saToken,
+                      },
                 })
               }
             >
@@ -280,6 +311,23 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
+        {/* Branding logo */}
+        <Field
+          label="Branding Logo"
+          description="Base 64 encoded logo to include in the report."
+          data-testid={testIds.appConfig.logo}
+          className={s.marginTop}
+        >
+          <Input
+            type="string"
+            width={60}
+            id="logo"
+            label={`Logo`}
+            value={state.logo}
+            onChange={onChangeLogo}
+          />
+        </Field>
+
         {/* Persist data */}
         <Field
           label="Persist Data Files"
@@ -326,6 +374,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   orientation: state.orientation,
                   layout: state.layout,
                   dashboardMode: state.dashboardMode,
+                  logo: state.logo,
                   persistData: state.persistData,
                 },
                 // This cannot be queried later by the frontend.
@@ -341,6 +390,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.layoutChanged &&
                 !state.orientationChanged &&
                 !state.dashboardModeChanged &&
+                !state.logoChanged &&
                 !state.maxRenderWorkersChanged &&
                 !state.persistDataChanged &&
                 !state.saToken

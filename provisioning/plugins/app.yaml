@@ -90,6 +90,12 @@ apps:
       #
       dashboardMode: default
 
+      # Branding logo in the report.
+      #
+      # A base64 encoded of the logo can be set which will be included in the footer
+      # of the report in each page.
+      logo: ''
+
       # Maximum number of workers for generating panel PNGs.
       #
       # This can be changed from Grafana UI as well and this configuration parameter
