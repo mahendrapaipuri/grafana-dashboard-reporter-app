@@ -181,6 +181,10 @@ to set these values.
 
 ### Advanced parameters
 
+- `Service Account Token`: A service account token that will be used to generate reports
+  _via_ API requests. More details on how to use it is briefed in 
+  [Using Grafana API](#using-grafana-api) section.
+
 - `Branding Logo`: This parameter takes a base64 encoded png image that will be included
   in the footer of each page in the report. Typically, operators can include their 
   organization logos to have "customized" reports.

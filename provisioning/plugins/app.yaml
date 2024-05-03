@@ -20,7 +20,7 @@ apps:
       # In Grafana >= 10.3.0, by enabling `externalServiceAccounts` feature flag, this
       # provisioning of the service account token is done automatically and there is
       # no need to set the token in the config
-      saToken: ""
+      saToken: ''
 
     jsonData:
       # appUrl is at which Grafana can be accessible. The plugin will make API requests
