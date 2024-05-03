@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- Support including branding logo in report [#29](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/29)
+- Fix report generation by API requests [#28](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/28)
+
 ## 1.2.0
 
 - Support API requests from service accounts [#25](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/25)
