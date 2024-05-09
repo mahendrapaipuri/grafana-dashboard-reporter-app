@@ -93,7 +93,8 @@ jobs:
       - name: Validate plugin
         run: |
           zip plugin-app.zip pkg/ src/ package.json -r
-          git clone https://github.com/grafana/plugin-validator
+          # Use last stable version based on Go 1.21.x
+          git clone --depth 1 --branch v0.12.0 https://github.com/grafana/plugin-validator
           pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
           popd
