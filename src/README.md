@@ -141,7 +141,9 @@ The following configuration parameters are directly tied to Grafana instance
 - `dataPath`: Grafana data path. By default on Linux deployment, it is `/var/lib/grafana`.
   If a custom directory is used for `paths.data` in `grafana.ini`, the same path should be
   used for the `dataPath`. If environment variable `GF_PATHS_DATA` is set, that will 
-  take the precedence over the value configured in the provisioning file. 
+  take the precedence over the value configured in the provisioning file. For Windows
+  deployments, this path **must be set** to correct data path in the provisioned config 
+  file.
 
 - `skipTlsCheck`: If Grafana instance is configured to use TLS with self signed certificates
   set this parameter to `true` to skip TLS certificate check. 
@@ -294,6 +296,18 @@ in the report "natively". A workaround is to _save_ the dashboard with repeated 
 before generating the report.
 
 ## Troubleshooting
+
+- When TLS is enabled on Grafana server, `grafana-image-renderer` tends to throw 
+certificate errors even when the TLS certificates are signed by well-known CA. Typical
+error messages will be as follows:
+
+  ```
+  logger=plugin.grafana-image-renderer t=2024-05-09T10:46:00.117454724+02:00 level=error msg="Browser request failed" url="https://localhost/d-solo/f5a26bea-adf2-4f2c-8522-79159ba26c0f/_?from=now-24h&height=500&panelId=6&theme=light&to=now&width=1000&render=1" method=GET failure=net::ERR_CERT_COMMON_NAME_INVALID
+  logger=plugin.grafana-image-renderer t=2024-05-09T10:46:00.118784778+02:00 level=error msg="Error while trying to prepare page for screenshot" url="https://localhost:443/d-solo/f5a26bea-adf2-4f2c-8522-79159ba26c0f/_?from=now-24h&height=500&panelId=6&theme=light&to=now&width=1000&render=1" err="Error: net::ERR_CERT_COMMON_NAME_INVALID"
+  ```
+
+  To solve this issue set environment variables `GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true` 
+  and `IGNORE_HTTPS_ERRORS=true` for the `grafana-image-renderer` service.
 
 - If `chromium` fails to run, it suggests that there are missing dependent libraries on 
 the host. In that case, we advise to install `chromium` on the machine which will 
