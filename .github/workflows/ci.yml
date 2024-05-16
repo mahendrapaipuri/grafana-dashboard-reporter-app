@@ -24,6 +24,11 @@ jobs:
           node-version: '16'
           cache: 'yarn'
 
+      # Install chrome as we will use it in unit tests
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          install-dependencies: true
+
       - name: Install dependencies
         run: yarn install --immutable --prefer-offline
 
