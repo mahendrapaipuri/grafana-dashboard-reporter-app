@@ -16,11 +16,11 @@ import (
 
 // Add filename to header
 func addFilenameHeader(w http.ResponseWriter, title string) {
-	//sanitize title. Http headers should be ASCII
-	filename := strconv.QuoteToASCII(title)
-	filename = strings.TrimLeft(filename, "\"")
-	filename = strings.TrimRight(filename, "\"")
-	header := fmt.Sprintf("inline; filename=\"%s.pdf\"", filename)
+	// Sanitize title to escape non ASCII characters
+	// Ref: https://stackoverflow.com/questions/62705546/unicode-characters-in-attachment-name
+	// Ref: https://medium.com/@JeremyLaine/non-ascii-content-disposition-header-in-django-3a20acc05f0d
+	filename := url.PathEscape(title)
+	header := `inline; filename*=UTF-8''` + fmt.Sprintf("%s.pdf", filename)
 	w.Header().Add("Content-Disposition", header)
 }
 
@@ -37,8 +37,8 @@ func getDashboardVariables(r *http.Request) url.Values {
 	return variables
 }
 
-// /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report
-// handleReport handles createing a PDF report from a given dashboard UID
+// handleReport handles creating a PDF report from a given dashboard UID
+// GET /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report
 func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -62,7 +62,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Get Grafana config from context
 	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
 	if saToken, err := grafanaConfig.PluginAppClientSecret(); err != nil {
-		ctxLogger.Warn("Failed to get plugin app secret", "err", err)
+		ctxLogger.Warn("failed to get plugin app secret", "err", err)
 	} else {
 		// If we are on Grafana >= 10.3.0 and externalServiceAccounts are enabled
 		// always prefer this token over the one that is configured in plugin config
@@ -73,8 +73,11 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 	// If cookie is found in request headers, add it to secrets as well
 	if req.Header.Get(backend.CookiesHeaderName) != "" {
-		ctxLogger.Debug("Cookie found in the request", "user", currentUser, "dash_uid", dashboardUID)
-		a.secrets.cookie = req.Header.Get(backend.CookiesHeaderName)
+		ctxLogger.Debug("cookie found in the request", "user", currentUser, "dash_uid", dashboardUID)
+		a.secrets.cookieHeader = req.Header.Get(backend.CookiesHeaderName)
+		if grafanaCookie, err := req.Cookie(a.config.CookieName); err != nil {
+			a.secrets.cookieValue = grafanaCookie.Value
+		}
 	}
 
 	// Get Dashboard variables
@@ -88,109 +91,77 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
 
 	// Get custom settings if provided in Plugin settings
-	var data map[string]interface{}
-	var orientation = a.config.orientation
-	var layout = a.config.layout
-	var dashboardMode = a.config.dashboardMode
-	var maxRenderWorkers = a.config.maxRenderWorkers
-	var persistData = a.config.persistData
 	if config.AppInstanceSettings.JSONData != nil {
-		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &data); err == nil {
-			if v, exists := data["orientation"]; exists && v.(string) != orientation {
-				layout = v.(string)
-				ctxLogger.Debug(
-					"orientation setting",
-					"orientation",
-					orientation,
-					"user",
-					currentUser,
-					"dash_uid",
-					dashboardUID,
-				)
-			}
-			if v, exists := data["layout"]; exists && v.(string) != layout {
-				layout = v.(string)
-				ctxLogger.Debug("layout setting", "layout", layout, "user", currentUser, "dash_uid", dashboardUID)
-			}
-			if v, exists := data["dashboardMode"]; exists && v.(string) != dashboardMode {
-				dashboardMode = v.(string)
-				ctxLogger.Debug(
-					"dashboardMode setting",
-					"dashboardMode",
-					dashboardMode,
-					"user",
-					currentUser,
-					"dash_uid",
-					dashboardUID,
-				)
-			}
-			if v, exists := data["maxRenderWorkers"]; exists && int(v.(float64)) != maxRenderWorkers {
-				maxRenderWorkers = int(v.(float64))
-				ctxLogger.Debug(
-					"custom max render workers setting",
-					"maxRenderWorkers",
-					maxRenderWorkers,
-					"user",
-					currentUser,
-					"dash_uid",
-					dashboardUID,
-				)
-			}
-			if v, exists := data["persistData"]; exists && v.(bool) != persistData {
-				persistData = v.(bool)
-				ctxLogger.Debug(
-					"persistData setting",
-					"persistData",
-					persistData,
-					"user",
-					currentUser,
-					"dash_uid",
-					dashboardUID,
-				)
-			}
+		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &a.config); err == nil {
+			ctxLogger.Debug(
+				"updated config", "config", a.config.String(), "user", currentUser, "dash_uid", dashboardUID,
+			)
+		} else {
+			ctxLogger.Error(
+				"failed to update config", "user", currentUser, "dash_uid", dashboardUID, "err", err,
+			)
 		}
 	}
 
-	// If layout and/or orientation and/or panels is set in query params override existing
+	// Override config if any of them are set in query parameters
 	if queryLayouts, ok := req.URL.Query()["layout"]; ok {
 		if slices.Contains([]string{"simple", "grid"}, queryLayouts[len(queryLayouts)-1]) {
-			layout = queryLayouts[len(queryLayouts)-1]
+			a.config.Layout = queryLayouts[len(queryLayouts)-1]
 		}
 	}
 	if queryOrientations, ok := req.URL.Query()["orientation"]; ok {
 		if slices.Contains([]string{"landscape", "portrait"}, queryOrientations[len(queryOrientations)-1]) {
-			orientation = queryOrientations[len(queryOrientations)-1]
+			a.config.Orientation = queryOrientations[len(queryOrientations)-1]
 		}
 	}
 	if queryDashboardMode, ok := req.URL.Query()["dashboardMode"]; ok {
 		if slices.Contains([]string{"default", "full"}, queryDashboardMode[len(queryDashboardMode)-1]) {
-			dashboardMode = queryDashboardMode[len(queryDashboardMode)-1]
+			a.config.DashboardMode = queryDashboardMode[len(queryDashboardMode)-1]
 		}
 	}
+
+	// Two special query parameters: includePanelID and excludePanelID
+	// The query parameters are self explanatory and based on the values set to them
+	// panels will be included/excluded in the final report
+	var includeIDs, excludeIDs []int
+	if includePanelIDs, ok := req.URL.Query()["includePanelID"]; ok {
+		for _, id := range includePanelIDs {
+			if idInt, err := strconv.Atoi(id); err == nil {
+				includeIDs = append(includeIDs, idInt)
+			}
+		}
+	}
+	if excludePanelIDs, ok := req.URL.Query()["excludePanelID"]; ok {
+		for _, id := range excludePanelIDs {
+			if idInt, err := strconv.Atoi(id); err == nil {
+				excludeIDs = append(excludeIDs, idInt)
+			}
+		}
+	}
+	a.config.IncludePanelIDs = includeIDs
+	a.config.ExcludePanelIDs = excludeIDs
+	ctxLogger.Info(
+		"filtering panels", "included", a.config.IncludePanelIDs, "excluded", a.config.ExcludePanelIDs,
+		"user", currentUser, "dash_uid", dashboardUID,
+	)
 
 	// Make a new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := a.newGrafanaClient(
 		a.httpClient,
-		a.grafanaAppUrl,
 		a.secrets,
+		a.config,
 		variables,
-		layout,
-		dashboardMode,
 	)
+
 	// Make a new Report to put all PNGs into a LateX template and compile it into a PDF
 	report, err := a.newReport(
 		ctxLogger,
 		grafanaClient,
-		&ReportConfig{
-			dashUID:          dashboardUID,
-			timeRange:        timeRange,
-			vfs:              a.config.vfs,
-			maxRenderWorkers: maxRenderWorkers,
-			layout:           layout,
-			orientation:      orientation,
-			persistData:      persistData,
-			encodedLogo:      a.config.encodedLogo,
-			chromeOpts:       a.config.chromeOpts,
+		&ReportOptions{
+			dashUID:   dashboardUID,
+			timeRange: timeRange,
+			config:    a.config,
+			vfs:       a.vfs,
 		},
 	)
 	if err != nil {
@@ -206,7 +177,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "error generating report", http.StatusInternalServerError)
 		return
 	}
-	if !persistData {
+	if !a.config.PersistData {
 		defer report.Clean()
 	}
 

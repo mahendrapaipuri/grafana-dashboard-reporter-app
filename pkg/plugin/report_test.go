@@ -39,11 +39,11 @@ type mockGrafanaClient struct {
 	variables         url.Values
 }
 
-func (m *mockGrafanaClient) GetDashboard(dashName string) (Dashboard, error) {
-	return NewDashboard([]byte(dashJSON), m.variables, "default"), nil
+func (m *mockGrafanaClient) Dashboard(dashName string) (Dashboard, error) {
+	return NewDashboard([]byte(dashJSON), nil, m.variables, &Config{})
 }
 
-func (m *mockGrafanaClient) GetPanelPNG(p Panel, dashName string, t TimeRange) (io.ReadCloser, error) {
+func (m *mockGrafanaClient) PanelPNG(p Panel, dashName string, t TimeRange) (io.ReadCloser, error) {
 	m.getPanelCallCount++
 	return io.NopCloser(bytes.NewBuffer([]byte("Not actually a png"))), nil
 }
@@ -53,26 +53,25 @@ func TestReport(t *testing.T) {
 		variables := url.Values{}
 		variables.Add("var-test", "testvarvalue")
 		gClient := &mockGrafanaClient{0, variables}
-		rep, _ := newReport(logger, gClient, &ReportConfig{
-			timeRange:        TimeRange{"1453206447000", "1453213647000"},
-			dashUID:          "testDash",
-			layout:           "simple",
-			vfs:              afero.NewBasePathFs(afero.NewOsFs(), t.TempDir()).(*afero.BasePathFs),
-			maxRenderWorkers: 2,
+		rep, _ := newReport(logger, gClient, &ReportOptions{
+			timeRange: TimeRange{"1453206447000", "1453213647000"},
+			dashUID:   "testDash",
+			vfs:       afero.NewBasePathFs(afero.NewOsFs(), t.TempDir()).(*afero.BasePathFs),
+			config:    &Config{},
 		})
 		defer rep.Clean()
 
 		Convey("When rendering images", func() {
-			dashboard, _ := gClient.GetDashboard("")
+			dashboard, _ := gClient.Dashboard("")
 			rep.renderPNGsParallel(dashboard)
 
 			Convey("It should create a temporary folder", func() {
-				_, err := rep.cfg.vfs.Stat(rep.cfg.reportsDir)
+				_, err := rep.options.vfs.Stat(rep.options.reportsDir)
 				So(err, ShouldBeNil)
 			})
 
 			Convey("It should copy the file to the image folder", func() {
-				_, err := rep.cfg.vfs.Stat(rep.imgDirPath() + "/image1.png")
+				_, err := rep.options.vfs.Stat(rep.imgDirPath() + "/image1.png")
 				So(err, ShouldBeNil)
 			})
 
@@ -81,7 +80,7 @@ func TestReport(t *testing.T) {
 			})
 
 			Convey("It should create one file per panel", func() {
-				f, _ := rep.cfg.vfs.Open(rep.imgDirPath())
+				f, _ := rep.options.vfs.Open(rep.imgDirPath())
 				defer f.Close()
 				files, err := f.Readdir(0)
 				So(files, ShouldHaveLength, 9)
@@ -90,9 +89,9 @@ func TestReport(t *testing.T) {
 		})
 
 		Convey("When genereting the HTML files", func() {
-			dashboard, _ := gClient.GetDashboard("")
+			dashboard, _ := gClient.Dashboard("")
 			rep.generateHTMLFile(dashboard)
-			f, err := rep.cfg.vfs.Open(rep.htmlPath())
+			f, err := rep.options.vfs.Open(rep.htmlPath())
 			defer f.Close()
 
 			Convey("It should create a file in the temporary folder", func() {
@@ -106,11 +105,11 @@ func TestReport(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				Convey("Including the Title", func() {
-					So(rep.cfg.header, ShouldContainSubstring, "My first dashboard")
+					So(rep.options.header, ShouldContainSubstring, "My first dashboard")
 
 				})
 				Convey("Including the varialbe values", func() {
-					So(rep.cfg.header, ShouldContainSubstring, "testvarvalue")
+					So(rep.options.header, ShouldContainSubstring, "testvarvalue")
 
 				})
 				Convey("and the images", func() {
@@ -127,8 +126,8 @@ func TestReport(t *testing.T) {
 				Convey("and the time range", func() {
 					//server time zone by shift hours timestamp
 					//so just test for day and year
-					So(rep.cfg.header, ShouldContainSubstring, "Tue Jan 19")
-					So(rep.cfg.header, ShouldContainSubstring, "2016")
+					So(rep.options.header, ShouldContainSubstring, "Tue Jan 19")
+					So(rep.options.header, ShouldContainSubstring, "2016")
 				})
 			})
 		})
@@ -136,7 +135,7 @@ func TestReport(t *testing.T) {
 		Convey("Clean() should remove the temporary folder", func() {
 			rep.Clean()
 
-			_, err := rep.cfg.vfs.Stat(rep.cfg.reportsDir)
+			_, err := rep.options.vfs.Stat(rep.options.reportsDir)
 			So(os.IsNotExist(err), ShouldBeTrue)
 		})
 	})
@@ -148,12 +147,12 @@ type errClient struct {
 	variables         url.Values
 }
 
-func (e *errClient) GetDashboard(dashName string) (Dashboard, error) {
-	return NewDashboard([]byte(dashJSON), e.variables, "default"), nil
+func (e *errClient) Dashboard(dashName string) (Dashboard, error) {
+	return NewDashboard([]byte(dashJSON), nil, e.variables, &Config{})
 }
 
 // Produce an error on the 2nd panel fetched
-func (e *errClient) GetPanelPNG(p Panel, dashName string, t TimeRange) (io.ReadCloser, error) {
+func (e *errClient) PanelPNG(p Panel, dashName string, t TimeRange) (io.ReadCloser, error) {
 	e.getPanelCallCount++
 	if e.getPanelCallCount == 2 {
 		return nil, errors.New("The second panel has some problem")
@@ -165,16 +164,16 @@ func TestReportErrorHandling(t *testing.T) {
 	Convey("When generating a report where one panels gives an error", t, func() {
 		variables := url.Values{}
 		gClient := &errClient{0, variables}
-		rep, _ := newReport(logger, gClient, &ReportConfig{
+		rep, _ := newReport(logger, gClient, &ReportOptions{
 			timeRange: TimeRange{"1453206447000", "1453213647000"},
 			vfs:       afero.NewBasePathFs(afero.NewOsFs(), t.TempDir()).(*afero.BasePathFs),
 			dashUID:   "testDash",
-			layout:    "simple",
+			config:    &Config{Layout: "simple"},
 		})
 		defer rep.Clean()
 
 		Convey("When rendering images", func() {
-			dashboard, _ := gClient.GetDashboard("")
+			dashboard, _ := gClient.Dashboard("")
 			err := rep.renderPNGsParallel(dashboard)
 
 			Convey("It shoud call getPanelPng once per panel", func() {
@@ -182,7 +181,7 @@ func TestReportErrorHandling(t *testing.T) {
 			})
 
 			Convey("It should create one less image file than the total number of panels", func() {
-				f, _ := rep.cfg.vfs.Open(rep.imgDirPath())
+				f, _ := rep.options.vfs.Open(rep.imgDirPath())
 				defer f.Close()
 				files, err := f.Readdir(0)
 				So(files, ShouldHaveLength, 8) // one less than the total number of im
@@ -201,7 +200,7 @@ func TestReportErrorHandling(t *testing.T) {
 		Convey("Clean() should remove the temporary folder", func() {
 			rep.Clean()
 
-			_, err := rep.cfg.vfs.Stat(rep.cfg.reportsDir)
+			_, err := rep.options.vfs.Stat(rep.options.reportsDir)
 			So(os.IsNotExist(err), ShouldBeTrue)
 		})
 	})

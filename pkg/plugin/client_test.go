@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -19,11 +20,17 @@ func init() {
 }
 
 func TestGrafanaClientFetchesDashboard(t *testing.T) {
+	// Skip test if chrome is not available
+	_, err := exec.LookPath("chrome")
+	if err != nil {
+		t.Skip("Chrome not found. Skipping test")
+	}
+
 	Convey("When fetching a Dashboard", t, func() {
-		requestURI := ""
+		var requestURI []string
 		requestCookie := ""
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestURI = r.RequestURI
+			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
 			w.Write([]byte(`{"dashboard": {"title": "foo"}}`))
 		}))
@@ -31,18 +38,22 @@ func TestGrafanaClientFetchesDashboard(t *testing.T) {
 
 		Convey("When using the Grafana client", func() {
 			secrets := &Secrets{}
-			secrets.cookie = "cookie"
-			grf := NewGrafanaClient(&testClient, ts.URL, secrets, url.Values{}, "simple", "default")
-			grf.GetDashboard("rYy7Paekz")
+			secrets.cookieHeader = "cookie"
+			config := &Config{
+				AppURL:        ts.URL,
+				Layout:        "simple",
+				DashboardMode: "default",
+			}
+			grf := NewGrafanaClient(&testClient, secrets, config, url.Values{})
+			grf.Dashboard("rYy7Paekz")
 
 			Convey("It should use the v5 dashboards endpoint", func() {
-				So(requestURI, ShouldEqual, "/api/dashboards/uid/rYy7Paekz")
+				So(requestURI, ShouldContain, "/api/dashboards/uid/rYy7Paekz")
 			})
 			Convey("It should use cookie", func() {
 				So(requestCookie, ShouldEqual, "cookie")
 			})
 		})
-
 	})
 }
 
@@ -59,6 +70,11 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 
 		secrets := &Secrets{}
 		secrets.token = "token"
+		config := &Config{
+			AppURL:        ts.URL,
+			Layout:        "simple",
+			DashboardMode: "default",
+		}
 		variables := url.Values{}
 		variables.Add("var-host", "servername")
 		variables.Add("var-port", "adapter")
@@ -68,13 +84,13 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, ts.URL, secrets, variables, "simple", "default"),
+				NewGrafanaClient(&testClient, secrets, config, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
 		for _, cl := range cases {
 			grf := cl.client
-			grf.GetPanelPNG(
+			grf.PanelPNG(
 				Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
 				"testDash",
 				TimeRange{"now-1h", "now"},
@@ -108,12 +124,13 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			})
 		}
 
+		config.Layout = "grid"
 		casesGridLayout := map[string]struct {
 			client      GrafanaClient
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, ts.URL, secrets, variables, "grid", "default"),
+				NewGrafanaClient(&testClient, secrets, config, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -121,7 +138,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			grf := cl.client
 
 			Convey("The client should request grid layout panels with width=2400 and height=216", func() {
-				grf.GetPanelPNG(
+				grf.PanelPNG(
 					Panel{44, "graph", "title", GridPos{6, 24, 0, 0}},
 					"testDash",
 					TimeRange{"now", "now-1h"},
@@ -147,9 +164,9 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, &Secrets{}, url.Values{}, "simple", "default")
+		grf := NewGrafanaClient(&testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
 
-		_, err := grf.GetPanelPNG(
+		_, err := grf.PanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
 			"testDash",
 			TimeRange{"now-1h", "now"},
@@ -166,9 +183,9 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, ts.URL, &Secrets{}, url.Values{}, "simple", "default")
+		grf := NewGrafanaClient(&testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
 
-		_, err := grf.GetPanelPNG(
+		_, err := grf.PanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
 			"testDash",
 			TimeRange{"now-1h", "now"},

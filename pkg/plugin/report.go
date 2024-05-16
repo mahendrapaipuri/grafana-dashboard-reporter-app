@@ -10,6 +10,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"sync"
 	"time"
@@ -37,57 +38,52 @@ type Report interface {
 // Data structures used inside HTML template
 type templateData struct {
 	Dashboard
-	ReportConfig
+	ReportOptions
 	Date string
 }
 
-// Report config
-type ReportConfig struct {
-	dashTitle        string
-	dashUID          string
-	timeRange        TimeRange
-	vfs              *afero.BasePathFs
-	reportsDir       string
-	maxRenderWorkers int
-	layout           string
-	orientation      string
-	persistData      bool
-	encodedLogo      string
-	header           string
-	footer           string
-	chromeOpts       []func(*chromedp.ExecAllocator)
+// Report options
+type ReportOptions struct {
+	config     *Config
+	dashTitle  string
+	dashUID    string
+	timeRange  TimeRange
+	vfs        *afero.BasePathFs
+	reportsDir string
+	header     string
+	footer     string
 }
 
 // Is layout grid?
-func (c ReportConfig) IsGridLayout() bool {
-	return (c.layout == "grid")
+func (o ReportOptions) IsGridLayout() bool {
+	return (o.config.Layout == "grid")
 }
 
 // Is orientation landscape?
-func (c ReportConfig) IsLandscapeOrientation() bool {
-	return (c.orientation == "landscape")
+func (o ReportOptions) IsLandscapeOrientation() bool {
+	return (o.config.Orientation == "landscape")
 }
 
 // Get from time string
-func (c ReportConfig) From() string {
-	return c.timeRange.FromFormatted()
+func (o ReportOptions) From() string {
+	return o.timeRange.FromFormatted()
 }
 
 // Get to time string
-func (c ReportConfig) To() string {
-	return c.timeRange.ToFormatted()
+func (o ReportOptions) To() string {
+	return o.timeRange.ToFormatted()
 }
 
 // Get logo
-func (c ReportConfig) Logo() string {
-	return c.encodedLogo
+func (o ReportOptions) Logo() string {
+	return o.config.EncodedLogo
 }
 
 // report struct
 type report struct {
-	logger log.Logger
-	client GrafanaClient
-	cfg    *ReportConfig
+	logger  log.Logger
+	client  GrafanaClient
+	options *ReportOptions
 }
 
 const (
@@ -96,33 +92,38 @@ const (
 	reportPDF  = "report.pdf"
 )
 
-func newReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (*report, error) {
+func newReport(logger log.Logger, client GrafanaClient, options *ReportOptions) (*report, error) {
 	var err error
-	if config.persistData {
-		config.reportsDir = filepath.Join("reports", "debug", uuid.New().String())
+	if options.config.PersistData {
+		options.reportsDir = filepath.Join("reports", "debug", uuid.New().String())
 	} else {
-		config.reportsDir = filepath.Join("reports", "production", uuid.New().String())
+		options.reportsDir = filepath.Join("reports", "production", uuid.New().String())
 	}
-	if err = config.vfs.MkdirAll(config.reportsDir, 0750); err != nil {
+	if err = options.vfs.MkdirAll(options.reportsDir, 0750); err != nil {
 		return nil, err
 	}
-	return &report{logger, client, config}, nil
+	return &report{logger, client, options}, nil
 }
 
 // New creates a new Report.
-func NewReport(logger log.Logger, client GrafanaClient, config *ReportConfig) (Report, error) {
-	return newReport(logger, client, config)
+func NewReport(logger log.Logger, client GrafanaClient, options *ReportOptions) (Report, error) {
+	return newReport(logger, client, options)
 }
 
 // Generate returns the report.pdf file.  After reading this file it should be Closed()
 // After closing the file, call report.Clean() to delete the file as well the temporary build files
 func (r *report) Generate() ([]byte, error) {
 	// Get dashboard JSON model
-	dash, err := r.client.GetDashboard(r.cfg.dashUID)
+	dash, err := r.client.Dashboard(r.options.dashUID)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching dashboard %s: %v", r.cfg.dashUID, err)
+		// If we get empty dashboard model, return error
+		if reflect.DeepEqual(Dashboard{}, dash) {
+			return nil, fmt.Errorf("error fetching dashboard %s: %v", r.options.dashUID, err)
+		} else {
+			r.logger.Warn("error(s) fetching dashboard model and data", "err", err, "dash_title", r.options.dashTitle)
+		}
 	}
-	r.cfg.dashTitle = dash.Title
+	r.options.dashTitle = dash.Title
 
 	// Render panel PNGs in parallel using max workers configured in plugin
 	if err = r.renderPNGsParallel(dash); err != nil {
@@ -141,32 +142,32 @@ func (r *report) Generate() ([]byte, error) {
 // Title returns the dashboard title parsed from the dashboard definition
 func (r *report) Title() string {
 	// lazy fetch if Title() is called before Generate()
-	if r.cfg.dashTitle == "" {
-		dash, err := r.client.GetDashboard(r.cfg.dashUID)
+	if r.options.dashTitle == "" {
+		dash, err := r.client.Dashboard(r.options.dashUID)
 		if err != nil {
 			return ""
 		}
-		r.cfg.dashTitle = dash.Title
+		r.options.dashTitle = dash.Title
 	}
-	return r.cfg.dashTitle
+	return r.options.dashTitle
 }
 
 // Clean deletes the reports directory used during report generation
 func (r *report) Clean() {
-	err := r.cfg.vfs.RemoveAll(r.cfg.reportsDir)
+	err := r.options.vfs.RemoveAll(r.options.reportsDir)
 	if err != nil {
-		r.logger.Warn("error cleaning up ephermal files", "err", err, "dash_title", r.cfg.dashTitle)
+		r.logger.Warn("error cleaning up ephermal files", "err", err, "dash_title", r.options.dashTitle)
 	}
 }
 
 // Get path to images directory
 func (r *report) imgDirPath() string {
-	return filepath.Join(r.cfg.reportsDir, imgDir)
+	return filepath.Join(r.options.reportsDir, imgDir)
 }
 
 // Get path to HTML file
 func (r *report) htmlPath() string {
-	return filepath.Join(r.cfg.reportsDir, reportHTML)
+	return filepath.Join(r.options.reportsDir, reportHTML)
 }
 
 // Render panel PNGs in parallel using configured number of workers
@@ -182,7 +183,7 @@ func (r *report) renderPNGsParallel(dash Dashboard) error {
 	// limit concurrency using a worker pool to avoid overwhelming grafana
 	// for dashboards with many panels.
 	var wg sync.WaitGroup
-	workers := int(math.Max(1, math.Min(float64(r.cfg.maxRenderWorkers), float64(runtime.NumCPU()))))
+	workers := int(math.Max(1, math.Min(float64(r.options.config.MaxRenderWorkers), float64(runtime.NumCPU()))))
 	wg.Add(workers)
 	errs := make(chan error, len(dash.Panels)) // routines can return errors on a channel
 	for i := 0; i < workers; i++ {
@@ -214,17 +215,17 @@ func (r *report) renderPNG(p Panel) error {
 	var err error
 
 	// Get panel
-	if body, err = r.client.GetPanelPNG(p, r.cfg.dashUID, r.cfg.timeRange); err != nil {
+	if body, err = r.client.PanelPNG(p, r.options.dashUID, r.options.timeRange); err != nil {
 		return fmt.Errorf("error getting panel %s: %v", p.Title, err)
 	}
 	defer body.Close()
 
 	// Create directory to store PNG files and get file handler
-	if err = r.cfg.vfs.MkdirAll(r.imgDirPath(), 0750); err != nil {
+	if err = r.options.vfs.MkdirAll(r.imgDirPath(), 0750); err != nil {
 		return fmt.Errorf("error creating img directory: %v", err)
 	}
-	imgFileName := fmt.Sprintf("image%d.png", p.Id)
-	if file, err = r.cfg.vfs.Create(filepath.Join(r.imgDirPath(), imgFileName)); err != nil {
+	imgFileName := fmt.Sprintf("image%d.png", p.ID)
+	if file, err = r.options.vfs.Create(filepath.Join(r.imgDirPath(), imgFileName)); err != nil {
 		return fmt.Errorf("error creating image file: %v", err)
 	}
 	defer file.Close()
@@ -255,7 +256,7 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 	}
 
 	// Make a file handle for HTML file
-	if file, err = r.cfg.vfs.Create(r.htmlPath()); err != nil {
+	if file, err = r.options.vfs.Create(r.htmlPath()); err != nil {
 		return fmt.Errorf("error creating HTML file at %v : %v", r.htmlPath(), err)
 	}
 	defer file.Close()
@@ -269,7 +270,7 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 	if err = tmpl.ExecuteTemplate(
 		file,
 		"report.gohtml",
-		templateData{dash, *r.cfg, time.Now().Format(time.RFC850)}); err != nil {
+		templateData{dash, *r.options, time.Now().Format(time.RFC850)}); err != nil {
 		return fmt.Errorf("error executing report template: %v", err)
 	}
 
@@ -283,10 +284,10 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 	if err = tmpl.ExecuteTemplate(
 		bufHeader,
 		"header.gohtml",
-		templateData{dash, *r.cfg, time.Now().Format(time.RFC850)}); err != nil {
+		templateData{dash, *r.options, time.Now().Format(time.RFC850)}); err != nil {
 		return fmt.Errorf("error executing header template: %v", err)
 	}
-	r.cfg.header = bufHeader.String()
+	r.options.header = bufHeader.String()
 
 	// Make a new template for footer of the report
 	if tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml"); err != nil {
@@ -298,10 +299,10 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 	if err = tmpl.ExecuteTemplate(
 		bufFooter,
 		"footer.gohtml",
-		templateData{dash, *r.cfg, time.Now().Format(time.RFC850)}); err != nil {
+		templateData{dash, *r.options, time.Now().Format(time.RFC850)}); err != nil {
 		return fmt.Errorf("error executing footer template: %v", err)
 	}
-	r.cfg.footer = bufFooter.String()
+	r.options.footer = bufFooter.String()
 	return nil
 }
 
@@ -311,12 +312,12 @@ func (r *report) renderPDF() ([]byte, error) {
 	var err error
 
 	// Get real path on actual file system
-	if realPath, err = r.cfg.vfs.RealPath(r.cfg.reportsDir); err != nil {
+	if realPath, err = r.options.vfs.RealPath(r.options.reportsDir); err != nil {
 		return nil, err
 	}
 
 	// create context
-	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), r.cfg.chromeOpts...)
+	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), r.options.config.ChromeOptions...)
 	defer allocCtxCancel()
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
@@ -335,7 +336,7 @@ func (r *report) renderPDF() ([]byte, error) {
 	}
 
 	// If persistData is set to true, write buf to file
-	if r.cfg.persistData {
+	if r.options.config.PersistData {
 		if err := os.WriteFile(filepath.Join(realPath, reportPDF), buf, 0o640); err != nil {
 			return nil, fmt.Errorf("error writing PDF: %v", err)
 		}
@@ -350,12 +351,12 @@ func (r *report) printToPDF(url string, res *[]byte) chromedp.Tasks {
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			pageParams := page.PrintToPDF().
 				WithDisplayHeaderFooter(true).
-				WithHeaderTemplate(r.cfg.header).
-				WithFooterTemplate(r.cfg.footer).
+				WithHeaderTemplate(r.options.header).
+				WithFooterTemplate(r.options.footer).
 				WithPreferCSSPageSize(true)
 
 			// If landscape add it to page params
-			if r.cfg.IsLandscapeOrientation() {
+			if r.options.IsLandscapeOrientation() {
 				pageParams = pageParams.WithLandscape(true)
 			}
 
