@@ -32,33 +32,60 @@ var (
 	_ backend.CheckHealthHandler    = (*App)(nil)
 )
 
+// Default Grafana session cookie name
+const (
+	grafanaCookieName = "grafana_session"
+)
+
 // Plugin config settings
 type Config struct {
-	orientation      string
-	layout           string
-	dashboardMode    string
-	encodedLogo      string
-	maxRenderWorkers int
-	persistData      bool
-	vfs              *afero.BasePathFs
-	chromeOpts       []func(*chromedp.ExecAllocator)
+	AppURL           string `json:"appUrl"`
+	SkipTLSCheck     bool   `json:"skipTlsCheck"`
+	DataPath         string `json:"dataPath"`
+	CookieName       string `json:"loginCookieName"`
+	Orientation      string `json:"orientation"`
+	Layout           string `json:"layout"`
+	DashboardMode    string `json:"dashboardMode"`
+	EncodedLogo      string `json:"encodedLogo"`
+	MaxRenderWorkers int    `json:"maxRenderWorkers"`
+	PersistData      bool   `json:"persistData"`
+	IncludePanelIDs  []int
+	ExcludePanelIDs  []int
+	ChromeOptions    []func(*chromedp.ExecAllocator)
+}
+
+// String implements the stringer interface of Config
+func (c *Config) String() string {
+	var encodedLogo string
+	if c.EncodedLogo != "" {
+		encodedLogo = "[truncated]"
+	} else {
+		encodedLogo = ""
+	}
+	return fmt.Sprintf(
+		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; Grafana Login Cookie Name: %s; "+
+			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Encoded Logo: %s; Max Renderer Workers: %d; "+
+			"Persist Data: %t", c.AppURL, c.SkipTLSCheck, c.DataPath, c.CookieName, c.Orientation, c.Layout,
+		c.DashboardMode, encodedLogo, c.MaxRenderWorkers, c.PersistData,
+	)
 }
 
 // Plugin secret settings
 type Secrets struct {
-	cookie string
-	token string
+	cookieHeader string
+	cookieValue  string
+	token        string
 }
 
 // App is the backend plugin which can respond to api queries.
 type App struct {
 	backend.CallResourceHandler
 	httpClient       *http.Client
-	grafanaAppUrl    string
 	config           *Config
 	secrets          *Secrets
-	newGrafanaClient func(client *http.Client, grafanaAppURL string, secrets *Secrets, variables url.Values, layout string, panels string) GrafanaClient
-	newReport        func(logger log.Logger, grafanaClient GrafanaClient, config *ReportConfig) (Report, error)
+	vfs              *afero.BasePathFs
+	newGrafanaClient func(client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient
+	newReport        func(logger log.Logger, grafanaClient GrafanaClient, options *ReportOptions) (Report, error)
 }
 
 // NewApp creates a new example *App instance.
@@ -76,52 +103,13 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	app.CallResourceHandler = httpadapter.New(mux)
 
 	// Get Grafana App URL from plugin settings
-	var data map[string]interface{}
-	var grafanaAppUrl string
-	var skipTLSCheck bool = false
-	var grafanaDataPath string
-	var orientation string
-	var layout string
-	var dashboardMode string
-	var encodedLogo string
-	var maxRenderWorkers int = 2
-	var persistData bool = false
+	var config Config
 	if settings.JSONData != nil {
-		if err := json.Unmarshal(settings.JSONData, &data); err == nil {
-			if v, exists := data["appUrl"]; exists {
-				grafanaAppUrl = strings.TrimRight(v.(string), "/")
-			}
-			if v, exists := data["skipTlsCheck"]; exists {
-				skipTLSCheck = v.(bool)
-			}
-			if v, exists := data["dataPath"]; exists {
-				grafanaDataPath = v.(string)
-			}
-			if v, exists := data["orientation"]; exists {
-				orientation = v.(string)
-			}
-			if v, exists := data["layout"]; exists {
-				layout = v.(string)
-			}
-			if v, exists := data["dashboardMode"]; exists {
-				dashboardMode = v.(string)
-			}
-			if v, exists := data["logo"]; exists {
-				encodedLogo = v.(string)
-			}
-			if v, exists := data["maxRenderWorkers"]; exists {
-				maxRenderWorkers = int(v.(float64))
-			}
-			if v, exists := data["persistData"]; exists {
-				persistData = v.(bool)
-			}
+		if err := json.Unmarshal(settings.JSONData, &config); err == nil {
+			ctxLogger.Info("Provisioned config", "config", config.String())
+		} else {
+			ctxLogger.Error("Failed to load plugin config", "err", err)
 		}
-		ctxLogger.Info(
-			"Provisioned config", "appUrl", grafanaAppUrl, "skipTlsCheck", skipTLSCheck,
-			"dataPath", grafanaDataPath,
-			"orientation", orientation, "layout", layout, "dashboardMode", dashboardMode,
-			"maxRenderWorkers", maxRenderWorkers, "persistData", persistData,
-		)
 	}
 
 	// Fetch token, if configured in SecureJSONData
@@ -142,33 +130,37 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	}
 
 	// If skip verify is set to true configure it for Grafana HTTP client
-	if skipTLSCheck {
+	if config.SkipTLSCheck {
 		opts.TLS = &httpclient.TLSOptions{InsecureSkipVerify: true}
 	}
 
-	cl, err := httpclient.New(opts)
-	if err != nil {
+	if app.httpClient, err = httpclient.New(opts); err != nil {
 		return nil, fmt.Errorf("error in httpclient new: %w", err)
 	}
-	app.httpClient = cl
 
 	// Seems like accessing env vars is not encouraged
 	// Ref: https://github.com/grafana/plugin-validator/blob/eb71abbbead549fd7697371b25c226faba19b252/pkg/analysis/passes/coderules/semgrep-rules.yaml#L13-L28
 	//
 	// appURL set from the env var will always take the highest precedence
 	if os.Getenv("GF_APP_URL") != "" {
-		grafanaAppUrl = strings.TrimRight(os.Getenv("GF_APP_URL"), "/")
-		ctxLogger.Debug("Using Grafana app URL from environment variable", "GF_APP_URL", grafanaAppUrl)
+		config.AppURL = strings.TrimRight(os.Getenv("GF_APP_URL"), "/")
+		ctxLogger.Debug("Using Grafana app URL from environment variable", "GF_APP_URL", config.AppURL)
 	}
 
-	if grafanaAppUrl == "" {
-		return nil, fmt.Errorf("grafana app URL not configured in JSONData")
+	if config.AppURL == "" {
+		return nil, fmt.Errorf("grafana app URL not found. Please set it in provisioned config")
 	}
 
 	// Similarly GF_PATHS_DATA set from the env var will always have the highest precedence
 	if os.Getenv("GF_PATHS_DATA") != "" {
-		grafanaDataPath = os.Getenv("GF_PATHS_DATA")
-		ctxLogger.Debug("Using Grafana data path from environment variable", "GF_PATHS_DATA", grafanaDataPath)
+		config.DataPath = os.Getenv("GF_PATHS_DATA")
+		ctxLogger.Debug("Using Grafana data path from environment variable", "GF_PATHS_DATA", config.DataPath)
+	}
+
+	// Similarly GF_AUTH_LOGIN_COOKIE_NAME set from the env var will always have the highest precedence
+	if os.Getenv("GF_AUTH_LOGIN_COOKIE_NAME") != "" {
+		config.CookieName = os.Getenv("GF_AUTH_LOGIN_COOKIE_NAME")
+		ctxLogger.Debug("Using Grafana login cookie name from environment variable", "GF_AUTH_LOGIN_COOKIE_NAME", config.CookieName)
 	}
 
 	/*
@@ -181,7 +173,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		into PDF. We will clean them up after each request and so we will use this
 		reports directory to store these files.
 	*/
-	if grafanaDataPath == "" {
+	if config.DataPath == "" {
 		// If grafanaDataPath is still not set, attempt to get it from current executable path
 		// Get path of current executable
 		pluginExe, err := os.Executable()
@@ -191,18 +183,23 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 
 		// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
 		// Now we attempt to get install_dir directory which is Grafana data path
-		grafanaDataPath = filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
-		ctxLogger.Info("Grafana data path found", "GF_PATHS_DATA", grafanaDataPath)
+		config.DataPath = filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
+		ctxLogger.Info("Grafana data path found", "GF_PATHS_DATA", config.DataPath)
 	}
-	vfs := afero.NewBasePathFs(afero.NewOsFs(), grafanaDataPath).(*afero.BasePathFs)
+	vfs := afero.NewBasePathFs(afero.NewOsFs(), config.DataPath).(*afero.BasePathFs)
 
 	// Create a reports dir inside this GF_PATHS_DATA folder
 	if err = vfs.MkdirAll("reports", 0750); err != nil {
-		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", grafanaDataPath, err)
+		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", config.DataPath, err)
+	}
+
+	// If CookieName is still empty use the default value
+	if config.CookieName == "" {
+		config.CookieName = grafanaCookieName
 	}
 
 	// Set chrome options
-	chromeOpts := append(chromedp.DefaultExecAllocatorOptions[:],
+	config.ChromeOptions = append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.NoSandbox,
 		chromedp.DisableGPU,
 	)
@@ -221,7 +218,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	var chromeExec string
 
 	// Walk through grafana-image-renderer plugin dir to find chrome executable
-	err = filepath.Walk(filepath.Join(grafanaDataPath, "plugins", "grafana-image-renderer"),
+	err = filepath.Walk(filepath.Join(config.DataPath, "plugins", "grafana-image-renderer"),
 		func(path string, info fs.FileInfo, err error) error {
 			// prevent panic by handling failure accessing a path
 			if err != nil {
@@ -240,26 +237,17 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	// If chrome is found in grafana-image-renderer plugin dir, use it
 	if chromeExec != "" {
 		ctxLogger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
-		chromeOpts = append(chromeOpts, chromedp.ExecPath(chromeExec))
+		config.ChromeOptions = append(config.ChromeOptions, chromedp.ExecPath(chromeExec))
 	}
 
 	// Make config
-	app.config = &Config{
-		orientation:      orientation,
-		layout:           layout,
-		dashboardMode:    dashboardMode,
-		encodedLogo:      encodedLogo,
-		maxRenderWorkers: maxRenderWorkers,
-		persistData:      persistData,
-		vfs:              vfs,
-		chromeOpts:       chromeOpts,
-	}
+	app.config = &config
 
 	// Add secrets to app
 	app.secrets = &secrets
 
-	// Add Grafana App URL
-	app.grafanaAppUrl = grafanaAppUrl
+	// Set VFS instance to app
+	app.vfs = vfs
 
 	// Add Grafana client and report factory makers
 	app.newGrafanaClient = NewGrafanaClient

@@ -56,14 +56,14 @@ func TestReportResource(t *testing.T) {
 	Convey("When the report handler is called", t, func() {
 		var clientVars url.Values
 		// mock new grafana client function to capture and validate its input parameters
-		app.newGrafanaClient = func(client *http.Client, url string, secrets *Secrets, variables url.Values, layout string, panels string) GrafanaClient {
+		app.newGrafanaClient = func(client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient {
 			clientVars = variables
-			return NewGrafanaClient(&testClient, url, &Secrets{}, clientVars, "simple", "default")
+			return NewGrafanaClient(&testClient, &Secrets{}, &Config{}, clientVars)
 		}
 		//mock new report function to capture and validate its input parameters
 		var repDashName string
-		app.newReport = func(logger log.Logger, g GrafanaClient, config *ReportConfig) (Report, error) {
-			repDashName = config.dashUID
+		app.newReport = func(logger log.Logger, g GrafanaClient, options *ReportOptions) (Report, error) {
+			repDashName = options.dashUID
 			return &mockReport{}, nil
 		}
 
