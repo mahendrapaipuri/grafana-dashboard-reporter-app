@@ -5,6 +5,7 @@ import pluginJson from "../../src/plugin.json";
 const { Panel } = e2e.getSelectors(testIds);
 
 const dashboardUid = "e472bbf0-140c-4852-a74b-1a4c32202659";
+const queryParams = `from=now-5m&to=now&var-testvar0=All&var-testvar1=foo&var-testvar2=1&layout=grid&excludePanelID=12&excludePanelID=28&excludePanelID=10&includePanelID=10&dashboardMode=full`;
 
 describe("visiting test dashboard", () => {
   beforeEach(() => {
@@ -14,7 +15,7 @@ describe("visiting test dashboard", () => {
   });
 
   it("should display test panels", () => {
-    e2e.components.Panels.Panel.title("Panel 11").should("be.visible");
+    e2e.components.Panels.Panel.title("Panel 11 Var 0").should("be.visible");
     Panel.container().should("be.visible");
   });
 
@@ -33,9 +34,10 @@ describe("visiting test dashboard", () => {
   });
 
   it("should successfully create pdf", () => {
-    cy.request(
-      `http://localhost:3000/api/plugins/${pluginJson.id}/resources/report?dashUid=${dashboardUid}`
-    ).then((response) => {
+    cy.request({
+      url: `http://localhost:3000/api/plugins/${pluginJson.id}/resources/report?dashUid=${dashboardUid}&${queryParams}`,
+      timeout: 60000,
+    }).then((response) => {
       expect(response.status).to.eq(200);
       expect(response.headers["content-type"]).to.eq("application/pdf");
     });

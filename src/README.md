@@ -148,6 +148,10 @@ The following configuration parameters are directly tied to Grafana instance
 - `skipTlsCheck`: If Grafana instance is configured to use TLS with self signed certificates
   set this parameter to `true` to skip TLS certificate check. 
 
+- `loginCookieName`: The name of the login cookie used in Grafana's `auth` section. It 
+  should be set to the same value as the one set in `auth.login_cookie_name` in Grafana's
+  config. Default is `grafana_session` which is the same default as Grafana.
+
 > [!IMPORTANT] 
 > These config parameters are dependent on Grafana instance 
 and cannot be changed without restarting Grafana instance. Hence, these config parameters 
@@ -164,7 +168,7 @@ All the configuration parameters can only be modified by `Admin` role.
 
 - `Dashboard Mode`: Whether to render default dashboard or full dashboard. In default 
   mode, collapsed rows are ignored and only visible panels are included in the report.
-  Whereas in full mode, rows are uncollapsed and all the panels are included in the 
+  Whereas in full mode, rows are un collapsed and all the panels are included in the 
   report
 
 Although these parameters can only be changed by users with `Admin` role for whole instance
@@ -180,6 +184,27 @@ to set these values.
 
 - Query field for dashboard mode is `dashboardMode` and it takes either `default` or `full`
   as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
+
+Besides there are two special query parameters available namely:
+
+- `includePanelID`: This can be used to include only panels with IDs set in the query in 
+  the generated report. An example can be 
+  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelID=1&includePanelID=5&includePanelID=8`.
+  This request will only include the panels `1`, `5` and `8` in the report and ignoring the rest. 
+  When `grid` layout is used with `includePanelID`, the report layout will leave the gaps 
+  in the place of panels that are not included in the report.
+
+- `excludePanelID`: This can be used to exclude any unwanted panels in 
+  the generated report. An example can be 
+  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&excludePanelID=2&excludePanelID=7`.
+  This request will only exclude panels `2`, and `7` in the report and including the rest. 
+  When `grid` layout is used with `excludePanelID`, the report layout will leave the gaps 
+  in the place of panels that are excluded in the report.
+
+> [!NOTE] 
+> If a given panel ID is set in both `includePanelID` and `excludePanelID` query parameter,
+  it will be **included** in the report. Query parameter `includePanelID` has more 
+  precedence over `excludePanelID`.
 
 ### Advanced parameters
 
@@ -288,12 +313,6 @@ Here are the example reports that are generated out of the test dashboards
 - [Report with portrait orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_full.pdf)
 - [Report with landscape orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_grid_full.pdf)
 - [Report with portrait orientation, grid layout and default dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_default.pdf)
-
-## Limitations
-
-- Currently, the reporter app will not be able to included the repeated panels/rows 
-in the report "natively". A workaround is to _save_ the dashboard with repeated rows/panels
-before generating the report.
 
 ## Troubleshooting
 

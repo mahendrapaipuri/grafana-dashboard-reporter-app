@@ -56,6 +56,14 @@ apps:
       #
       dataPath: /var/lib/grafana
 
+      # The plugin uses headless chromium instance to render the dashboard and get the
+      # current panels. Hence, the plugin uses the user cookie to set it in the 
+      # headless chromium for auth. If the `login_cookie_name` is set to a different 
+      # value in Grafana `auth` config section, the same value must be set for the 
+      # plugin as well
+      #
+      loginCookieName: grafana_session
+
       # Orientation of the report. Possible values are portrait and landscape
       #
       # This can be changed from Grafana UI as well and this configuration parameter
