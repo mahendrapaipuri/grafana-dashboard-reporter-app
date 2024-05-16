@@ -26,6 +26,9 @@ improvements and modernization.
   as a separate web service. The advantage of the plugin approach is the authenticated 
   access to the reporter app is guaranteed by Grafana auth.
 
+- The plugin is capable of including all the repeated rows and/or panels in the 
+  generated report.
+
 - The plugin can be configured by Admins and users either from 
   [Configuration Page](./src/img/light.png) or query parameters to the report API.
 
