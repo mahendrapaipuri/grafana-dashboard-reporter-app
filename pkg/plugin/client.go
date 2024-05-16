@@ -215,14 +215,14 @@ func (g grafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 			chromedp.Evaluate(unCollapseRowsJS, &unCollapseOut),
 			chromedp.Evaluate(dashboardDataJS, &dashboardData),
 		); err != nil {
-			return nil, fmt.Errorf("failed to fetch dashboard from browser: %s", err)
+			return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %s", dashURL, err)
 		}
 	} else {
 		if err := chromedp.Run(ctx,
 			tasks,
 			chromedp.Evaluate(dashboardDataJS, &dashboardData),
 		); err != nil {
-			return nil, fmt.Errorf("failed to fetch dashboard from browser: %s", err)
+			return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %s", dashURL, err)
 		}
 	}
 	return dashboardData, nil

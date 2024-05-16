@@ -92,7 +92,10 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 	// Get custom settings if provided in Plugin settings
 	if config.AppInstanceSettings.JSONData != nil {
+		// NEVER update appURL as the one we have at this point is the most correct one
+		currentAppURL := a.config.AppURL
 		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &a.config); err == nil {
+			a.config.AppURL = currentAppURL
 			ctxLogger.Debug(
 				"updated config", "config", a.config.String(), "user", currentUser, "dash_uid", dashboardUID,
 			)
