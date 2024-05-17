@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/chromedp/chromedp"
@@ -56,11 +57,33 @@ func (c *Config) String() string {
 	} else {
 		encodedLogo = ""
 	}
+
+	var includedPanelIDs, excludedPanelIDs string
+	if len(c.IncludePanelIDs) > 0 {
+		var panelIDs []string
+		for _, id := range c.IncludePanelIDs {
+			panelIDs = append(panelIDs, strconv.Itoa(id))
+		}
+		includedPanelIDs = strings.Join(panelIDs, ",")
+	} else {
+		includedPanelIDs = "all"
+	}
+	if len(c.ExcludePanelIDs) > 0 {
+		var panelIDs []string
+		for _, id := range c.ExcludePanelIDs {
+			panelIDs = append(panelIDs, strconv.Itoa(id))
+		}
+		excludedPanelIDs = strings.Join(panelIDs, ",")
+	} else {
+		excludedPanelIDs = "none"
+	}
 	return fmt.Sprintf(
 		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; "+
 			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Encoded Logo: %s; Max Renderer Workers: %d; "+
-			"Persist Data: %t", c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
-		c.DashboardMode, encodedLogo, c.MaxRenderWorkers, c.PersistData,
+			"Persist Data: %t; Included Panel IDs: %s; Excluded Panel IDs: %s", 
+			c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
+		c.DashboardMode, encodedLogo, c.MaxRenderWorkers, c.PersistData, includedPanelIDs,
+		excludedPanelIDs,
 	)
 }
 
@@ -116,9 +139,9 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	}
 	if settings.JSONData != nil && string(settings.JSONData) != "null" {
 		if err := json.Unmarshal(settings.JSONData, &config); err == nil {
-			ctxLogger.Info("Provisioned config", "config", config.String())
+			ctxLogger.Info("provisioned config", "config", config.String())
 		} else {
-			ctxLogger.Error("Failed to load plugin config", "err", err)
+			ctxLogger.Error("failed to load plugin config", "err", err)
 		}
 	}
 
@@ -128,7 +151,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		if saToken, ok := settings.DecryptedSecureJSONData["saToken"]; ok {
 			if saToken != "" {
 				secrets = Secrets{token: saToken}
-				ctxLogger.Info("Service account token configured")
+				ctxLogger.Info("service account token configured")
 			}
 		}
 	}
@@ -154,7 +177,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	// appURL set from the env var will always take the highest precedence
 	if os.Getenv("GF_APP_URL") != "" {
 		config.AppURL = os.Getenv("GF_APP_URL")
-		ctxLogger.Debug("Using Grafana app URL from environment variable", "GF_APP_URL", config.AppURL)
+		ctxLogger.Debug("using Grafana app URL from environment variable", "GF_APP_URL", config.AppURL)
 	}
 
 	if config.AppURL == "" {

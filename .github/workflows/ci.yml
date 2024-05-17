@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '20'
           cache: 'yarn'
 
       # Install chrome as we will use it in unit tests
@@ -74,18 +74,32 @@ jobs:
   
       - name: Run e2e tests
         run: |
-          docker-compose up --build -d
-          sleep 10
-          yarn e2e
-          docker-compose down
+          yarn e2e:server:up
 
-      - name: Run API test
-        run: |
-          GF_SERVER_HTTP_PORT=3010 GF_AUTH_BASIC_ENABLED=true GF_AUTH_ANONYMOUS_ENABLED=false docker-compose up --build -d
-          sleep 10
-          # Generate report from API request using basic auth
-          curl -f -o report.pdf "http://admin:admin@localhost:3000/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=e472bbf0-140c-4852-a74b-1a4c32202659&from=now-5m&to=now&var-testvar0=0&var-testvar1=foo&var-testvar2=1"
-          docker-compose down
+          # Sleep for a while for containers to be up and running
+          sleep 20
+
+          # Run e2e tests
+          yarn e2e
+
+          # Run API tests
+          yarn e2e:report
+
+          # yarn e2e:server:down
+
+      - name: Compare PDF report from plain server
+        uses: nowsprinting/diff-pdf-action@v1
+        with:
+          file1: default.pdf
+          file2: .ci/reports/default.pdf
+          options: --verbose
+      
+      - name: Compare PDF report from TLS server
+        uses: nowsprinting/diff-pdf-action@v1
+        with:
+          file1: alternative.pdf
+          file2: .ci/reports/alternative.pdf
+          options: --verbose
 
       # Remove this once plugin review has been submitted
       - name: Package plugin
@@ -121,13 +135,31 @@ jobs:
         shell: bash
 
       - name: Upload plugin artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: plugin-artifacts
           path: |
             mahendrapaipuri-dashboardreporter-app-nightly.zip
             mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
           retention-days: 3
+
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+        with:
+          dest: docker-logs
+
+      - name: Upload UI Test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-output
+          path: |
+            test-results
+            docker-logs
+            default.pdf
+            alternative.pdf
+          retention-days: 1
 
       - name: Release nightly
         uses: softprops/action-gh-release@v1
