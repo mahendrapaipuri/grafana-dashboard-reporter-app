@@ -200,8 +200,12 @@ func (g grafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 
 	// Always prefer cookie over token
 	var tasks chromedp.Tasks
-	if g.secrets.cookieValue != "" {
-		tasks = setcookies(dashURL, g.config.CookieName, g.secrets.cookieValue)
+	var err error
+	if len(g.secrets.cookies) > 0 {
+		tasks, err = setcookies(dashURL, g.secrets.cookies...)
+		if err != nil {
+			return nil, fmt.Errorf("error setting cookies in the browser: %s", err)
+		}
 	} else if g.secrets.token != "" {
 		headers := map[string]interface{}{backend.OAuthIdentityTokenHeaderName: fmt.Sprintf("Bearer %s", g.secrets.token)}
 		tasks = setheaders(dashURL, headers)

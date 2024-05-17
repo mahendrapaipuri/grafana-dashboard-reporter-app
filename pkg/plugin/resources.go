@@ -75,9 +75,12 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Header.Get(backend.CookiesHeaderName) != "" {
 		ctxLogger.Debug("cookie found in the request", "user", currentUser, "dash_uid", dashboardUID)
 		a.secrets.cookieHeader = req.Header.Get(backend.CookiesHeaderName)
-		if grafanaCookie, err := req.Cookie(a.config.CookieName); err != nil {
-			a.secrets.cookieValue = grafanaCookie.Value
+		var cookies []string
+		for _, cookie := range req.Cookies() {
+			cookies = append(cookies, cookie.Name)
+			cookies = append(cookies, cookie.Value)
 		}
+		a.secrets.cookies = cookies
 	}
 
 	// Get Dashboard variables
@@ -91,12 +94,12 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
 
 	// Get custom settings if provided in Plugin settings
-	if config.AppInstanceSettings.JSONData != nil {
-		// NEVER update appURL as the one we have at this point is the most correct one
-		currentAppURL := a.config.AppURL
+	// Seems like when json.RawMessage is nil, it actually returns []byte("null"). So
+	// we need to check for both
+	// Ref: https://go.dev/src/encoding/json/stream.go?s=6218:6240#L262
+	if config.AppInstanceSettings.JSONData != nil && string(config.AppInstanceSettings.JSONData) != "null" {
 		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &a.config); err == nil {
-			a.config.AppURL = currentAppURL
-			ctxLogger.Debug(
+			ctxLogger.Info(
 				"updated config", "config", a.config.String(), "user", currentUser, "dash_uid", dashboardUID,
 			)
 		} else {
@@ -105,6 +108,9 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			)
 		}
 	}
+
+	// Trim trailing slash in app URL (Just in case)
+	a.config.AppURL = strings.TrimRight(a.config.AppURL, "/")
 
 	// Override config if any of them are set in query parameters
 	if queryLayouts, ok := req.URL.Query()["layout"]; ok {
@@ -141,12 +147,15 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}
-	a.config.IncludePanelIDs = includeIDs
-	a.config.ExcludePanelIDs = excludeIDs
-	ctxLogger.Info(
-		"filtering panels", "included", a.config.IncludePanelIDs, "excluded", a.config.ExcludePanelIDs,
-		"user", currentUser, "dash_uid", dashboardUID,
-	)
+	if len(includeIDs) > 0 || len(excludeIDs) > 0 {
+		a.config.IncludePanelIDs = includeIDs
+		a.config.ExcludePanelIDs = excludeIDs
+		ctxLogger.Info(
+			"filtering panels", "included", a.config.IncludePanelIDs,
+			"excluded", a.config.ExcludePanelIDs,
+			"user", currentUser, "dash_uid", dashboardUID,
+		)
+	}
 
 	// Make a new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := a.newGrafanaClient(

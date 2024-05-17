@@ -32,23 +32,17 @@ var (
 	_ backend.CheckHealthHandler    = (*App)(nil)
 )
 
-// Default Grafana session cookie name
-const (
-	grafanaCookieName = "grafana_session"
-)
-
 // Plugin config settings
 type Config struct {
 	AppURL           string `json:"appUrl"`
 	SkipTLSCheck     bool   `json:"skipTlsCheck"`
-	DataPath         string `json:"dataPath"`
-	CookieName       string `json:"loginCookieName"`
 	Orientation      string `json:"orientation"`
 	Layout           string `json:"layout"`
 	DashboardMode    string `json:"dashboardMode"`
 	EncodedLogo      string `json:"encodedLogo"`
 	MaxRenderWorkers int    `json:"maxRenderWorkers"`
 	PersistData      bool   `json:"persistData"`
+	DataPath         string
 	IncludePanelIDs  []int
 	ExcludePanelIDs  []int
 	ChromeOptions    []func(*chromedp.ExecAllocator)
@@ -63,9 +57,9 @@ func (c *Config) String() string {
 		encodedLogo = ""
 	}
 	return fmt.Sprintf(
-		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; Grafana Login Cookie Name: %s; "+
+		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; "+
 			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Encoded Logo: %s; Max Renderer Workers: %d; "+
-			"Persist Data: %t", c.AppURL, c.SkipTLSCheck, c.DataPath, c.CookieName, c.Orientation, c.Layout,
+			"Persist Data: %t", c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
 		c.DashboardMode, encodedLogo, c.MaxRenderWorkers, c.PersistData,
 	)
 }
@@ -73,8 +67,8 @@ func (c *Config) String() string {
 // Plugin secret settings
 type Secrets struct {
 	cookieHeader string
-	cookieValue  string
 	token        string
+	cookies      []string // Slice of name, value pairs of all cookies applicable to current domain
 }
 
 // App is the backend plugin which can respond to api queries.
@@ -102,9 +96,25 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	app.registerRoutes(mux)
 	app.CallResourceHandler = httpadapter.New(mux)
 
-	// Get Grafana App URL from plugin settings
-	var config Config
-	if settings.JSONData != nil {
+	// Get Grafana data path based on path of current executable
+	pluginExe, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
+	// Now we attempt to get install_dir directory which is Grafana data path
+	dataPath := filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
+
+	// Update plugin settings defaults
+	var config = Config{
+		DataPath:         dataPath,
+		Orientation:      "portrait",
+		Layout:           "simple",
+		DashboardMode:    "default",
+		MaxRenderWorkers: 2,
+	}
+	if settings.JSONData != nil && string(settings.JSONData) != "null" {
 		if err := json.Unmarshal(settings.JSONData, &config); err == nil {
 			ctxLogger.Info("Provisioned config", "config", config.String())
 		} else {
@@ -143,7 +153,7 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	//
 	// appURL set from the env var will always take the highest precedence
 	if os.Getenv("GF_APP_URL") != "" {
-		config.AppURL = strings.TrimRight(os.Getenv("GF_APP_URL"), "/")
+		config.AppURL = os.Getenv("GF_APP_URL")
 		ctxLogger.Debug("Using Grafana app URL from environment variable", "GF_APP_URL", config.AppURL)
 	}
 
@@ -151,17 +161,8 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		return nil, fmt.Errorf("grafana app URL not found. Please set it in provisioned config")
 	}
 
-	// Similarly GF_PATHS_DATA set from the env var will always have the highest precedence
-	if os.Getenv("GF_PATHS_DATA") != "" {
-		config.DataPath = os.Getenv("GF_PATHS_DATA")
-		ctxLogger.Debug("Using Grafana data path from environment variable", "GF_PATHS_DATA", config.DataPath)
-	}
-
-	// Similarly GF_AUTH_LOGIN_COOKIE_NAME set from the env var will always have the highest precedence
-	if os.Getenv("GF_AUTH_LOGIN_COOKIE_NAME") != "" {
-		config.CookieName = os.Getenv("GF_AUTH_LOGIN_COOKIE_NAME")
-		ctxLogger.Debug("Using Grafana login cookie name from environment variable", "GF_AUTH_LOGIN_COOKIE_NAME", config.CookieName)
-	}
+	// Trim trailing slash in app URL
+	config.AppURL = strings.TrimRight(config.AppURL, "/")
 
 	/*
 		Create a virtual FS with /var/lib/grafana as base path. In cloud context,
@@ -173,19 +174,6 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		into PDF. We will clean them up after each request and so we will use this
 		reports directory to store these files.
 	*/
-	if config.DataPath == "" {
-		// If grafanaDataPath is still not set, attempt to get it from current executable path
-		// Get path of current executable
-		pluginExe, err := os.Executable()
-		if err != nil {
-			panic(err)
-		}
-
-		// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
-		// Now we attempt to get install_dir directory which is Grafana data path
-		config.DataPath = filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
-		ctxLogger.Info("Grafana data path found", "GF_PATHS_DATA", config.DataPath)
-	}
 	vfs := afero.NewBasePathFs(afero.NewOsFs(), config.DataPath).(*afero.BasePathFs)
 
 	// Create a reports dir inside this GF_PATHS_DATA folder
@@ -193,15 +181,17 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", config.DataPath, err)
 	}
 
-	// If CookieName is still empty use the default value
-	if config.CookieName == "" {
-		config.CookieName = grafanaCookieName
-	}
-
 	// Set chrome options
 	config.ChromeOptions = append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.NoSandbox,
 		chromedp.DisableGPU,
+		// Seems like this is critical. When it is not turned on there are no errors
+		// and plugin will exit without rendering any panels. Not sure why the error
+		// handling is failing here. So, add this option as default just to avoid
+		// those cases
+		//
+		// Ref: https://github.com/chromedp/chromedp/issues/492#issuecomment-543223861
+		chromedp.Flag("ignore-certificate-errors", "1"),
 	)
 
 	/*
