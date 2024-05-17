@@ -17,11 +17,12 @@ import {
   PluginMeta,
   GrafanaTheme2,
 } from "@grafana/data";
-import { config, getBackendSrv } from "@grafana/runtime";
+import { getBackendSrv } from "@grafana/runtime";
 import { testIds } from "../testIds";
 
 export type JsonData = {
   appUrl?: string;
+  skipTlsCheck?: boolean;
   orientation?: string;
   layout?: string;
   dashboardMode?: string;
@@ -85,9 +86,9 @@ export const AppConfig = ({ plugin }: Props) => {
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
 
-  // appUrl configured from provisioning will
-  // always have higher precedence to default values
-  const appUrl = jsonData?.appUrl || config.appUrl;
+  // Pass through appUrl and SkipTlsCheck as they cannot be configured via UI
+  const appUrl = jsonData?.appUrl;
+  const skipTlsCheck = jsonData?.skipTlsCheck;
 
   const orientationOptions = [
     { label: "Portrait", value: "portrait", icon: "gf-portrait" },
@@ -184,6 +185,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: true,
                   jsonData: {
                     appUrl: appUrl,
+                    skipTlsCheck: skipTlsCheck,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
@@ -219,6 +221,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: false,
                   jsonData: {
                     appUrl: appUrl,
+                    skipTlsCheck: skipTlsCheck,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
@@ -365,6 +368,7 @@ export const AppConfig = ({ plugin }: Props) => {
                 pinned,
                 jsonData: {
                   appUrl: appUrl,
+                  skipTlsCheck: skipTlsCheck,
                   maxRenderWorkers: state.maxRenderWorkers,
                   orientation: state.orientation,
                   layout: state.layout,

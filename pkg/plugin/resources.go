@@ -98,11 +98,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// we need to check for both
 	// Ref: https://go.dev/src/encoding/json/stream.go?s=6218:6240#L262
 	if config.AppInstanceSettings.JSONData != nil && string(config.AppInstanceSettings.JSONData) != "null" {
-		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &a.config); err == nil {
-			ctxLogger.Info(
-				"updated config", "config", a.config.String(), "user", currentUser, "dash_uid", dashboardUID,
-			)
-		} else {
+		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &a.config); err != nil {
 			ctxLogger.Error(
 				"failed to update config", "user", currentUser, "dash_uid", dashboardUID, "err", err,
 			)
@@ -132,30 +128,25 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Two special query parameters: includePanelID and excludePanelID
 	// The query parameters are self explanatory and based on the values set to them
 	// panels will be included/excluded in the final report
-	var includeIDs, excludeIDs []int
+	a.config.IncludePanelIDs = nil
+	a.config.ExcludePanelIDs = nil
 	if includePanelIDs, ok := req.URL.Query()["includePanelID"]; ok {
 		for _, id := range includePanelIDs {
 			if idInt, err := strconv.Atoi(id); err == nil {
-				includeIDs = append(includeIDs, idInt)
+				a.config.IncludePanelIDs = append(a.config.IncludePanelIDs, idInt)
 			}
 		}
 	}
 	if excludePanelIDs, ok := req.URL.Query()["excludePanelID"]; ok {
 		for _, id := range excludePanelIDs {
 			if idInt, err := strconv.Atoi(id); err == nil {
-				excludeIDs = append(excludeIDs, idInt)
+				a.config.ExcludePanelIDs = append(a.config.ExcludePanelIDs, idInt)
 			}
 		}
 	}
-	if len(includeIDs) > 0 || len(excludeIDs) > 0 {
-		a.config.IncludePanelIDs = includeIDs
-		a.config.ExcludePanelIDs = excludeIDs
-		ctxLogger.Info(
-			"filtering panels", "included", a.config.IncludePanelIDs,
-			"excluded", a.config.ExcludePanelIDs,
-			"user", currentUser, "dash_uid", dashboardUID,
-		)
-	}
+	ctxLogger.Info(
+		"updated config", "config", a.config.String(), "user", currentUser, "dash_uid", dashboardUID,
+	)
 
 	// Make a new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := a.newGrafanaClient(

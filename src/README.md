@@ -138,19 +138,8 @@ The following configuration parameters are directly tied to Grafana instance
   used which should work for most of the deployments. If environment variable `GF_APP_URL`
   is set, that will take the precedence over the value configured in the provisioning file. 
 
-- `dataPath`: Grafana data path. By default on Linux deployment, it is `/var/lib/grafana`.
-  If a custom directory is used for `paths.data` in `grafana.ini`, the same path should be
-  used for the `dataPath`. If environment variable `GF_PATHS_DATA` is set, that will 
-  take the precedence over the value configured in the provisioning file. For Windows
-  deployments, this path **must be set** to correct data path in the provisioned config 
-  file.
-
 - `skipTlsCheck`: If Grafana instance is configured to use TLS with self signed certificates
-  set this parameter to `true` to skip TLS certificate check. 
-
-- `loginCookieName`: The name of the login cookie used in Grafana's `auth` section. It 
-  should be set to the same value as the one set in `auth.login_cookie_name` in Grafana's
-  config. Default is `grafana_session` which is the same default as Grafana.
+  set this parameter to `true` to skip TLS certificate check.
 
 > [!IMPORTANT] 
 > These config parameters are dependent on Grafana instance 

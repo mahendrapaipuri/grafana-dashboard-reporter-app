@@ -43,27 +43,6 @@ apps:
       #
       skipTlsCheck: false
 
-      # The plugin uses Grafana data path to discover grafana-image-renderer plugin and also
-      # to stage the generated PDF files before serving them. In a classic deployment,
-      # default /var/lib/grafana should work. If the `paths.data` in `grafana.ini` is set
-      # to custom path, use the same path here
-      #
-      # In the windows machines, please set it to the path corresponding to `install_dir/data`
-      # eg C:\grafana-10.1.0\data
-      #
-      # The data path set in GF_PATHS_DATA env variable will always have the highest precedence
-      # and will override the value set here
-      #
-      dataPath: /var/lib/grafana
-
-      # The plugin uses headless chromium instance to render the dashboard and get the
-      # current panels. Hence, the plugin uses the user cookie to set it in the 
-      # headless chromium for auth. If the `login_cookie_name` is set to a different 
-      # value in Grafana `auth` config section, the same value must be set for the 
-      # plugin as well
-      #
-      loginCookieName: grafana_session
-
       # Orientation of the report. Possible values are portrait and landscape
       #
       # This can be changed from Grafana UI as well and this configuration parameter
@@ -102,6 +81,7 @@ apps:
       #
       # A base64 encoded of the logo can be set which will be included in the footer
       # of the report in each page.
+      #
       logo: ''
 
       # Maximum number of workers for generating panel PNGs.

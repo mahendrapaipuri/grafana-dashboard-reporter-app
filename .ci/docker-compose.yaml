@@ -1,0 +1,113 @@
+version: '3.0'
+
+services:
+  grafana_plain:
+    # image: grafana/grafana:latest
+    container_name: 'mahendrapaipuri-dashboardreporter-app-plain'
+    build:
+      context: ../.config
+      args:
+        grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
+        grafana_version: ${GRAFANA_VERSION:-10.4.2}
+    ports:
+      - 3080:${GF_SERVER_HTTP_PORT:-3000}/tcp
+    volumes:
+      - ../dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
+      - ./dashboards:/etc/grafana/provisioning/dashboards
+      # Dont set config in provisioning just to ensure that plugin works without any
+      # extra config
+      - ./config/plain:/etc/grafana/provisioning/plugins
+    environment:
+      # basic settings
+      # output to terminal
+      - TERM=linux
+      - GF_DEFAULT_APP_MODE=development
+      - GF_SERVER_HTTP_PORT=${GF_SERVER_HTTP_PORT:-3000}
+      - GF_LOG_LEVEL=${GF_LOG_LEVEL:-info}
+      - GF_DATAPROXY_LOGGING=true
+      # allow anonymous admin so we don't have to set up a password to start testing
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_BASIC_ENABLED=true
+      #- GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      # skip login page
+      # - GF_AUTH_DISABLE_LOGIN_FORM=true
+      # We need to toggle external service accounts so that Grafana will get
+      # the token from a service account to read dashboards
+      - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-externalServiceAccounts}
+      # disable alerting because it vomits logs
+      - GF_ALERTING_ENABLED=false
+      - GF_UNIFIED_ALERTING_ENABLED=false
+      # Grafana image renderer
+      - GF_RENDERING_SERVER_URL=http://renderer_plain:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana_plain:${GF_SERVER_HTTP_PORT:-3000}/
+      - GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true
+      - GF_LOG_FILTERS=rendering:debug
+      # Set CI mode to remove header in report
+      - __REPORTER_APP_CI_MODE=true
+  renderer_plain:
+    image: grafana/grafana-image-renderer:latest
+    environment:
+      # Recommendation of grafana-image-renderer for optimal performance
+      # https://grafana.com/docs/grafana/latest/setup-grafana/image-rendering/#configuration
+      - RENDERING_MODE=clustered
+      - RENDERING_CLUSTERING_MODE=browser
+      - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
+      - RENDERING_CLUSTERING_TIMEOUT=60
+      - IGNORE_HTTPS_ERRORS=true
+
+  grafana_tls:
+    # image: grafana/grafana:latest
+    container_name: 'mahendrapaipuri-dashboardreporter-app-tls'
+    build:
+      context: ../.config
+      args:
+        grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
+        grafana_version: ${GRAFANA_VERSION:-10.4.2}
+    ports:
+      - 3443:${GF_SERVER_HTTP_PORT:-3000}/tcp
+    volumes:
+      - ../dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
+      - ./dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/tls:/etc/grafana/provisioning/plugins
+      - ./certs:/etc/grafana/tls
+    environment:
+      # basic settings
+      # output to terminal
+      - TERM=linux
+      - GF_DEFAULT_APP_MODE=development
+      - GF_SERVER_HTTP_PORT=${GF_SERVER_HTTP_PORT:-3000}
+      - GF_LOG_LEVEL=${GF_LOG_LEVEL:-info}
+      - GF_DATAPROXY_LOGGING=true
+      # allow anonymous admin so we don't have to set up a password to start testing
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_BASIC_ENABLED=true
+      #- GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      # skip login page
+      # - GF_AUTH_DISABLE_LOGIN_FORM=true
+      # We need to toggle external service accounts so that Grafana will get
+      # the token from a service account to read dashboards
+      - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-externalServiceAccounts}
+      # disable alerting because it vomits logs
+      - GF_ALERTING_ENABLED=false
+      - GF_UNIFIED_ALERTING_ENABLED=false
+       # TLS
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_KEY=/etc/grafana/tls/localhost.key
+      - GF_SERVER_CERT_FILE=/etc/grafana/tls/localhost.crt
+      # Grafana image renderer
+      - GF_RENDERING_SERVER_URL=http://renderer_tls:8081/render
+      - GF_RENDERING_CALLBACK_URL=https://grafana_tls:${GF_SERVER_HTTP_PORT:-3000}/
+      - GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true
+      - GF_LOG_FILTERS=rendering:debug
+      # Set CI mode to remove header in report
+      - __REPORTER_APP_CI_MODE=true
+  renderer_tls:
+    image: grafana/grafana-image-renderer:latest
+    environment:
+      # Recommendation of grafana-image-renderer for optimal performance
+      # https://grafana.com/docs/grafana/latest/setup-grafana/image-rendering/#configuration
+      - RENDERING_MODE=clustered
+      - RENDERING_CLUSTERING_MODE=browser
+      - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
+      - RENDERING_CLUSTERING_TIMEOUT=60
+      - IGNORE_HTTPS_ERRORS=true

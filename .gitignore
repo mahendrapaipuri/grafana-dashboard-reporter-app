@@ -45,5 +45,13 @@ package-lock.json
 # Ignore plugin validator
 plugin-validator
 
-# Ignore ci folder
-.ci
+# Ignore PDF files
+*.pdf
+!.ci/reports/*.pdf
+
+# Playwright stuff
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
