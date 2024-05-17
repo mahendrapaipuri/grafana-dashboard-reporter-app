@@ -2,6 +2,8 @@ package plugin
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
@@ -79,20 +81,27 @@ func waitFor(ctx context.Context, eventName string) error {
 }
 
 // setheaders returns a task list that sets the passed headers.
-func setheaders(url string, headers map[string]interface{}) chromedp.Tasks {
+func setheaders(u string, headers map[string]interface{}) chromedp.Tasks {
 	return chromedp.Tasks{
 		network.Enable(),
 		network.SetExtraHTTPHeaders(network.Headers(headers)),
 		enableLifeCycleEvents(),
-		navigateAndWaitFor(url, "networkIdle"),
+		navigateAndWaitFor(u, "networkIdle"),
 	}
 }
 
 // setcookies returns a task to navigate to a host with the passed cookies set
 // on the network request.
-func setcookies(url string, cookies ...string) chromedp.Tasks {
+func setcookies(u string, cookies ...string) (chromedp.Tasks, error) {
+	// Throw error if cookie pairs are not passed
 	if len(cookies)%2 != 0 {
-		panic("length of cookies must be divisible by 2")
+		return nil, fmt.Errorf("cookie pair(s) not found")
+	}
+
+	// Get domain of current URL
+	parsedURL, err := url.Parse(u)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse URL: %s", err)
 	}
 	return chromedp.Tasks{
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -102,6 +111,7 @@ func setcookies(url string, cookies ...string) chromedp.Tasks {
 			for i := 0; i < len(cookies); i += 2 {
 				err := network.SetCookie(cookies[i], cookies[i+1]).
 					WithExpires(&expr).
+					WithDomain(parsedURL.Host).
 					WithHTTPOnly(false).
 					Do(ctx)
 				if err != nil {
@@ -111,6 +121,6 @@ func setcookies(url string, cookies ...string) chromedp.Tasks {
 			return nil
 		}),
 		enableLifeCycleEvents(),
-		navigateAndWaitFor(url, "networkIdle"),
-	}
+		navigateAndWaitFor(u, "networkIdle"),
+	}, nil
 }

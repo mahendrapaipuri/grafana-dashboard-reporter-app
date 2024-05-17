@@ -120,11 +120,8 @@ func NewDashboard(dashJSON []byte, dashData []interface{}, queryParams url.Value
 
 	// Get dashboard from map
 	if dashboard, ok := dash["dashboard"]; !ok {
-		return Dashboard{}, fmt.Errorf("dashboard model missing")
+		return Dashboard{}, fmt.Errorf("no dashboard model found in Grafana API response")
 	} else {
-		// Add query parameters to dashboard model
-		dashboard.VariableValues = variablesValues(queryParams)
-
 		// Attempt to update panels from browser data
 		// If there are no errors, update the panels from browser dashabord model and
 		// return
@@ -138,7 +135,9 @@ func NewDashboard(dashJSON []byte, dashData []interface{}, queryParams url.Value
 
 		// Filter the panels based on IncludePanelIDs/ExcludePanelIDs
 		dashboard.Panels = filterPanels(panels, config)
-		return dashboard, nil
+		// Add query parameters to dashboard model
+		dashboard.VariableValues = variablesValues(queryParams)
+		return dashboard, err
 	}
 }
 
@@ -146,13 +145,12 @@ func NewDashboard(dashJSON []byte, dashData []interface{}, queryParams url.Value
 func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	// If dashData is nil return
 	if dashData == nil {
-		return nil, fmt.Errorf("dashboard data not found")
+		return nil, fmt.Errorf("no dashboard data found in browser data")
 	}
 
 	var panels []Panel
 	var allErrs error
 	var err error
-
 	// Iterate over the slice of interfaces and build each panel
 	for _, p := range dashData {
 		var id, x, y, w, h, vInt, xInt, yInt int
@@ -208,6 +206,12 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 				W: float64(w),
 			},
 		})
+	}
+
+	// Check if we fetched any panels
+	if len(panels) == 0 {
+		allErrs = errors.Join(err, fmt.Errorf("no panels found in browser data"))
+		return nil, allErrs
 	}
 	return panels, allErrs
 }

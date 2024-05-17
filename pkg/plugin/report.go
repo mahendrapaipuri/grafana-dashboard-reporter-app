@@ -349,11 +349,19 @@ func (r *report) printToPDF(url string, res *[]byte) chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.Navigate(url),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			pageParams := page.PrintToPDF().
-				WithDisplayHeaderFooter(true).
-				WithHeaderTemplate(r.options.header).
-				WithFooterTemplate(r.options.footer).
-				WithPreferCSSPageSize(true)
+
+			var pageParams *page.PrintToPDFParams
+			// In CI mode do not add header and footer for visual comparison
+			if os.Getenv("__REPORTER_APP_CI_MODE") == "true" {
+				pageParams = page.PrintToPDF().
+					WithPreferCSSPageSize(true)
+			} else {
+				pageParams = page.PrintToPDF().
+					WithDisplayHeaderFooter(true).
+					WithHeaderTemplate(r.options.header).
+					WithFooterTemplate(r.options.footer).
+					WithPreferCSSPageSize(true)
+			}
 
 			// If landscape add it to page params
 			if r.options.IsLandscapeOrientation() {
