@@ -146,6 +146,11 @@ The following configuration parameters are directly tied to Grafana instance
 and cannot be changed without restarting Grafana instance. Hence, these config parameters 
 can only be set using provisioning method and **it is not possible to configure them in Grafana UI**.
 
+> [!NOTE] 
+> Starting from `v1.4.0`, config parameter `dataPath` is not needed anymore as the plugin
+will get the Grafana's data path based on its own executable path. If the existing provisioned
+configs have this parameter set, it will be ignored while loading the plugin's configuration.
+
 ### Report parameters
 
 All the configuration parameters can only be modified by `Admin` role.
