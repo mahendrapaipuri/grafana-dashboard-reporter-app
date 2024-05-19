@@ -284,11 +284,13 @@ func filterPanels(panels []Panel, config *Config) []Panel {
 	// Iterate over all panels and check if they should be included or not
 	var filteredPanels []Panel
 	for _, panel := range panels {
-		if len(config.IncludePanelIDs) > 0 && slices.Contains(config.IncludePanelIDs, panel.ID) && !slices.Contains(filteredPanels, panel) {
+		if len(config.IncludePanelIDs) > 0 && slices.Contains(config.IncludePanelIDs, panel.ID) &&
+			!slices.Contains(filteredPanels, panel) {
 			filteredPanels = append(filteredPanels, panel)
 		}
 
-		if len(config.ExcludePanelIDs) > 0 && !slices.Contains(config.ExcludePanelIDs, panel.ID) && !slices.Contains(filteredPanels, panel) {
+		if len(config.ExcludePanelIDs) > 0 && !slices.Contains(config.ExcludePanelIDs, panel.ID) &&
+			!slices.Contains(filteredPanels, panel) {
 			filteredPanels = append(filteredPanels, panel)
 		}
 	}
