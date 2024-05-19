@@ -5,6 +5,7 @@ export const testIds = {
     layout: "data-testid ac-layout",
     orientation: "data-testid ac-orientation",
     dashboardMode: "data-testid ac-dashboard-mode",
+    tz: "data-testid ac-timezone",
     logo: "data-testid ac-logo",
     persistData: "data-testid ac-persist-data",
     maxWorkers: "data-testid ac-max-workers",
@@ -13,7 +14,7 @@ export const testIds = {
   Status: {
     container: "data-testid pg-one-container",
     health: "data-testid pg-one-health",
-    config: "data-testid pg-one-config"
+    config: "data-testid pg-one-config",
   },
   Panel: {
     container: "data-testid Panel header Repeated Panel",

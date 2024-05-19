@@ -26,6 +26,7 @@ export type JsonData = {
   orientation?: string;
   layout?: string;
   dashboardMode?: string;
+  timeZone?: string;
   logo?: string;
   maxRenderWorkers?: number;
   persistData?: boolean;
@@ -44,6 +45,10 @@ type State = {
   dashboardMode: string;
   // If dashboardMode has changed
   dashboardModeChanged: boolean;
+  // time zone in IANA format
+  timeZone: string;
+  // If timeZone has changed
+  timeZoneChanged: boolean;
   // base64 encoded logo
   logo: string;
   // If logo has changed
@@ -76,6 +81,8 @@ export const AppConfig = ({ plugin }: Props) => {
     layoutChanged: false,
     dashboardMode: jsonData?.dashboardMode || "default",
     dashboardModeChanged: false,
+    timeZone: jsonData?.timeZone || "",
+    timeZoneChanged: false,
     logo: jsonData?.logo || "",
     logoChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
@@ -128,6 +135,15 @@ export const AppConfig = ({ plugin }: Props) => {
       dashboardModeChanged: true,
     });
   };
+
+  const onChangetimeZone = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      timeZone: event.target.value,
+      timeZoneChanged: true,
+    });
+  };
+
 
   const onChangeLogo = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
@@ -190,6 +206,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
+                    timeZone: state.timeZone,
                     logo: state.logo,
                     persistData: state.persistData,
                   },
@@ -226,6 +243,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
+                    timeZone: state.timeZone,
                     logo: state.logo,
                     persistData: state.persistData,
                   },
@@ -310,6 +328,23 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
+        {/* Time zone */}
+        <Field
+          label="Time Zone"
+          description="Time Zone in IANA format. By default time zone of the server will be used."
+          data-testid={testIds.appConfig.tz}
+          className={s.marginTop}
+        >
+          <Input
+            type="string"
+            width={60}
+            id="tz"
+            label={`Time Zone`}
+            value={state.timeZone}
+            onChange={onChangetimeZone}
+          />
+        </Field>
+
         {/* Branding logo */}
         <Field
           label="Branding Logo"
@@ -373,6 +408,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   orientation: state.orientation,
                   layout: state.layout,
                   dashboardMode: state.dashboardMode,
+                  timeZone: state.timeZone,
                   logo: state.logo,
                   persistData: state.persistData,
                 },
@@ -389,6 +425,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.layoutChanged &&
                 !state.orientationChanged &&
                 !state.dashboardModeChanged &&
+                !state.timeZoneChanged &&
                 !state.logoChanged &&
                 !state.maxRenderWorkersChanged &&
                 !state.persistDataChanged &&

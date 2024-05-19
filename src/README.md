@@ -165,6 +165,10 @@ All the configuration parameters can only be modified by `Admin` role.
   Whereas in full mode, rows are un collapsed and all the panels are included in the 
   report
 
+- `Time Zone`: The time zone that will be used in the report. It has to conform to the 
+  [IANA format](https://www.iana.org/time-zones). By default, local Grafana server's 
+  time zone will be used.
+
 Although these parameters can only be changed by users with `Admin` role for whole instance
 of Grafana, it is possible to override the global defaults for a particular report
 by using query parameters. It is enough to add query parameters to dashboard report URL
@@ -178,6 +182,11 @@ to set these values.
 
 - Query field for dashboard mode is `dashboardMode` and it takes either `default` or `full`
   as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
+
+- Query field for dashboard mode is `timeZone` and it takes a value in [IANA format](https://www.iana.org/time-zones)
+  as value. **Note** that it should be encoded to escape URL specific characters. For example
+  to use `America/New_York` query parameter should be 
+  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeZone=America%2FNew_York`
 
 Besides there are two special query parameters available namely:
 

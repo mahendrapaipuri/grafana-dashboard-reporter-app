@@ -66,17 +66,26 @@ func (o ReportOptions) IsLandscapeOrientation() bool {
 
 // Get from time string
 func (o ReportOptions) From() string {
-	return o.timeRange.FromFormatted()
+	return o.timeRange.FromFormatted(o.location())
 }
 
 // Get to time string
 func (o ReportOptions) To() string {
-	return o.timeRange.ToFormatted()
+	return o.timeRange.ToFormatted(o.location())
 }
 
 // Get logo
 func (o ReportOptions) Logo() string {
 	return o.config.EncodedLogo
+}
+
+// Location of time zone
+func (o ReportOptions) location() *time.Location {
+	if location, err := time.LoadLocation(o.config.TimeZone); err != nil {
+		return time.Now().Local().Location()
+	} else {
+		return location
+	}
 }
 
 // report struct
@@ -266,11 +275,11 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 		return fmt.Errorf("error parsing report template: %v", err)
 	}
 
+	// Template data
+	data := templateData{dash, *r.options, time.Now().Local().In(r.options.location()).Format(time.RFC850)}
+
 	// Render the template for body of the report
-	if err = tmpl.ExecuteTemplate(
-		file,
-		"report.gohtml",
-		templateData{dash, *r.options, time.Now().Format(time.RFC850)}); err != nil {
+	if err = tmpl.ExecuteTemplate(file, "report.gohtml", data); err != nil {
 		return fmt.Errorf("error executing report template: %v", err)
 	}
 
@@ -281,10 +290,7 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 
 	// Render the template for header of the report
 	bufHeader := &bytes.Buffer{}
-	if err = tmpl.ExecuteTemplate(
-		bufHeader,
-		"header.gohtml",
-		templateData{dash, *r.options, time.Now().Format(time.RFC850)}); err != nil {
+	if err = tmpl.ExecuteTemplate(bufHeader, "header.gohtml", data); err != nil {
 		return fmt.Errorf("error executing header template: %v", err)
 	}
 	r.options.header = bufHeader.String()
@@ -296,10 +302,7 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 
 	// Render the template for footer of the report
 	bufFooter := &bytes.Buffer{}
-	if err = tmpl.ExecuteTemplate(
-		bufFooter,
-		"footer.gohtml",
-		templateData{dash, *r.options, time.Now().Format(time.RFC850)}); err != nil {
+	if err = tmpl.ExecuteTemplate(bufFooter, "footer.gohtml", data); err != nil {
 		return fmt.Errorf("error executing footer template: %v", err)
 	}
 	r.options.footer = bufFooter.String()

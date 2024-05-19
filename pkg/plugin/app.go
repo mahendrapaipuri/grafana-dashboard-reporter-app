@@ -40,6 +40,7 @@ type Config struct {
 	Orientation      string `json:"orientation"`
 	Layout           string `json:"layout"`
 	DashboardMode    string `json:"dashboardMode"`
+	TimeZone         string `json:"timeZone"`
 	EncodedLogo      string `json:"encodedLogo"`
 	MaxRenderWorkers int    `json:"maxRenderWorkers"`
 	PersistData      bool   `json:"persistData"`
@@ -79,11 +80,12 @@ func (c *Config) String() string {
 	}
 	return fmt.Sprintf(
 		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; "+
-			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Encoded Logo: %s; Max Renderer Workers: %d; "+
-			"Persist Data: %t; Included Panel IDs: %s; Excluded Panel IDs: %s", 
-			c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
-		c.DashboardMode, encodedLogo, c.MaxRenderWorkers, c.PersistData, includedPanelIDs,
-		excludedPanelIDs,
+			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Time Zone: %s; Encoded Logo: %s; "+
+			"Max Renderer Workers: %d; "+
+			"Persist Data: %t; Included Panel IDs: %s; Excluded Panel IDs: %s",
+		c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
+		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.PersistData,
+		includedPanelIDs, excludedPanelIDs,
 	)
 }
 
@@ -105,6 +107,45 @@ type App struct {
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, options *ReportOptions) (Report, error)
 }
 
+// Default config
+var defaultConfig Config
+
+// Keep a state of current provisioned config
+var currentAppConfig Config
+
+func init() {
+	// Get Grafana data path based on path of current executable
+	pluginExe, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
+	// Now we attempt to get install_dir directory which is Grafana data path
+	dataPath := filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
+
+	// Populate defaultConfig
+	defaultConfig = Config{
+		DataPath:         dataPath,
+		Orientation:      "portrait",
+		Layout:           "simple",
+		DashboardMode:    "default",
+		TimeZone:         "",
+		EncodedLogo:      "",
+		MaxRenderWorkers: 2,
+	}
+}
+
+// DefaultConfig returns an instance of default config
+func DefaultConfig() Config {
+	return defaultConfig
+}
+
+// NewAppConfig returns an instance of current app's provisioned config
+func NewAppConfig() Config {
+	return currentAppConfig
+}
+
 // NewApp creates a new example *App instance.
 func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instancemgmt.Instance, error) {
 	var app App
@@ -119,24 +160,10 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	app.registerRoutes(mux)
 	app.CallResourceHandler = httpadapter.New(mux)
 
-	// Get Grafana data path based on path of current executable
-	pluginExe, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-
-	// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
-	// Now we attempt to get install_dir directory which is Grafana data path
-	dataPath := filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
-
+	// Always start with a default config so that when the plugin is not provisioned
+	// with a config, we will still have "non-null" config to work with
+	var config = DefaultConfig()
 	// Update plugin settings defaults
-	var config = Config{
-		DataPath:         dataPath,
-		Orientation:      "portrait",
-		Layout:           "simple",
-		DashboardMode:    "default",
-		MaxRenderWorkers: 2,
-	}
 	if settings.JSONData != nil && string(settings.JSONData) != "null" {
 		if err := json.Unmarshal(settings.JSONData, &config); err == nil {
 			ctxLogger.Info("provisioned config", "config", config.String())
@@ -252,6 +279,9 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		ctxLogger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
 		config.ChromeOptions = append(config.ChromeOptions, chromedp.ExecPath(chromeExec))
 	}
+
+	// Set current App's config
+	currentAppConfig = config
 
 	// Make config
 	app.config = &config
