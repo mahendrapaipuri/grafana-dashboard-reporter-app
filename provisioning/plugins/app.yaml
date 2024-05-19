@@ -77,6 +77,19 @@ apps:
       #
       dashboardMode: default
 
+      # Time zone to use the report. This should be provided in IANA format.
+      # More details on IANA format can be obtained from https://www.iana.org/time-zones
+      # Eg America/New_York, Asia/Singapore, Australia/Melbourne, Europe/Berlin
+      #
+      # If empty or an invalid format is provided, the plugin defaults to using local
+      # location of the Grafana server.
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?timeZone=America%2FNew_York during report generation process. Note that we 
+      # need to escape URL characters
+      #
+      timeZone: ''
+
       # Branding logo in the report.
       #
       # A base64 encoded of the logo can be set which will be included in the footer

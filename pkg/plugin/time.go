@@ -115,15 +115,15 @@ func NewTimeRange(from, to string) TimeRange {
 }
 
 // Formats Grafana 'From' time spec into absolute printable time
-func (tr TimeRange) FromFormatted() string {
+func (tr TimeRange) FromFormatted(loc *time.Location) string {
 	n := newNow()
-	return n.parseFrom(tr.From).Format(time.UnixDate)
+	return n.parseFrom(tr.From).In(loc).Format(time.UnixDate)
 }
 
 // Formats Grafana 'To' time spec into absolute printable time
-func (tr TimeRange) ToFormatted() string {
+func (tr TimeRange) ToFormatted(loc *time.Location) string {
 	n := newNow()
-	return n.parseTo(tr.To).Format(time.UnixDate)
+	return n.parseTo(tr.To).In(loc).Format(time.UnixDate)
 }
 
 // Make current time custom struct

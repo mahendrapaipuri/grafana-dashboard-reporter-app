@@ -93,6 +93,10 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	timeRange := NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
 	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
 
+	// Always start with new instance of app config for each request
+	configInstance := NewAppConfig()
+	a.config = &configInstance
+
 	// Get custom settings if provided in Plugin settings
 	// Seems like when json.RawMessage is nil, it actually returns []byte("null"). So
 	// we need to check for both
@@ -123,6 +127,9 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		if slices.Contains([]string{"default", "full"}, queryDashboardMode[len(queryDashboardMode)-1]) {
 			a.config.DashboardMode = queryDashboardMode[len(queryDashboardMode)-1]
 		}
+	}
+	if timeZone, ok := req.URL.Query()["timeZone"]; ok {
+		a.config.TimeZone = timeZone[len(timeZone)-1]
 	}
 
 	// Two special query parameters: includePanelID and excludePanelID

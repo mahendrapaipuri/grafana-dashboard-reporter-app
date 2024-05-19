@@ -15,6 +15,7 @@ apps:
       orientation: portrait
       layout: simple
       dashboardMode: default
+      timeZone: ''
       logo: ''
       maxRenderWorkers: 2
       persistData: false
