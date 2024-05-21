@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- Support configurable time zone [#35](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/35)
+- Support repeated panels and/or rows [#33](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/33)
+
 ## 1.3.0
 
 - Support including branding logo in report [#29](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/29)
