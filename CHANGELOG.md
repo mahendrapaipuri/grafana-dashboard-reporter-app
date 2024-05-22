@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1
+
+- Correct logo json tag in config struct [#37](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/37)
+
 ## 1.4.0
 
 - Support configurable time zone [#35](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/35)
