@@ -41,7 +41,7 @@ type Config struct {
 	Layout           string `json:"layout"`
 	DashboardMode    string `json:"dashboardMode"`
 	TimeZone         string `json:"timeZone"`
-	EncodedLogo      string `json:"encodedLogo"`
+	EncodedLogo      string `json:"logo"`
 	MaxRenderWorkers int    `json:"maxRenderWorkers"`
 	PersistData      bool   `json:"persistData"`
 	DataPath         string
