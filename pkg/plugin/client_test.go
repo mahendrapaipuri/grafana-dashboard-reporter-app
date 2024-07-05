@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -44,8 +45,8 @@ func TestGrafanaClientFetchesDashboard(t *testing.T) {
 				Layout:        "simple",
 				DashboardMode: "default",
 			}
-			grf := NewGrafanaClient(&testClient, secrets, config, url.Values{})
-			grf.Dashboard("rYy7Paekz")
+			grf := NewGrafanaClient(logger, &testClient, secrets, config, url.Values{})
+			grf.Dashboard(context.Background(), "rYy7Paekz")
 
 			Convey("It should use the v5 dashboards endpoint", func() {
 				So(requestURI, ShouldContain, "/api/dashboards/uid/rYy7Paekz")
@@ -84,7 +85,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, secrets, config, variables),
+				NewGrafanaClient(logger, &testClient, secrets, config, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -130,7 +131,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"client": {
-				NewGrafanaClient(&testClient, secrets, config, variables),
+				NewGrafanaClient(logger, &testClient, secrets, config, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -155,7 +156,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 	Convey("When trying to fetching a panel from the server sometimes returns an error", t, func() {
 		try := 0
 
-		//create a server that will return error on the first call
+		// create a server that will return error on the first call
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if try < 1 {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -164,7 +165,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
+		grf := NewGrafanaClient(logger, &testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
 
 		_, err := grf.PanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}, ""},
@@ -183,7 +184,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := NewGrafanaClient(&testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
+		grf := NewGrafanaClient(logger, &testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
 
 		_, err := grf.PanelPNG(
 			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}, ""},

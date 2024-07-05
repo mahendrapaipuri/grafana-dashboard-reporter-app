@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"errors"
 	"net/url"
 	"strings"
@@ -36,7 +37,7 @@ type mockGrafanaClient struct {
 	variables         url.Values
 }
 
-func (m *mockGrafanaClient) Dashboard(dashName string) (Dashboard, error) {
+func (m *mockGrafanaClient) Dashboard(_ context.Context, dashName string) (Dashboard, error) {
 	return NewDashboard([]byte(dashJSON), nil, m.variables, &Config{})
 }
 
@@ -116,7 +117,7 @@ type errClient struct {
 	variables         url.Values
 }
 
-func (e *errClient) Dashboard(dashName string) (Dashboard, error) {
+func (e *errClient) Dashboard(_ context.Context, dashName string) (Dashboard, error) {
 	return NewDashboard([]byte(dashJSON), nil, e.variables, &Config{})
 }
 
@@ -140,7 +141,7 @@ func TestReportErrorHandling(t *testing.T) {
 		})
 
 		Convey("When rendering images", func() {
-			dashboard, _ := gClient.Dashboard("")
+			dashboard, _ := gClient.Dashboard(context.Background(), "")
 			rep.options.dashboard = dashboard
 			err := rep.renderPNGsParallel()
 
