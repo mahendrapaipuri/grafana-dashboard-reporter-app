@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"io"
@@ -252,6 +253,11 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 	var tmpl *template.Template
 	var err error
 
+	realPath, err := r.options.vfs.RealPath(r.options.reportsDir)
+	if err != nil {
+		return fmt.Errorf("error getting real path: %w", err)
+	}
+
 	// Template functions
 	funcMap := template.FuncMap{
 		// The name "inc" is what the function will be called in the template text.
@@ -261,6 +267,18 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 
 		"mult": func(i int) int {
 			return i*30 + 5
+		},
+
+		"embed": func(mineType, imageFilePath string) (template.URL, error) {
+			imageContent, err := os.ReadFile(filepath.Join(realPath, imageFilePath))
+			if err != nil {
+				return "", fmt.Errorf("error reading image file: %w", err)
+			}
+
+			imageContentBase64 := make([]byte, base64.StdEncoding.EncodedLen(len(imageContent)))
+			base64.StdEncoding.Encode(imageContentBase64, imageContent)
+
+			return template.URL(fmt.Sprintf("data:%s;charset=utf-8;base64,%s", mineType, imageContentBase64)), nil
 		},
 	}
 
@@ -325,15 +343,15 @@ func (r *report) renderPDF() ([]byte, error) {
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
+	reportContent, err := os.ReadFile(filepath.Join(realPath, reportHTML))
+	if err != nil {
+		return nil, fmt.Errorf("error reading report file: %w", err)
+	}
+
 	// capture pdf
-	// NOTE: We can improve this by using in memory base64 encoded PNG images and
-	// using SetDocumentContent of chromedp without having to have access to underlying
-	// filesystem.
-	// This will need a bit of refactoring of the code tho
-	// Ref: https://github.com/chromedp/chromedp/issues/941#issuecomment-961181348
 	var buf []byte
-	if err := chromedp.Run(
-		ctx, r.printToPDF(fmt.Sprintf("file://%s", filepath.Join(realPath, reportHTML)), &buf),
+	if err = chromedp.Run(
+		ctx, r.printToPDF(string(reportContent), &buf),
 	); err != nil {
 		return nil, fmt.Errorf("error rendering PDF: %v", err)
 	}
@@ -348,9 +366,17 @@ func (r *report) renderPDF() ([]byte, error) {
 }
 
 // Print to PDF using headless Chromium
-func (r *report) printToPDF(url string, res *[]byte) chromedp.Tasks {
+func (r *report) printToPDF(html string, res *[]byte) chromedp.Tasks {
 	return chromedp.Tasks{
-		chromedp.Navigate(url),
+		chromedp.Navigate("about:blank"),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			frameTree, err := page.GetFrameTree().Do(ctx)
+			if err != nil {
+				return err
+			}
+
+			return page.SetDocumentContent(frameTree.Frame.ID, html).Do(ctx)
+		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 
 			var pageParams *page.PrintToPDFParams
