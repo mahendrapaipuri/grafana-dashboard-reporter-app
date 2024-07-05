@@ -192,23 +192,30 @@ func (g grafanaClient) dashboardFromAPI(dashUID string) ([]byte, error) {
 func (g grafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, error) {
 	dashURL := g.dashBrowserURL(dashUID)
 
+	var (
+		allocCtx       context.Context
+		allocCtxCancel context.CancelFunc
+	)
+
 	// Create new context
-	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), g.config.ChromeOptions...)
+	if g.config.RemoteChromeAddr != "" {
+		allocCtx, allocCtxCancel = chromedp.NewRemoteAllocator(context.Background(), g.config.RemoteChromeAddr)
+	} else {
+		allocCtx, allocCtxCancel = chromedp.NewExecAllocator(context.Background(), g.config.ChromeOptions...)
+	}
+
 	defer allocCtxCancel()
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	// Always prefer cookie over token
 	var tasks chromedp.Tasks
-	var err error
-	if len(g.secrets.cookies) > 0 {
-		tasks, err = setcookies(dashURL, g.secrets.cookies...)
-		if err != nil {
-			return nil, fmt.Errorf("error setting cookies in the browser: %s", err)
-		}
+	if len(g.secrets.cookieHeader) > 0 {
+		headers := map[string]interface{}{backend.CookiesHeaderName: g.secrets.cookieHeader}
+		tasks = setHeaders(dashURL, headers)
 	} else if g.secrets.token != "" {
 		headers := map[string]interface{}{backend.OAuthIdentityTokenHeaderName: fmt.Sprintf("Bearer %s", g.secrets.token)}
-		tasks = setheaders(dashURL, headers)
+		tasks = setHeaders(dashURL, headers)
 	}
 
 	// Fetch dashboard data

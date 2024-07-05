@@ -19,3 +19,4 @@ apps:
       logo: ''
       maxRenderWorkers: 2
       persistData: false
+      remoteChromeAddr: ''

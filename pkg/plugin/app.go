@@ -44,6 +44,7 @@ type Config struct {
 	EncodedLogo      string `json:"logo"`
 	MaxRenderWorkers int    `json:"maxRenderWorkers"`
 	PersistData      bool   `json:"persistData"`
+	RemoteChromeAddr string `json:"remoteChromeAddr"`
 	DataPath         string
 	IncludePanelIDs  []int
 	ExcludePanelIDs  []int
@@ -81,10 +82,10 @@ func (c *Config) String() string {
 	return fmt.Sprintf(
 		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; "+
 			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Time Zone: %s; Encoded Logo: %s; "+
-			"Max Renderer Workers: %d; "+
+			"Max Renderer Workers: %d; Remote Chrome Addr: %s; "+
 			"Persist Data: %t; Included Panel IDs: %s; Excluded Panel IDs: %s",
 		c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
-		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.PersistData,
+		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.RemoteChromeAddr, c.PersistData,
 		includedPanelIDs, excludedPanelIDs,
 	)
 }
@@ -93,7 +94,6 @@ func (c *Config) String() string {
 type Secrets struct {
 	cookieHeader string
 	token        string
-	cookies      []string // Slice of name, value pairs of all cookies applicable to current domain
 }
 
 // App is the backend plugin which can respond to api queries.
@@ -231,53 +231,55 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", config.DataPath, err)
 	}
 
-	// Set chrome options
-	config.ChromeOptions = append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.NoSandbox,
-		chromedp.DisableGPU,
-		// Seems like this is critical. When it is not turned on there are no errors
-		// and plugin will exit without rendering any panels. Not sure why the error
-		// handling is failing here. So, add this option as default just to avoid
-		// those cases
-		//
-		// Ref: https://github.com/chromedp/chromedp/issues/492#issuecomment-543223861
-		chromedp.Flag("ignore-certificate-errors", "1"),
-	)
+	if config.RemoteChromeAddr == "" {
+		// Set chrome options
+		config.ChromeOptions = append(chromedp.DefaultExecAllocatorOptions[:],
+			chromedp.NoSandbox,
+			chromedp.DisableGPU,
+			// Seems like this is critical. When it is not turned on there are no errors
+			// and plugin will exit without rendering any panels. Not sure why the error
+			// handling is failing here. So, add this option as default just to avoid
+			// those cases
+			//
+			// Ref: https://github.com/chromedp/chromedp/issues/492#issuecomment-543223861
+			chromedp.Flag("ignore-certificate-errors", "1"),
+		)
 
-	/*
-		Attempt to use chrome shipped from grafana-image-renderer. If not found,
-		use the chromium browser installed on the host.
+		/*
+			Attempt to use chrome shipped from grafana-image-renderer. If not found,
+			use the chromium browser installed on the host.
 
-		We check for the GF_PATHS_DATA env variable and if not found we use default
-		/var/lib/grafana. We do a walk dir in $GF_PATHS_DATA/plugins/grafana-image-render
-		and try to find `chrome` executable. If we find it, we use it as chrome
-		executable for rendering the PDF report.
-	*/
+			We check for the GF_PATHS_DATA env variable and if not found we use default
+			/var/lib/grafana. We do a walk dir in $GF_PATHS_DATA/plugins/grafana-image-render
+			and try to find `chrome` executable. If we find it, we use it as chrome
+			executable for rendering the PDF report.
+		*/
 
-	// Chrome executable path
-	var chromeExec string
+		// Chrome executable path
+		var chromeExec string
 
-	// Walk through grafana-image-renderer plugin dir to find chrome executable
-	err = filepath.Walk(filepath.Join(config.DataPath, "plugins", "grafana-image-renderer"),
-		func(path string, info fs.FileInfo, err error) error {
-			// prevent panic by handling failure accessing a path
-			if err != nil {
-				return err
-			}
-			if !info.IsDir() && info.Name() == "chrome" {
-				chromeExec = path
+		// Walk through grafana-image-renderer plugin dir to find chrome executable
+		err = filepath.Walk(filepath.Join(config.DataPath, "plugins", "grafana-image-renderer"),
+			func(path string, info fs.FileInfo, err error) error {
+				// prevent panic by handling failure accessing a path
+				if err != nil {
+					return err
+				}
+				if !info.IsDir() && info.Name() == "chrome" {
+					chromeExec = path
+					return nil
+				}
 				return nil
-			}
-			return nil
-		})
-	if err != nil {
-		ctxLogger.Warn("failed to walk through grafana-image-renderer data dir", "err", err)
-	}
+			})
+		if err != nil {
+			ctxLogger.Warn("failed to walk through grafana-image-renderer data dir", "err", err)
+		}
 
-	// If chrome is found in grafana-image-renderer plugin dir, use it
-	if chromeExec != "" {
-		ctxLogger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
-		config.ChromeOptions = append(config.ChromeOptions, chromedp.ExecPath(chromeExec))
+		// If chrome is found in grafana-image-renderer plugin dir, use it
+		if chromeExec != "" {
+			ctxLogger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
+			config.ChromeOptions = append(config.ChromeOptions, chromedp.ExecPath(chromeExec))
+		}
 	}
 
 	// Set current App's config

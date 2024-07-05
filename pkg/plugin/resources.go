@@ -75,12 +75,6 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Header.Get(backend.CookiesHeaderName) != "" {
 		ctxLogger.Debug("cookie found in the request", "user", currentUser, "dash_uid", dashboardUID)
 		a.secrets.cookieHeader = req.Header.Get(backend.CookiesHeaderName)
-		var cookies []string
-		for _, cookie := range req.Cookies() {
-			cookies = append(cookies, cookie.Name)
-			cookies = append(cookies, cookie.Value)
-		}
-		a.secrets.cookies = cookies
 	}
 
 	// Get Dashboard variables

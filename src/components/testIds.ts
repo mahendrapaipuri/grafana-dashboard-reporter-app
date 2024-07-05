@@ -8,6 +8,7 @@ export const testIds = {
     tz: "data-testid ac-timezone",
     logo: "data-testid ac-logo",
     persistData: "data-testid ac-persist-data",
+    remoteChromeAddr: "data-testid ac-remote-chrome-addr",
     maxWorkers: "data-testid ac-max-workers",
     submit: "data-testid ac-submit-form",
   },

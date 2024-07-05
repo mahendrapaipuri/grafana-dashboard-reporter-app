@@ -320,8 +320,19 @@ func (r *report) renderPDF() ([]byte, error) {
 	}
 
 	// create context
-	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), r.options.config.ChromeOptions...)
+	var (
+		allocCtx       context.Context
+		allocCtxCancel context.CancelFunc
+	)
+
+	if r.options.config.RemoteChromeAddr != "" {
+		allocCtx, allocCtxCancel = chromedp.NewRemoteAllocator(context.Background(), r.options.config.RemoteChromeAddr)
+	} else {
+		allocCtx, allocCtxCancel = chromedp.NewExecAllocator(context.Background(), r.options.config.ChromeOptions...)
+	}
+
 	defer allocCtxCancel()
+
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 

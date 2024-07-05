@@ -111,3 +111,6 @@ apps:
       # applies globally to all generated reports
       #
       persistData: false
+
+      # A remote address for a running chrome instance. If empty, a local chrome browser will be executed
+      remoteChromeAddr: 'ws://chrome:9222/'

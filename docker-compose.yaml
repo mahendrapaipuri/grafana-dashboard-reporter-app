@@ -1,14 +1,12 @@
-version: '3.0'
-
 services:
   grafana:
-    # image: grafana/grafana:latest
-    container_name: 'mahendrapaipuri-dashboardreporter-app'
-    build:
-      context: ./.config
-      args:
-        grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-10.4.2}
+    image: grafana/grafana:latest
+    #container_name: 'mahendrapaipuri-dashboardreporter-app'
+    #build:
+    #  context: ./.config
+    #  args:
+    #    grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
+    #    grafana_version: ${GRAFANA_VERSION:-11.1.0}
     ports:
       - 3000:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
@@ -51,3 +49,8 @@ services:
       - IGNORE_HTTPS_ERRORS=true
     ports:
       - 8081
+  chrome:
+    image: chromedp/headless-shell:latest
+    shm_size: 2G
+    ports:
+      - 9222

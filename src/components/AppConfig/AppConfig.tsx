@@ -30,6 +30,7 @@ export type JsonData = {
   logo?: string;
   maxRenderWorkers?: number;
   persistData?: boolean;
+  remoteChromeAddr?: string;
 };
 
 type State = {
@@ -61,6 +62,10 @@ type State = {
   persistData: boolean;
   // If persistData has changed
   persistDataChanged: boolean;
+  // Adresse of an chrome remote instance
+  remoteChromeAddr: string;
+  // If remoteChromeAddrChanged has changed
+  remoteChromeAddrChanged: boolean;
   // Tells us if the Service Account's token is set.
   // Set to `true` ONLY if it has already been set and haven't been changed.
   // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
@@ -89,6 +94,8 @@ export const AppConfig = ({ plugin }: Props) => {
     maxRenderWorkersChanged: false,
     persistData: jsonData?.persistData || false,
     persistDataChanged: false,
+    remoteChromeAddr: jsonData?.remoteChromeAddr || "",
+    remoteChromeAddrChanged: false,
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
@@ -169,6 +176,14 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangeRemoteChromeAddr = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      remoteChromeAddr: event.target.value,
+      remoteChromeAddrChanged: true,
+    });
+  };
+
   const onResetSaToken = () =>
     setState({
       ...state,
@@ -209,6 +224,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     timeZone: state.timeZone,
                     logo: state.logo,
                     persistData: state.persistData,
+                    remoteChromeAddr: state.remoteChromeAddr,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -246,6 +262,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     timeZone: state.timeZone,
                     logo: state.logo,
                     persistData: state.persistData,
+                    remoteChromeAddr: state.remoteChromeAddr,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -376,6 +393,25 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
+
+        {/* Remote Chrome Addr */}
+        <Field
+          label="Remote Chrome Addr"
+          description="Address to a running chrome instance with an listening chrome remote debug socket"
+          data-testid={testIds.appConfig.remoteChromeAddr}
+          className={s.marginTop}
+        >
+          <Input
+            type="string"
+            width={60}
+            id="remoteChromeAddr"
+            label={`Remote Chrome Addr`}
+            pattern={`(https?|ws)://.+:[0-9]{1,5}/`}
+            value={state.remoteChromeAddr}
+            onChange={onChangeRemoteChromeAddr}
+          />
+        </Field>
+
         {/* Max workers */}
         <Field
           label="Maximum Render Workers"
@@ -411,6 +447,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   timeZone: state.timeZone,
                   logo: state.logo,
                   persistData: state.persistData,
+                  remoteChromeAddr: state.remoteChromeAddr,
                 },
                 // This cannot be queried later by the frontend.
                 // We don't want to override it in case it was set previously and left untouched now.
@@ -429,6 +466,7 @@ export const AppConfig = ({ plugin }: Props) => {
                 !state.logoChanged &&
                 !state.maxRenderWorkersChanged &&
                 !state.persistDataChanged &&
+                !state.remoteChromeAddrChanged &&
                 !state.saToken
             )}
           >
