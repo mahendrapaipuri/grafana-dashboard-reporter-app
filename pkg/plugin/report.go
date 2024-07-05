@@ -38,8 +38,8 @@ var popularSignatures = map[string]string{
 
 // Report groups functions related to genrating the report.
 type Report interface {
-	Generate() ([]byte, error)
-	Title() string
+	Generate(ctx context.Context) ([]byte, error)
+	Title(ctx context.Context) string
 }
 
 // HTMLContent contains the templated HTML body, header and footer strings
@@ -132,10 +132,10 @@ func NewReport(logger log.Logger, client GrafanaClient, options *ReportOptions) 
 
 // Generate returns the report.pdf file.  After reading this file it should be Closed()
 // After closing the file, call report.Clean() to delete the file as well the temporary build files
-func (r *report) Generate() ([]byte, error) {
+func (r *report) Generate(ctx context.Context) ([]byte, error) {
 	var err error
 	// Get dashboard JSON model
-	r.options.dashboard, err = r.client.Dashboard(r.options.dashUID)
+	r.options.dashboard, err = r.client.Dashboard(ctx, r.options.dashUID)
 	if err != nil {
 		// If we get empty dashboard model, return error
 		if reflect.DeepEqual(Dashboard{}, r.options.dashboard) {
@@ -156,7 +156,7 @@ func (r *report) Generate() ([]byte, error) {
 	}
 
 	// Print HTML page into PDF
-	return r.renderPDF()
+	return r.renderPDF(ctx)
 }
 
 // Title returns the dashboard title parsed from the dashboard definition
@@ -284,12 +284,18 @@ func (r *report) generateHTMLFile() error {
 }
 
 // renderPDF renders HTML page into PDF using Chromium
-func (r *report) renderPDF() ([]byte, error) {
+func (r *report) renderPDF(ctx context.Context) ([]byte, error) {
 	// var realPath string
 	var err error
 
+	chromeLogger := r.logger.With("subsystem", "chromium")
+
 	// Create a new tab
-	ctx, cancel := chromedp.NewContext(r.options.config.BrowserContext)
+	ctx, cancel := chromedp.NewContext(r.options.config.BrowserContext,
+		chromedp.WithErrorf(chromeLogger.Error),
+		chromedp.WithDebugf(chromeLogger.Debug),
+		chromedp.WithLogf(chromeLogger.Info),
+	)
 	defer cancel()
 
 	// capture pdf

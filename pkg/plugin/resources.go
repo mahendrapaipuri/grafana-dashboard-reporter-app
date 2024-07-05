@@ -156,6 +156,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 	// Make a new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := a.newGrafanaClient(
+		ctxLogger,
 		a.httpClient,
 		a.secrets,
 		a.config,
@@ -179,7 +180,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Generate report
-	buf, err := report.Generate()
+	buf, err := report.Generate(req.Context())
 	if err != nil {
 		ctxLogger.Error("error generating report", "err", err)
 		http.Error(w, "error generating report", http.StatusInternalServerError)
@@ -187,7 +188,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Add PDF file name to header
-	addFilenameHeader(w, report.Title())
+	addFilenameHeader(w, report.Title(req.Context()))
 
 	// Write buffered response to writer
 	w.Write(buf)

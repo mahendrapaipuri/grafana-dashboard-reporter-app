@@ -13,6 +13,7 @@ import (
 
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
 
 // Javascripts vars
@@ -31,7 +32,7 @@ var (
 
 // Client is a Grafana API client
 type GrafanaClient interface {
-	Dashboard(dashUID string) (Dashboard, error)
+	Dashboard(ctx context.Context, dashUID string) (Dashboard, error)
 	PanelPNG(p Panel, dashUID string, t TimeRange) (string, error)
 }
 
@@ -44,14 +45,16 @@ type grafanaClient struct {
 	secrets          *Secrets
 	config           *Config
 	queryParams      url.Values
+	logger           log.Logger
 }
 
 var getPanelRetrySleepTime = time.Duration(10) * time.Second
 
-// NewClient creates a new Grafana Client. Cookies and Authorization headers, if found,
+// NewGrafanaClient creates a new Grafana Client. Cookies and Authorization headers, if found,
 // will be forwarded in the requests
 // queryParams are Grafana template variable url values of the form var-{name}={value}, e.g. var-host=dev
 func NewGrafanaClient(
+	logger log.Logger,
 	client *http.Client,
 	secrets *Secrets,
 	config *Config,
@@ -81,6 +84,7 @@ func NewGrafanaClient(
 		secrets,
 		config,
 		queryParams,
+		logger,
 	}
 }
 
@@ -110,7 +114,7 @@ func (g grafanaClient) forwardAuthHeader(r *http.Request) *http.Request {
 }
 
 // Dashboard fetches dashboard from Grafana
-func (g grafanaClient) Dashboard(dashUID string) (Dashboard, error) {
+func (g grafanaClient) Dashboard(ctx context.Context, dashUID string) (Dashboard, error) {
 	// Start a wait group
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
@@ -134,7 +138,7 @@ func (g grafanaClient) Dashboard(dashUID string) (Dashboard, error) {
 
 	// Get dashboard model from browser
 	go func() {
-		dashboardData, err = g.dashboardFromBrowser(dashUID)
+		dashboardData, err = g.dashboardFromBrowser(ctx, dashUID)
 		if err != nil {
 			errorLock.Lock()
 			allErrs = errors.Join(err, allErrs)
@@ -200,7 +204,12 @@ func (g grafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 	dashURL := g.dashBrowserURL(dashUID)
 
 	// Create a new tab
-	ctx, cancel := chromedp.NewContext(g.config.BrowserContext)
+	chromeLogger := g.logger.With("subsystem", "chromium")
+	ctx, cancel := chromedp.NewContext(g.config.BrowserContext,
+		chromedp.WithErrorf(chromeLogger.Error),
+		chromedp.WithDebugf(chromeLogger.Debug),
+		chromedp.WithLogf(chromeLogger.Info),
+	)
 	defer cancel()
 
 	// Always prefer cookie over token

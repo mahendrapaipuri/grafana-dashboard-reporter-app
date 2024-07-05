@@ -32,7 +32,7 @@ type App struct {
 	config           *Config
 	secrets          *Secrets
 	ctxCancelFuncs   func()
-	newGrafanaClient func(client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient
+	newGrafanaClient func(logger log.Logger, client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, options *ReportOptions) (Report, error)
 }
 

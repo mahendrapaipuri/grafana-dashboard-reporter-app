@@ -26,13 +26,13 @@ func (s *mockCallResourceResponseSender) Send(response *backend.CallResourceResp
 type mockReport struct {
 }
 
-func (m mockReport) Generate() (pdf []byte, err error) {
+func (m mockReport) Generate(_ context.Context) (pdf []byte, err error) {
 	return []byte("mock"), nil
 }
 
 func (m mockReport) Clean() {}
 
-func (m mockReport) Title() string { return "title" }
+func (m mockReport) Title(_ context.Context) string { return "title" }
 
 // Test report resource
 func TestReportResource(t *testing.T) {
@@ -56,11 +56,11 @@ func TestReportResource(t *testing.T) {
 	Convey("When the report handler is called", t, func() {
 		var clientVars url.Values
 		// mock new grafana client function to capture and validate its input parameters
-		app.newGrafanaClient = func(client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient {
+		app.newGrafanaClient = func(logger log.Logger, client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient {
 			clientVars = variables
-			return NewGrafanaClient(&testClient, &Secrets{}, &Config{}, clientVars)
+			return NewGrafanaClient(logger, &testClient, &Secrets{}, &Config{}, clientVars)
 		}
-		//mock new report function to capture and validate its input parameters
+		// mock new report function to capture and validate its input parameters
 		var repDashName string
 		app.newReport = func(logger log.Logger, g GrafanaClient, options *ReportOptions) (Report, error) {
 			repDashName = options.dashUID
