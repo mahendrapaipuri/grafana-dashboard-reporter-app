@@ -121,11 +121,19 @@ apps:
       #
       maxRenderWorkers: 2
 
-      # A URL of a running remote chrome instance. 
+      # A URL of a running remote chrome instance.
       #
-      # For example, URL can be of form ws://localhost:9222. If empty, a local chrome 
+      # For example, URL can be of form ws://localhost:9222. If empty, a local chrome
       # browser will be executed.
-      # If this option is set, ensure that the `appUrl` is reachable is from remote 
+      # If this option is set, ensure that the `appUrl` is reachable is from remote
       # chrome instance
       #
       remoteChromeUrl: ''
+
+      # Report template to use for generating reports. This is an advanced feature.
+      # This can be used to customize the report generation process. The template should be
+      # a valid Go template.
+      #
+      headerTemplate: ''
+      reportTemplate: ''
+      footerTemplate: ''

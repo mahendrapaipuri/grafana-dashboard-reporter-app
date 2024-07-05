@@ -17,3 +17,6 @@ apps:
       maxBrowserWorkers: 10
       maxRenderWorkers: 10
       persistData: false
+      headerTemplate: ''
+      reportTemplate: ''
+      footerTemplate: ''
