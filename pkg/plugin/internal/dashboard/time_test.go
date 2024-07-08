@@ -1,4 +1,4 @@
-package plugin
+package dashboard
 
 import (
 	"fmt"
@@ -73,7 +73,7 @@ func TestTimeParsing(tst *testing.T) {
 
 	})
 
-	//?from=1463464226537&to=1463472462258
+	// ?from=1463464226537&to=1463472462258
 	Convey("Should be able to parse absolute time ", tst, func() {
 		So(t.parseTo("1463464226537"), sameTimeAs, time.Unix(1463464226537/1000, 0))
 	})
@@ -91,7 +91,7 @@ func TestTimeParsing(tst *testing.T) {
 			So(t.parseFrom("14123456789"), sameTimeAs, t.parseTo("14123456789"))
 		})
 
-		//now = Wed, 06 Jan 2016 16:34:32 UTC
+		// now = Wed, 06 Jan 2016 16:34:32 UTC
 		Convey("Should support days", func() {
 			startOfTheDay, _ := time.Parse(time.RFC1123, "Wed, 06 Jan 2016 00:00:00 UTC")
 			So(t.parseFrom("now/d"), sameTimeAs, startOfTheDay)
@@ -141,7 +141,7 @@ func TestTimeParsing(tst *testing.T) {
 	})
 
 	Convey("When parsing human frienly end time boundaries, parseTo()", tst, func() {
-		//now = Wed, 06 Jan 2016 16:34:32 UTC
+		// now = Wed, 06 Jan 2016 16:34:32 UTC
 		Convey("Should support days", func() {
 			endOfToday, _ := time.Parse(time.RFC1123, "Thu, 07 Jan 2016 00:00:00 UTC")
 			So(t.parseTo("now/d"), sameTimeAs, endOfToday)

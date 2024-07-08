@@ -74,7 +74,7 @@
 <body>
     <div class="container">
         <div class="grid">
-            {{- range $i, $v := .Panels}} 
+            {{- range $i, $v := .Dashboard.Panels}}
             <figure class="grid-image grid-image-{{$i}}">
                 <img src="{{embed $v.EncodedImage}}" id="image{{$v.ID}}" alt="{{$v.Title}}" class="grid-image">
             </figure>

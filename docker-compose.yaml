@@ -51,3 +51,8 @@ services:
       - IGNORE_HTTPS_ERRORS=true
     ports:
       - 8081
+  chrome:
+    image: chromedp/headless-shell:latest
+    shm_size: 2G
+    ports:
+      - 9222

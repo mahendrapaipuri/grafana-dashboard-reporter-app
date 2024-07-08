@@ -1,4 +1,4 @@
-package plugin
+package dashboard
 
 import (
 	"encoding/json"
@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
 )
 
 // Regex for parsing X and Y co-ordinates from CSS
@@ -39,7 +41,7 @@ const (
 	Table
 )
 
-// Panel represents a Grafana dashboard panel position
+// GridPos represents a Grafana dashboard panel position
 type GridPos struct {
 	H float64 `json:"h"`
 	W float64 `json:"w"`
@@ -56,32 +58,32 @@ type Panel struct {
 	EncodedImage string
 }
 
-// Is panel single stat?
+// IsSingleStat returns true if panel is of type SingleStat
 func (p Panel) IsSingleStat() bool {
 	return p.Is(SingleStat)
 }
 
-// If panel has width less than total allowable width
+// IsPartialWidth If panel has width less than total allowable width
 func (p Panel) IsPartialWidth() bool {
 	return (p.GridPos.W < 24)
 }
 
-// Get panel width
+// Width returns the width of the panel
 func (p Panel) Width() float64 {
 	return float64(p.GridPos.W) * 0.04
 }
 
-// Get panel height
+// Height returns the height of the panel
 func (p Panel) Height() float64 {
 	return float64(p.GridPos.H) * 0.04
 }
 
-// If panel is of type
+// Is returns true if panel is of type t
 func (p Panel) Is(t PanelType) bool {
 	return p.Type == t.string()
 }
 
-// Row represents a container for Panels
+// RowOrPanel represents a container for Panels
 type RowOrPanel struct {
 	Panel
 	Collapsed bool    `json:"collapsed"`
@@ -111,42 +113,44 @@ func variablesValues(queryParams url.Values) string {
 	return strings.Join(values, "; ")
 }
 
-// NewDashboard creates Dashboard from Grafana's internal JSON dashboard model
+// New creates Dashboard from Grafana's internal JSON dashboard model
 // fetched from Grafana API and browser
-func NewDashboard(dashJSON []byte, dashData []interface{}, queryParams url.Values, config *Config) (Dashboard, error) {
+func New(dashJSON []byte, dashData []interface{}, queryParams url.Values, config *config.Config) (Dashboard, error) {
 	var dash map[string]Dashboard
 	if err := json.Unmarshal(dashJSON, &dash); err != nil {
-		return Dashboard{}, err
+		return Dashboard{}, fmt.Errorf("failed to unmarshal dashboard JSON: %w", err)
 	}
 
 	// Get dashboard from map
-	if dashboard, ok := dash["dashboard"]; !ok {
+	dashboard, ok := dash["dashboard"]
+	if !ok {
 		return Dashboard{}, fmt.Errorf("no dashboard model found in Grafana API response")
-	} else {
-		// Attempt to update panels from browser data
-		// If there are no errors, update the panels from browser dashabord model and
-		// return
-		var panels []Panel
-		var err error
-		if panels, err = panelsFromBrowser(dashData); err != nil {
-			// If we fail to get panels from browser data, get them from dashboard JSON model
-			// and correct grid positions
-			panels = panelsFromJSON(dashboard.RowOrPanels, config.DashboardMode)
-		}
-
-		// Filter the panels based on IncludePanelIDs/ExcludePanelIDs
-		dashboard.Panels = filterPanels(panels, config)
-		// Add query parameters to dashboard model
-		dashboard.VariableValues = variablesValues(queryParams)
-		return dashboard, err
 	}
+
+	// Attempt to update panels from browser data
+	// If there are no errors, update the panels from browser dashabord model and
+	// return
+	var panels []Panel
+	var err error
+	if panels, err = panelsFromBrowser(dashData); err != nil {
+		// If we fail to get panels from browser data, get them from dashboard JSON model
+		// and correct grid positions
+		panels = panelsFromJSON(dashboard.RowOrPanels, config.DashboardMode)
+	}
+
+	// Filter the panels based on IncludePanelIDs/ExcludePanelIDs
+	dashboard.Panels = filterPanels(panels, config)
+	// Add query parameters to dashboard model
+	dashboard.VariableValues = variablesValues(queryParams)
+
+	return dashboard, err
 }
 
 // panelsFromBrowser creates slice of panels from the data fetched from browser's DOM model
 func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	// If dashData is nil return
 	if dashData == nil {
-		return nil, fmt.Errorf("no dashboard data found in browser data")
+		return nil, ErrNoDashboardData
 	}
 
 	var panels []Panel
@@ -211,7 +215,7 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 
 	// Check if we fetched any panels
 	if len(panels) == 0 {
-		allErrs = errors.Join(err, fmt.Errorf("no panels found in browser data"))
+		allErrs = errors.Join(err, ErrNoPanels)
 		return nil, allErrs
 	}
 	return panels, allErrs
@@ -276,7 +280,7 @@ func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 
 // filterPanels filters the panels based on IncludePanelIDs and ExcludePanelIDs
 // config parameters
-func filterPanels(panels []Panel, config *Config) []Panel {
+func filterPanels(panels []Panel, config *config.Config) []Panel {
 	// If config parameters are empty, return original panels
 	if len(config.IncludePanelIDs) == 0 && len(config.ExcludePanelIDs) == 0 {
 		return panels

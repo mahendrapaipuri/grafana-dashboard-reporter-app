@@ -40,6 +40,45 @@ jobs:
             echo "has-backend=true" >> $GITHUB_OUTPUT
           fi
 
+      # Install chrome as we will use it in e2e tests
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          install-dependencies: true
+
+      - name: Start headless chrome for remote tests
+        run: >-
+          chrome
+          --remote-debugging-port=44251
+          --no-sandbox
+          --disable-gpu
+          --no-first-run
+          --no-default-browser-check
+          --headless
+          --hide-scrollbars
+          --mute-audio
+          --disable-background-networking¥
+          --enable-features=NetworkService,NetworkServiceInProcess
+          --disable-background-timer-throttling
+          --disable-backgrounding-occluded-windows
+          --disable-breakpad
+          --disable-client-side-phishing-detection
+          --disable-default-apps
+          --disable-dev-shm-usage
+          --disable-extensions
+          --disable-features=site-per-process,Translate,BlinkGenPropertyTrees
+          --disable-hang-monitor
+          --disable-ipc-flooding-protection
+          --disable-popup-blocking
+          --disable-prompt-on-repost
+          --disable-renderer-backgrounding
+          --disable-sync
+          --force-color-profile=srgb
+          --metrics-recording-only
+          --safebrowsing-disable-auto-update
+          --enable-automation
+          --password-store=basic
+          --use-mock-keychain &
+
       - name: Setup Go environment
         if: steps.check-for-backend.outputs.has-backend == 'true'
         uses: actions/setup-go@v5
