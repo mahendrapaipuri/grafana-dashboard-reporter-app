@@ -111,8 +111,7 @@ jobs:
 
       - name: Validate plugin
         run: |
-          zip plugin-app.zip pkg/ src/ package.json go.* -r
-          # Use last stable version based on Go 1.21.x
+          zip plugin-app.zip pkg/ src/ package.json go.* Magefile.go -r
           git clone --depth 1 --branch v0.16.1 https://github.com/grafana/plugin-validator
           pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
