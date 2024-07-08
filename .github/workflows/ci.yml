@@ -113,7 +113,7 @@ jobs:
         run: |
           zip plugin-app.zip pkg/ src/ package.json -r
           # Use last stable version based on Go 1.21.x
-          git clone --depth 1 --branch v0.12.0 https://github.com/grafana/plugin-validator
+          git clone --depth 1 --branch v0.16.1 https://github.com/grafana/plugin-validator
           pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
           popd
