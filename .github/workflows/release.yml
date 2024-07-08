@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: grafana/plugin-actions/build-plugin@0315492b375faa7af0fa6c226ecb6c93c6fe9745
+      - uses: grafana/plugin-actions/build-plugin@0315492b375faa7af0fa6c226ecb6c93c6fe9745 # commit of 2024-07-08
         with:
           go-version: '1.22'
           policy_token: '' # We cannot sign plugin as it will not be published in grafana catalog
