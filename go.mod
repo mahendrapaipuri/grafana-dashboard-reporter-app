@@ -10,6 +10,7 @@ require (
 	github.com/grafana/grafana-plugin-sdk-go v0.236.0
 	github.com/magefile/mage v1.15.0
 	github.com/smartystreets/goconvey v1.8.1
+	golang.org/x/net v0.25.0
 )
 
 require (
@@ -90,7 +91,6 @@ require (
 	go.opentelemetry.io/proto/otlp v1.2.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect

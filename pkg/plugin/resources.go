@@ -1,20 +1,22 @@
 package plugin
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
-	"slices"
-	"strconv"
 	"strings"
 
+	"github.com/chromedp/cdproto/io"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/client"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/dashboard"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/report"
 )
 
-// Add filename to header
+// Add filename to Header
 func addFilenameHeader(w http.ResponseWriter, title string) {
 	// Sanitize title to escape non ASCII characters
 	// Ref: https://stackoverflow.com/questions/62705546/unicode-characters-in-attachment-name
@@ -34,6 +36,7 @@ func getDashboardVariables(r *http.Request) url.Values {
 			}
 		}
 	}
+
 	return variables
 }
 
@@ -42,6 +45,7 @@ func getDashboardVariables(r *http.Request) url.Values {
 func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
@@ -49,38 +53,78 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	ctxLogger := log.DefaultLogger.FromContext(req.Context())
 
 	// Get config from context
-	config := httpadapter.PluginConfigFromContext(req.Context())
-	currentUser := config.User.Login
+	pluginConfig := httpadapter.PluginConfigFromContext(req.Context())
+	currentUser := pluginConfig.User.Login
 
 	// Get Dashboard ID
 	dashboardUID := req.URL.Query().Get("dashUid")
 	if dashboardUID == "" {
 		http.Error(w, "Query parameter dashUid not found", http.StatusBadRequest)
+
 		return
 	}
 
 	// Get Grafana config from context
 	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
-	if saToken, err := grafanaConfig.PluginAppClientSecret(); err != nil {
-		ctxLogger.Warn("failed to get plugin app secret", "err", err)
+	conf, err := config.Load(
+		pluginConfig.AppInstanceSettings.JSONData,
+		pluginConfig.AppInstanceSettings.DecryptedSecureJSONData,
+	)
+	if err != nil {
+		ctxLogger.Error("error loading config", "err", err)
+		http.Error(w, "error loading config", http.StatusInternalServerError)
+
+		return
+	}
+
+	var grafanaAppURL string
+	if conf.URL != "" {
+		grafanaAppURL = conf.URL
 	} else {
-		// If we are on Grafana >= 10.3.0 and externalServiceAccounts are enabled
-		// always prefer this token over the one that is configured in plugin config
-		if saToken != "" {
-			a.secrets.token = saToken
+		grafanaAppURL, err = grafanaConfig.AppURL()
+		if err != nil {
+			ctxLogger.Error("failed to get app URL", "err", err)
+			http.Error(w, "failed to get app URL", http.StatusInternalServerError)
+
+			return
 		}
 	}
 
-	// If cookie is found in request headers, add it to secrets as well
-	if req.Header.Get(backend.CookiesHeaderName) != "" {
-		ctxLogger.Debug("cookie found in the request", "user", currentUser, "dash_uid", dashboardUID)
-		a.secrets.cookieHeader = req.Header.Get(backend.CookiesHeaderName)
-		var cookies []string
-		for _, cookie := range req.Cookies() {
-			cookies = append(cookies, cookie.Name)
-			cookies = append(cookies, cookie.Value)
+	var credential client.Credential
+
+	switch {
+	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
+		credential = client.Credential{
+			HeaderName:  backend.OAuthIdentityTokenHeaderName,
+			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
 		}
-		a.secrets.cookies = cookies
+	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
+		credential = client.Credential{
+			HeaderName:  backend.OAuthIdentityTokenHeaderName,
+			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
+		}
+	case req.Header.Get(backend.OAuthIdentityIDTokenHeaderName) != "":
+		credential = client.Credential{
+			HeaderName:  backend.OAuthIdentityIDTokenHeaderName,
+			HeaderValue: req.Header.Get(backend.OAuthIdentityIDTokenHeaderName),
+		}
+	default:
+		saToken, err := grafanaConfig.PluginAppClientSecret()
+		if err != nil {
+			if conf.Token == "" {
+				ctxLogger.Error("failed to get plugin app client secret", "err", err)
+				http.Error(w, "failed to get plugin app client secret", http.StatusInternalServerError)
+
+				return
+			}
+
+			saToken = conf.Token
+		}
+
+		credential = client.Credential{
+			HeaderName:  backend.OAuthIdentityTokenHeaderName,
+			HeaderValue: "Bearer " + saToken,
+		}
 	}
 
 	// Get Dashboard variables
@@ -90,113 +134,98 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Get time range
-	timeRange := NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
+	timeRange := dashboard.NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
 	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
 
-	// Always start with new instance of app config for each request
-	a.config = currentDashboardReporterAppConfig()
-
-	// Get custom settings if provided in Plugin settings
-	// Seems like when json.RawMessage is nil, it actually returns []byte("null"). So
-	// we need to check for both
-	// Ref: https://go.dev/src/encoding/json/stream.go?s=6218:6240#L262
-	if config.AppInstanceSettings.JSONData != nil && string(config.AppInstanceSettings.JSONData) != "null" {
-		if err := json.Unmarshal(config.AppInstanceSettings.JSONData, &a.config); err != nil {
-			ctxLogger.Error(
-				"failed to update config", "user", currentUser, "dash_uid", dashboardUID, "err", err,
-			)
-		}
-	}
-
-	// Trim trailing slash in app URL (Just in case)
-	a.config.AppURL = strings.TrimRight(a.config.AppURL, "/")
-
-	// Override config if any of them are set in query parameters
-	if queryLayouts, ok := req.URL.Query()["layout"]; ok {
-		if slices.Contains([]string{"simple", "grid"}, queryLayouts[len(queryLayouts)-1]) {
-			a.config.Layout = queryLayouts[len(queryLayouts)-1]
-		}
-	}
-	if queryOrientations, ok := req.URL.Query()["orientation"]; ok {
-		if slices.Contains([]string{"landscape", "portrait"}, queryOrientations[len(queryOrientations)-1]) {
-			a.config.Orientation = queryOrientations[len(queryOrientations)-1]
-		}
-	}
-	if queryDashboardMode, ok := req.URL.Query()["dashboardMode"]; ok {
-		if slices.Contains([]string{"default", "full"}, queryDashboardMode[len(queryDashboardMode)-1]) {
-			a.config.DashboardMode = queryDashboardMode[len(queryDashboardMode)-1]
-		}
-	}
-	if timeZone, ok := req.URL.Query()["timeZone"]; ok {
-		a.config.TimeZone = timeZone[len(timeZone)-1]
-	}
-
-	// Two special query parameters: includePanelID and excludePanelID
-	// The query parameters are self explanatory and based on the values set to them
-	// panels will be included/excluded in the final report
-	a.config.IncludePanelIDs = nil
-	a.config.ExcludePanelIDs = nil
-	if includePanelIDs, ok := req.URL.Query()["includePanelID"]; ok {
-		for _, id := range includePanelIDs {
-			if idInt, err := strconv.Atoi(id); err == nil {
-				a.config.IncludePanelIDs = append(a.config.IncludePanelIDs, idInt)
-			}
-		}
-	}
-	if excludePanelIDs, ok := req.URL.Query()["excludePanelID"]; ok {
-		for _, id := range excludePanelIDs {
-			if idInt, err := strconv.Atoi(id); err == nil {
-				a.config.ExcludePanelIDs = append(a.config.ExcludePanelIDs, idInt)
-			}
-		}
-	}
-	ctxLogger.Info(
-		"updated config", "config", a.config.String(), "user", currentUser, "dash_uid", dashboardUID,
-	)
-
 	// Make a new Grafana client to get dashboard JSON model and Panel PNGs
-	grafanaClient := a.newGrafanaClient(
+	grafanaClient := client.New(
 		ctxLogger,
+		conf,
 		a.httpClient,
-		a.secrets,
-		a.config,
+		a.chromeInstance,
+		grafanaAppURL,
+		credential,
 		variables,
 	)
 
 	// Make a new Report to put all PNGs into a HTML template and print it into a PDF
-	report, err := a.newReport(
+	pdfReport, err := report.New(
 		ctxLogger,
+		conf,
+		a.chromeInstance,
 		grafanaClient,
-		&ReportOptions{
-			dashUID:   dashboardUID,
-			timeRange: timeRange,
-			config:    a.config,
+		&report.Options{
+			DashUID:     dashboardUID,
+			Layout:      conf.Layout,
+			Orientation: conf.Orientation,
+			TimeRange:   timeRange,
 		},
 	)
 	if err != nil {
 		ctxLogger.Error("error creating new Report instance", "err", err)
 		http.Error(w, "error generating report", http.StatusInternalServerError)
+
 		return
 	}
 
 	// Generate report
-	buf, err := report.Generate(req.Context())
+	steam, err := pdfReport.Generate(req.Context())
 	if err != nil {
 		ctxLogger.Error("error generating report", "err", err)
 		http.Error(w, "error generating report", http.StatusInternalServerError)
+
 		return
 	}
 
-	// Add PDF file name to header
-	addFilenameHeader(w, report.Title(req.Context()))
+	// Add PDF file name to Header
+	addFilenameHeader(w, pdfReport.Title())
 
-	// Write buffered response to writer
-	w.Write(buf)
+	reader := io.Read(steam)
+
+	var (
+		data string
+		eol  bool
+	)
+
+	for {
+		data, eol, err = reader.Do(req.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
+		}
+
+		if _, err = w.Write([]byte(data)); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			return
+		}
+
+		if eol {
+			break
+		}
+	}
+
+	if err = io.Close(steam).Do(req.Context()); err != nil {
+		ctxLogger.Warn("unable to close report", "user", currentUser, "dash_uid", dashboardUID)
+	}
+
 	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
+}
+
+// handlePing is an example HTTP GET resource that returns an OK response.
+func (a *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Add("Content-Type", "text/plan")
+	if _, err := w.Write([]byte("OK")); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
 // registerRoutes takes a *http.ServeMux and registers some HTTP handlers.
 func (a *App) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/report", a.handleReport)
+	mux.HandleFunc("/healthz", a.handleHealth)
 }

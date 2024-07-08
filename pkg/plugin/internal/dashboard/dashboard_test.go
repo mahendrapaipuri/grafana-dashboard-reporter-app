@@ -1,10 +1,11 @@
-package plugin
+package dashboard
 
 import (
 	"encoding/json"
 	"net/url"
 	"testing"
 
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -31,7 +32,7 @@ func TestDashboard(t *testing.T) {
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
-		dash, _ := NewDashboard([]byte(dashJSON), dashData, url.Values{}, &Config{})
+		dash, _ := New([]byte(dashJSON), dashData, url.Values{}, &config.Config{})
 
 		Convey("Panels should contain all panels from dashboard browser data", func() {
 			So(dash.Panels, ShouldHaveLength, 3)
@@ -63,7 +64,7 @@ func TestDashboard(t *testing.T) {
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
-		dash, _ := NewDashboard([]byte(dashJSON), dashData, url.Values{}, &Config{})
+		dash, _ := New([]byte(dashJSON), dashData, url.Values{}, &config.Config{})
 
 		Convey("Panels should contain all panels from dashboard JSON model", func() {
 			So(dash.Panels, ShouldHaveLength, 5)
@@ -83,7 +84,7 @@ func TestVariableValues(t *testing.T) {
 		vars := url.Values{}
 		vars.Add("var-one", "oneval")
 		vars.Add("var-two", "twoval")
-		dash, _ := NewDashboard([]byte(v5DashJSON), nil, vars, &Config{})
+		dash, _ := New([]byte(v5DashJSON), nil, vars, &config.Config{})
 
 		Convey("The dashboard should contain the variable values in a random order", func() {
 			So(dash.VariableValues, ShouldContainSubstring, "oneval")
@@ -98,23 +99,23 @@ func TestFilterPanels(t *testing.T) {
 			{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7},
 		}
 		cases := map[string]struct {
-			Config *Config
+			Config *config.Config
 			Result []Panel
 		}{
 			"include": {
-				&Config{
+				&config.Config{
 					IncludePanelIDs: []int{1, 4, 6},
 				},
 				[]Panel{{ID: 1}, {ID: 4}, {ID: 6}},
 			},
 			"exclude": {
-				&Config{
+				&config.Config{
 					ExcludePanelIDs: []int{2, 4, 3},
 				},
 				[]Panel{{ID: 1}, {ID: 5}, {ID: 6}, {ID: 7}},
 			},
 			"include_and_exclude": {
-				&Config{
+				&config.Config{
 					ExcludePanelIDs: []int{2, 4, 3},
 					IncludePanelIDs: []int{1, 4, 6},
 				},

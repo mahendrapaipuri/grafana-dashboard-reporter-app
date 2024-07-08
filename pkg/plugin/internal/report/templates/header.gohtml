@@ -35,10 +35,10 @@
             <div class="content-header-left">generated on {{.Date}}</div>
             <div class="content-header-right">Datetime range: {{.From}} to {{.To}}</div>
             <br />
-            {{.Title}} <span class="pageNumber"></span>/<span class="totalPages"></span>
-            {{- if .VariableValues}}
+            {{ .Dashboard.Title }} <span class="pageNumber"></span>/<span class="totalPages"></span>
+            {{- if .Dashboard.VariableValues}}
             <br />
-            <div class="content-header-left">{{.VariableValues}}</div>
+            <div class="content-header-left">{{ .Dashboard.VariableValues }}</div>
             {{- end}}
         </div>
     </body>

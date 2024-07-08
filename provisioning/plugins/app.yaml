@@ -103,3 +103,6 @@ apps:
       # applies globally to all generated reports
       #
       maxRenderWorkers: 2
+
+      # A remote address for a running chrome instance. If empty, a local chrome browser will be executed
+      remoteChromeAddr: 'ws://chrome:9222/'

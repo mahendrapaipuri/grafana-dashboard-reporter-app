@@ -1,5 +1,7 @@
 export const testIds = {
   appConfig: {
+    url: "data-testid ac-url",
+    tlsSkipVerify: "data-testid ac-tls-skip-verify",
     saToken: "data-testid ac-sa-token",
     container: "data-testid ac-container",
     layout: "data-testid ac-layout",
@@ -8,6 +10,7 @@ export const testIds = {
     tz: "data-testid ac-timezone",
     logo: "data-testid ac-logo",
     maxWorkers: "data-testid ac-max-workers",
+    remoteChromeAddr: "data-testid ac-remote-chrome-addr",
     submit: "data-testid ac-submit-form",
   },
   Status: {

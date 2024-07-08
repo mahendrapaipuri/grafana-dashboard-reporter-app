@@ -7,6 +7,7 @@ import {
   useStyles2,
   Field,
   Input,
+  Switch,
   FieldSet,
   RadioButtonGroup,
   SecretInput,
@@ -21,17 +22,26 @@ import { getBackendSrv } from "@grafana/runtime";
 import { testIds } from "../testIds";
 
 export type JsonData = {
-  appUrl?: string;
-  skipTlsCheck?: boolean;
+  url?: string;
+  tlsSkipVerify?: boolean;
   orientation?: string;
   layout?: string;
   dashboardMode?: string;
   timeZone?: string;
   logo?: string;
   maxRenderWorkers?: number;
+  remoteChromeAddr?: string;
 };
 
 type State = {
+  // URL of grafana (override auto-detection)
+  url: string;
+  // If url has changed
+  urlChanged: boolean;
+  // Skip TLS verification to grafana
+  tlsSkipVerify: boolean;
+  // If tlsSkipVerify has changed
+  tlsSkipVerifyChanged: boolean;
   // PDF report orientation (portrait or landscape)
   orientation: string;
   // If orientation has changed
@@ -56,6 +66,10 @@ type State = {
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
   maxRenderWorkersChanged: boolean;
+  // Address of an chrome remote instance
+  remoteChromeAddr: string;
+  // If remoteChromeAddrChanged has changed
+  remoteChromeAddrChanged: boolean;
   // Tells us if the Service Account's token is set.
   // Set to `true` ONLY if it has already been set and haven't been changed.
   // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
@@ -70,6 +84,10 @@ export const AppConfig = ({ plugin }: Props) => {
   const s = useStyles2(getStyles);
   const { enabled, pinned, jsonData, secureJsonFields } = plugin.meta;
   const [state, setState] = useState<State>({
+    url: jsonData?.url || "",
+    urlChanged: false,
+    tlsSkipVerify: jsonData?.tlsSkipVerify || false,
+    tlsSkipVerifyChanged: false,
     orientation: jsonData?.orientation || "portrait",
     orientationChanged: false,
     layout: jsonData?.layout || "simple",
@@ -82,13 +100,11 @@ export const AppConfig = ({ plugin }: Props) => {
     logoChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
+    remoteChromeAddr: jsonData?.remoteChromeAddr || "",
+    remoteChromeAddrChanged: false,
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
-
-  // Pass through appUrl and SkipTlsCheck as they cannot be configured via UI
-  const appUrl = jsonData?.appUrl;
-  const skipTlsCheck = jsonData?.skipTlsCheck;
 
   const orientationOptions = [
     { label: "Portrait", value: "portrait", icon: "gf-portrait" },
@@ -104,6 +120,22 @@ export const AppConfig = ({ plugin }: Props) => {
     { label: "Default", value: "default" },
     { label: "Full", value: "full" },
   ];
+
+  const onChangeURL = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      url: event.target.value,
+      urlChanged: true,
+    });
+  };
+
+  const onChangeTLSSkipVerify = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      tlsSkipVerify: event.target.checked,
+      tlsSkipVerifyChanged: true,
+    });
+  };
 
   const onChangeLayout = (value: string) => {
     setState({
@@ -153,6 +185,14 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangeRemoteChromeAddr = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      remoteChromeAddr: event.target.value,
+      remoteChromeAddrChanged: true,
+    });
+  };
+
   const onResetSaToken = () =>
     setState({
       ...state,
@@ -184,14 +224,15 @@ export const AppConfig = ({ plugin }: Props) => {
                   enabled: true,
                   pinned: true,
                   jsonData: {
-                    appUrl: appUrl,
-                    skipTlsCheck: skipTlsCheck,
+                    url: state.url,
+                    tlsSkipVerify: state.tlsSkipVerify,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
+                    remoteChromeAddr: state.remoteChromeAddr,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -220,14 +261,15 @@ export const AppConfig = ({ plugin }: Props) => {
                   enabled: false,
                   pinned: false,
                   jsonData: {
-                    appUrl: appUrl,
-                    skipTlsCheck: skipTlsCheck,
+                    url: state.url,
+                    tlsSkipVerify: state.tlsSkipVerify,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
+                    remoteChromeAddr: state.remoteChromeAddr,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -380,6 +422,54 @@ export const AppConfig = ({ plugin }: Props) => {
             onChange={onChangeMaxWorkers}
           />
         </Field>
+
+        {/* Grafana Hostname */}
+        <Field
+          label="Grafana Hostname"
+          description="Overrides the automatic grafana hostname detection. Use this if you have a reverse proxy in front of Grafana."
+          data-testid={testIds.appConfig.url}
+          className={s.marginTop}
+        >
+          <Input
+            type="url"
+            width={60}
+            id="url"
+            label={`Grafana Hostname`}
+            value={state.url}
+            onChange={onChangeURL}
+          />
+        </Field>
+        
+        {/* Skip TLS verification */}
+        <Field
+          label="Skip TLS Verification"
+          description="Do not validate TLS certificates when connecting to Grafana. NOTE: If using an remote chrome instance, set --ignore-certificate-errors flag in chrome."
+          data-testid={testIds.appConfig.tlsSkipVerify}
+          className={s.marginTop}
+        >
+          <Switch
+            id="tlsSkipVerify"
+            value={state.tlsSkipVerify}
+            onChange={onChangeTLSSkipVerify}
+          />
+        </Field>
+
+        {/* Remote Chrome Addr */}
+        <Field
+          label="Remote Chrome Addr"
+          description="Address to a running chrome instance with an listening chrome remote debug socket"
+          data-testid={testIds.appConfig.remoteChromeAddr}
+          className={s.marginTop}
+        >
+          <Input
+            type="url"
+            width={60}
+            id="remoteChromeAddr"
+            label={`Remote Chrome Addr`}
+            value={state.remoteChromeAddr}
+            onChange={onChangeRemoteChromeAddr}
+          />
+        </Field>
       </ConfigSection>
 
       <div className={s.marginTop}>
@@ -391,14 +481,15 @@ export const AppConfig = ({ plugin }: Props) => {
               enabled,
               pinned,
               jsonData: {
-                appUrl: appUrl,
-                skipTlsCheck: skipTlsCheck,
+                url: state.url,
+                tlsSkipVerify: state.tlsSkipVerify,
                 maxRenderWorkers: state.maxRenderWorkers,
                 orientation: state.orientation,
                 layout: state.layout,
                 dashboardMode: state.dashboardMode,
                 timeZone: state.timeZone,
                 logo: state.logo,
+                remoteChromeAddr: state.remoteChromeAddr,
               },
               // This cannot be queried later by the frontend.
               // We don't want to override it in case it was set previously and left untouched now.
@@ -410,12 +501,15 @@ export const AppConfig = ({ plugin }: Props) => {
             })
           }
           disabled={Boolean(
-            !state.layoutChanged &&
+            !state.url &&
+              !state.tlsSkipVerify &&
+              !state.layoutChanged &&
               !state.orientationChanged &&
               !state.dashboardModeChanged &&
               !state.timeZoneChanged &&
               !state.logoChanged &&
               !state.maxRenderWorkersChanged &&
+              !state.remoteChromeAddr &&
               !state.saToken
           )}
         >

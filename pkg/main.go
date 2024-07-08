@@ -16,8 +16,8 @@ func main() {
 	// argument. This factory will be automatically called on incoming request
 	// from Grafana to create different instances of `App` (per plugin
 	// ID).
-	if err := app.Manage(plugin.PLUGIN_NAME, plugin.NewDashboardReporterApp, app.ManageOpts{}); err != nil {
-		log.DefaultLogger.Error("failed to start mahendrapaipuri-dashboardreporter-app", "err", err.Error())
+	if err := app.Manage(plugin.Name, plugin.NewDashboardReporterApp, app.ManageOpts{}); err != nil {
+		log.DefaultLogger.Error("failed to start "+plugin.Name, "err", err.Error())
 		os.Exit(1)
 	}
 }

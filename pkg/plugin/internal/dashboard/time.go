@@ -1,4 +1,4 @@
-package plugin
+package dashboard
 
 import (
 	"regexp"
@@ -55,7 +55,7 @@ func daysToWeekBoundary(wd time.Weekday, b boundary) int {
 	if b == To {
 		return 1 + int(time.Saturday) - int(wd)
 	} else {
-		//b == From
+		// b == From
 		return -int(wd)
 	}
 }
@@ -103,7 +103,7 @@ func isHumanFriendlyBoundray(s string) bool {
 	return matched
 }
 
-// Make new TimeRange struct
+// NewTimeRange creates a new TimeRange struct
 func NewTimeRange(from, to string) TimeRange {
 	if from == "" {
 		from = "now-1h"
