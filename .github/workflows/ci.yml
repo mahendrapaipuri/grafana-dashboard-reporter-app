@@ -16,10 +16,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'yarn'
@@ -54,9 +54,9 @@ jobs:
 
       - name: Setup Go environment
         if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.22'
 
       - name: Test backend
         if: steps.check-for-backend.outputs.has-backend == 'true'
@@ -111,9 +111,8 @@ jobs:
 
       - name: Validate plugin
         run: |
-          zip plugin-app.zip pkg/ src/ package.json -r
-          # Use last stable version based on Go 1.21.x
-          git clone --depth 1 --branch v0.12.0 https://github.com/grafana/plugin-validator
+          zip plugin-app.zip pkg/ src/ package.json go.* Magefile.go -r
+          git clone --depth 1 --branch v0.16.1 https://github.com/grafana/plugin-validator
           pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
           popd
