@@ -63,7 +63,8 @@ func TestReport(t *testing.T) {
 
 		Convey("When rendering images", func() {
 			dashboard, _ := gClient.Dashboard("")
-			rep.renderPNGsParallel(dashboard)
+			err := rep.renderPNGsParallel(dashboard)
+			So(err, ShouldBeNil)
 
 			Convey("It should create a temporary folder", func() {
 				_, err := rep.options.vfs.Stat(rep.options.reportsDir)
@@ -90,7 +91,12 @@ func TestReport(t *testing.T) {
 
 		Convey("When genereting the HTML files", func() {
 			dashboard, _ := gClient.Dashboard("")
-			rep.generateHTMLFile(dashboard)
+			err := rep.renderPNGsParallel(dashboard)
+			So(err, ShouldBeNil)
+
+			err = rep.generateHTMLFile(dashboard)
+			So(err, ShouldBeNil)
+
 			f, err := rep.options.vfs.Open(rep.htmlPath())
 			defer f.Close()
 
@@ -124,8 +130,8 @@ func TestReport(t *testing.T) {
 					So(s, ShouldContainSubstring, "image99")
 				})
 				Convey("and the time range", func() {
-					//server time zone by shift hours timestamp
-					//so just test for day and year
+					// server time zone by shift hours timestamp
+					// so just test for day and year
 					So(rep.options.header, ShouldContainSubstring, "Tue Jan 19")
 					So(rep.options.header, ShouldContainSubstring, "2016")
 				})
