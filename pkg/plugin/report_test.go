@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -63,62 +64,49 @@ func TestReport(t *testing.T) {
 
 		Convey("When rendering images", func() {
 			dashboard, _ := gClient.Dashboard("")
-			err := rep.renderPNGsParallel(dashboard)
+			pngs, err := rep.renderPNGsParallel(dashboard)
 			So(err, ShouldBeNil)
+			So(pngs, ShouldHaveLength, 9)
 
 			Convey("It should create a temporary folder", func() {
 				_, err := rep.options.vfs.Stat(rep.options.reportsDir)
 				So(err, ShouldBeNil)
 			})
 
-			Convey("It should copy the file to the image folder", func() {
-				_, err := rep.options.vfs.Stat(rep.imgDirPath() + "/image1.png")
-				So(err, ShouldBeNil)
-			})
-
-			Convey("It shoud call getPanelPng once per panel", func() {
+			Convey("It should call getPanelPng once per panel", func() {
 				So(gClient.getPanelCallCount, ShouldEqual, 9)
-			})
-
-			Convey("It should create one file per panel", func() {
-				f, _ := rep.options.vfs.Open(rep.imgDirPath())
-				defer f.Close()
-				files, err := f.Readdir(0)
-				So(files, ShouldHaveLength, 9)
-				So(err, ShouldBeNil)
 			})
 		})
 
 		Convey("When genereting the HTML files", func() {
 			dashboard, _ := gClient.Dashboard("")
-			err := rep.renderPNGsParallel(dashboard)
+			pngs, err := rep.renderPNGsParallel(dashboard)
 			So(err, ShouldBeNil)
+			So(pngs, ShouldHaveLength, 9)
 
-			err = rep.generateHTMLFile(dashboard)
+			html, err := rep.generateHTMLFile(dashboard, pngs)
 			So(err, ShouldBeNil)
-
-			f, err := rep.options.vfs.Open(rep.htmlPath())
-			defer f.Close()
 
 			Convey("It should create a file in the temporary folder", func() {
 				So(err, ShouldBeNil)
 			})
 
 			Convey("The file should contain reference to the template data", func() {
-				var buf bytes.Buffer
-				io.Copy(&buf, f)
-				s := buf.String()
+				s := html
 
 				So(err, ShouldBeNil)
 				Convey("Including the Title", func() {
 					So(rep.options.header, ShouldContainSubstring, "My first dashboard")
 
 				})
-				Convey("Including the varialbe values", func() {
+				Convey("Including the variable values", func() {
 					So(rep.options.header, ShouldContainSubstring, "testvarvalue")
 
 				})
 				Convey("and the images", func() {
+					So(s, ShouldContainSubstring, "data:image/png")
+					So(strings.Count(s, "data:image/png"), ShouldEqual, 9)
+
 					So(s, ShouldContainSubstring, "image1")
 					So(s, ShouldContainSubstring, "image22")
 					So(s, ShouldContainSubstring, "image33")
@@ -180,22 +168,14 @@ func TestReportErrorHandling(t *testing.T) {
 
 		Convey("When rendering images", func() {
 			dashboard, _ := gClient.Dashboard("")
-			err := rep.renderPNGsParallel(dashboard)
+			_, err := rep.renderPNGsParallel(dashboard)
 
 			Convey("It shoud call getPanelPng once per panel", func() {
 				So(gClient.getPanelCallCount, ShouldEqual, 9)
 			})
 
-			Convey("It should create one less image file than the total number of panels", func() {
-				f, _ := rep.options.vfs.Open(rep.imgDirPath())
-				defer f.Close()
-				files, err := f.Readdir(0)
-				So(files, ShouldHaveLength, 8) // one less than the total number of im
-				So(err, ShouldBeNil)
-			})
-
 			Convey(
-				"If any panels return errors, renderPNGsParralel should return the error message from one panel",
+				"If any panels return errors, renderPNGsParallel should return the error message from one panel",
 				func() {
 					So(err, ShouldNotBeNil)
 					So(err.Error(), ShouldContainSubstring, "The second panel has some problem")

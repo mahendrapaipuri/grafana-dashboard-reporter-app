@@ -76,7 +76,7 @@
         <div class="grid">
             {{- range $i, $v := .Panels}} 
             <figure class="grid-image grid-image-{{$i}}">
-                <img src="{{ (printf "images/image%d.png" $v.ID) | embed "image/png" }}" id="image{{ $v.ID }}" alt="{{$v.Title}}" class="grid-image">
+                <img src="{{ index $.Images $v.ID }}" id="image{{ $v.ID }}" alt="{{ $v.Title }}" class="grid-image">
             </figure>
             {{- end }}
         </div>
