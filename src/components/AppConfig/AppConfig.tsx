@@ -375,6 +375,7 @@ export const AppConfig = ({ plugin }: Props) => {
             id="max-workers"
             data-testid={testIds.appConfig.maxWorkers}
             label={`Maximum Render Workers`}
+            pattern={`[0-9]{1,2}`}
             value={state.maxRenderWorkers}
             onChange={onChangeMaxWorkers}
           />
