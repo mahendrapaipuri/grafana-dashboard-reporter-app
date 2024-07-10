@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent } from 'react';
 import { lastValueFrom } from 'rxjs';
 import { css } from '@emotion/css';
+import { ConfigSection } from "@grafana/experimental";
 import {
   Button,
   useStyles2,
@@ -244,9 +245,12 @@ export const AppConfig = ({ plugin }: Props) => {
         )}
       </FieldSet>
 
-      {/* CUSTOM SETTINGS */}
-      <FieldSet label="Plugin Settings" className={s.marginTopXl}>
-        {/* Service account token */}
+      {/* Authentication Settings */}
+      <hr className={`${s.hrTopSpace} ${s.hrBottomSpace}`} />
+      <ConfigSection
+        title="Authentication"
+        description="Use this section to configure service account tokens when Grafana < 10.3.0 is used or externalServiceAccounts feature is not enabled"
+      >
         <Field
           label="Service Account Token"
           description="This token will be used to make API requests to Grafana for generating reports."
@@ -266,7 +270,14 @@ export const AppConfig = ({ plugin }: Props) => {
             onReset={onResetSaToken}
           />
         </Field>
+      </ConfigSection>
 
+      {/* Report Settings */}
+      <hr className={`${s.hrTopSpace} ${s.hrBottomSpace}`} />
+      <ConfigSection
+        title="Report Settings"
+        description="Use this section to customise the generated report"
+      >
         {/* Use Grid Layout */}
         <Field
           label="Layout"
@@ -342,7 +353,16 @@ export const AppConfig = ({ plugin }: Props) => {
             onChange={onChangeLogo}
           />
         </Field>
+      </ConfigSection>
 
+      {/* Additional Settings */}
+      <hr className={`${s.hrTopSpace} ${s.hrBottomSpace}`} />
+      <ConfigSection
+        title="Additional Settings"
+        description="Additional settings are optional settings that can be configured for more control over the plugin app."
+        isCollapsible
+        isInitiallyOpen={false}
+      >
         {/* Max workers */}
         <Field
           label="Maximum Render Workers"
@@ -355,66 +375,76 @@ export const AppConfig = ({ plugin }: Props) => {
             id="max-workers"
             data-testid={testIds.appConfig.maxWorkers}
             label={`Maximum Render Workers`}
+            pattern={`[0-9]{1,2}`}
             value={state.maxRenderWorkers}
             onChange={onChangeMaxWorkers}
           />
         </Field>
+      </ConfigSection>
 
-        <div className={s.marginTop}>
-          <Button
-            type="submit"
-            data-testid={testIds.appConfig.submit}
-            onClick={() =>
-              updatePluginAndReload(plugin.meta.id, {
-                enabled,
-                pinned,
-                jsonData: {
-                  appUrl: appUrl,
-                  skipTlsCheck: skipTlsCheck,
-                  maxRenderWorkers: state.maxRenderWorkers,
-                  orientation: state.orientation,
-                  layout: state.layout,
-                  dashboardMode: state.dashboardMode,
-                  timeZone: state.timeZone,
-                  logo: state.logo,
-                },
-                // This cannot be queried later by the frontend.
-                // We don't want to override it in case it was set previously and left untouched now.
-                secureJsonData: state.isSaTokenSet
-                  ? undefined
-                  : {
-                      saToken: state.saToken,
-                    },
-              })
-            }
-            disabled={Boolean(
-              !state.layoutChanged &&
-                !state.orientationChanged &&
-                !state.dashboardModeChanged &&
-                !state.timeZoneChanged &&
-                !state.logoChanged &&
-                !state.maxRenderWorkersChanged &&
-                !state.saToken
-            )}
-          >
-            Save settings
-          </Button>
-        </div>
-      </FieldSet>
+      <div className={s.marginTop}>
+        <Button
+          type="submit"
+          data-testid={testIds.appConfig.submit}
+          onClick={() =>
+            updatePluginAndReload(plugin.meta.id, {
+              enabled,
+              pinned,
+              jsonData: {
+                appUrl: appUrl,
+                skipTlsCheck: skipTlsCheck,
+                maxRenderWorkers: state.maxRenderWorkers,
+                orientation: state.orientation,
+                layout: state.layout,
+                dashboardMode: state.dashboardMode,
+                timeZone: state.timeZone,
+                logo: state.logo,
+              },
+              // This cannot be queried later by the frontend.
+              // We don't want to override it in case it was set previously and left untouched now.
+              secureJsonData: state.isSaTokenSet
+                ? undefined
+                : {
+                    saToken: state.saToken,
+                  },
+            })
+          }
+          disabled={Boolean(
+            !state.layoutChanged &&
+              !state.orientationChanged &&
+              !state.dashboardModeChanged &&
+              !state.timeZoneChanged &&
+              !state.logoChanged &&
+              !state.maxRenderWorkersChanged &&
+              !state.saToken
+          )}
+        >
+          Save settings
+        </Button>
+      </div>
     </div>
   );
 };
 
 const getStyles = (theme: GrafanaTheme2) => ({
-  colorWeak: css`
-    color: ${theme.colors.text.secondary};
-  `,
-  marginTop: css`
-    margin-top: ${theme.spacing(3)};
-  `,
-  marginTopXl: css`
-    margin-top: ${theme.spacing(6)};
-  `,
+  colorWeak: css({
+    color: `${theme.colors.text.secondary}`,
+  }),
+  marginTop: css({
+    marginTop: `${theme.spacing(3)}`,
+  }),
+  marginTopXl: css({
+    marginTop: `${theme.spacing(6)}`,
+  }),
+  hrBottomSpace: css({
+    marginBottom: "56px",
+  }),
+  hrTopSpace: css({
+    marginTop: "50px",
+  }),
+  reportSettings: css({
+    paddingTop: "32px",
+  }),
 });
 
 const updatePluginAndReload = async (pluginId: string, data: Partial<PluginMeta<JsonData>>) => {

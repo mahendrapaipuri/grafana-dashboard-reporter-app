@@ -23,6 +23,7 @@ test("should be possible to save app configuration", async ({
     .getByRole("textbox", { name: "Service Account Token" })
     .fill("secret-api-key");
   await page.getByLabel("Grid").click();
+  await page.getByLabel("Expand section Additional Settings").click();
   await page.getByLabel("Maximum Render Workers").clear();
   await page.getByLabel("Maximum Render Workers").fill("3");
 

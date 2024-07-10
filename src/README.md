@@ -127,7 +127,6 @@ parameters set in the `reporter.yml` file.
 Grafana Provisioning is a programmatic way of configuring the plugin app. However, it is 
 possible to configure the app from Grafana UI as well as explained in the first option.
 
-
 Different configuration parameters are explained below:
 
 ### Grafana related parameters
@@ -151,9 +150,17 @@ can only be set using provisioning method and **it is not possible to configure 
 will get the Grafana's data path based on its own executable path. If the existing provisioned
 configs have this parameter set, it will be ignored while loading the plugin's configuration.
 
-### Report parameters
+### Authentication settings
 
-All the configuration parameters can only be modified by `Admin` role.
+This config section allows to configure authentication related settings.
+
+- `Service Account Token`: A service account token that will be used to generate reports
+  _via_ API requests. More details on how to use it is briefed in 
+  [Using Grafana API](#using-grafana-api) section.
+
+### Report settings
+
+All the configuration parameters can only be modified by `Admin` role from Grafana UI.
 
 - `Layout`: Layout of the report. Using grid layout renders the report as it is rendered
   in the browser. A simple layout will render the report with one panel per row
@@ -169,10 +176,16 @@ All the configuration parameters can only be modified by `Admin` role.
   [IANA format](https://www.iana.org/time-zones). By default, local Grafana server's 
   time zone will be used.
 
-Although these parameters can only be changed by users with `Admin` role for whole instance
+- `Branding Logo`: This parameter takes a base64 encoded png image that will be included
+  in the footer of each page in the report. Typically, operators can include their 
+  organization logos to have "customized" reports.
+
+#### Overriding report settings
+
+Although report settings can only be modified by users with `Admin` role for whole instance
 of Grafana, it is possible to override the global defaults for a particular report
 by using query parameters. It is enough to add query parameters to dashboard report URL
-to set these values.
+to set these values. Currently, the supported query parameters are:
 
 - Query field for layout is `layout` and it takes either `simple` or `grid` as value.
   Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&layout=grid`
@@ -209,15 +222,9 @@ Besides there are two special query parameters available namely:
   it will be **included** in the report. Query parameter `includePanelID` has more 
   precedence over `excludePanelID`.
 
-### Advanced parameters
+### Additional settings
 
-- `Service Account Token`: A service account token that will be used to generate reports
-  _via_ API requests. More details on how to use it is briefed in 
-  [Using Grafana API](#using-grafana-api) section.
-
-- `Branding Logo`: This parameter takes a base64 encoded png image that will be included
-  in the footer of each page in the report. Typically, operators can include their 
-  organization logos to have "customized" reports.
+Additional settings that can only be modified by the users with `Admin` role.
 
 - `Maximum Render Workers`: Number of concurrent workers to create PNGs of panels in the
   dashboard. Do not use too high value as it starve the machine
@@ -281,9 +288,10 @@ any HTTP client of your favorite programming language.
 > If you are using Grafana >= 10.3.0, there is a feature flag called `externalServiceAccounts`
 that can create a service account and provision a service account token automatically for
 the plugin. Hence, there is no need to configure the service account token to the plugin. 
+To enable this feature, it is necessary to set 
+`enable = externalServiceAccounts` in `feature_toggles` section of Grafana configuration. 
 However, the user will still need to create a service account and token to make the API
-requests to generate report. To enable this feature, it is necessary to set 
-`enable = externalServiceAccounts` in `feature_toggles` section of Grafana configuration.
+requests to generate report. 
 
 ### Security
 

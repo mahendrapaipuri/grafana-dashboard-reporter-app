@@ -83,6 +83,7 @@
     "@grafana/data": "10.3.3",
     "@grafana/runtime": "10.3.3",
     "@grafana/ui": "10.3.3",
+    "@grafana/experimental": "1.7.12",
     "@grafana/schema": "10.3.3",
     "react": "18.2.0",
     "react-dom": "18.2.0",
