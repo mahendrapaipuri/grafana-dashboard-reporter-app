@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/base64"
 	"fmt"
 	"html/template"
 	"io"
@@ -39,7 +40,8 @@ type Report interface {
 type templateData struct {
 	Dashboard
 	ReportOptions
-	Date string
+	Images PanelImages
+	Date   string
 }
 
 // Report options
@@ -53,6 +55,8 @@ type ReportOptions struct {
 	header     string
 	footer     string
 }
+
+type PanelImages map[int]template.URL
 
 // Is layout grid?
 func (o ReportOptions) IsGridLayout() bool {
@@ -135,17 +139,19 @@ func (r *report) Generate() ([]byte, error) {
 	r.options.dashTitle = dash.Title
 
 	// Render panel PNGs in parallel using max workers configured in plugin
-	if err = r.renderPNGsParallel(dash); err != nil {
+	images, err := r.renderPNGsParallel(dash)
+	if err != nil {
 		return nil, fmt.Errorf("error rendering PNGs in parallel for dashboard %s: %v", dash.Title, err)
 	}
 
 	// Generate HTML file with fetched panel PNGs
-	if err = r.generateHTMLFile(dash); err != nil {
+	htmlReport, err := r.generateHTMLFile(dash, images)
+	if err != nil {
 		return nil, fmt.Errorf("error generating HTML file for dashboard %s: %v", dash.Title, err)
 	}
 
 	// Print HTML page into PDF
-	return r.renderPDF()
+	return r.renderPDF(htmlReport)
 }
 
 // Title returns the dashboard title parsed from the dashboard definition
@@ -179,14 +185,16 @@ func (r *report) htmlPath() string {
 	return filepath.Join(r.options.reportsDir, reportHTML)
 }
 
-// Render panel PNGs in parallel using configured number of workers
-func (r *report) renderPNGsParallel(dash Dashboard) error {
+// renderPNGsParallel render panel PNGs in parallel using configured amount workers.
+func (r *report) renderPNGsParallel(dash Dashboard) (PanelImages, error) {
 	// buffer all panels on a channel
 	panels := make(chan Panel, len(dash.Panels))
 	for _, p := range dash.Panels {
 		panels <- p
 	}
 	close(panels)
+
+	panelImages := make(PanelImages, len(dash.Panels))
 
 	// fetch images in parallel form Grafana sever.
 	// limit concurrency using a worker pool to avoid overwhelming grafana
@@ -199,10 +207,12 @@ func (r *report) renderPNGsParallel(dash Dashboard) error {
 		go func(panels <-chan Panel, errs chan<- error) {
 			defer wg.Done()
 			for p := range panels {
-				err := r.renderPNG(p)
+				image, err := r.renderPNG(p)
 				if err != nil {
 					errs <- err
 				}
+
+				panelImages[p.ID] = image
 			}
 		}(panels, errs)
 	}
@@ -211,44 +221,36 @@ func (r *report) renderPNGsParallel(dash Dashboard) error {
 
 	for err := range errs {
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return panelImages, nil
 }
 
 // Render a single panel into PNG
-func (r *report) renderPNG(p Panel) error {
+func (r *report) renderPNG(p Panel) (template.URL, error) {
 	var body io.ReadCloser
-	var file afero.File
 	var err error
 
 	// Get panel
 	if body, err = r.client.PanelPNG(p, r.options.dashUID, r.options.timeRange); err != nil {
-		return fmt.Errorf("error getting panel %s: %v", p.Title, err)
+		return "", fmt.Errorf("error getting panel %s: %w", p.Title, err)
 	}
 	defer body.Close()
 
-	// Create directory to store PNG files and get file handler
-	if err = r.options.vfs.MkdirAll(r.imgDirPath(), 0750); err != nil {
-		return fmt.Errorf("error creating img directory: %v", err)
+	imageContent, err := io.ReadAll(body)
+	if err != nil {
+		return "", fmt.Errorf("error reading image content for panel %s: %w", p.Title, err)
 	}
-	imgFileName := fmt.Sprintf("image%d.png", p.ID)
-	if file, err = r.options.vfs.Create(filepath.Join(r.imgDirPath(), imgFileName)); err != nil {
-		return fmt.Errorf("error creating image file: %v", err)
-	}
-	defer file.Close()
 
-	// Copy PNG to file
-	if _, err = io.Copy(file, body); err != nil {
-		return fmt.Errorf("error copying body to file: %v", err)
-	}
-	return nil
+	imageContentBase64 := make([]byte, base64.StdEncoding.EncodedLen(len(imageContent)))
+	base64.StdEncoding.Encode(imageContentBase64, imageContent)
+
+	return template.URL("data:image/png;charset=utf-8;base64," + string(imageContentBase64)), nil
 }
 
 // Generate HTML file(s) for dashboard
-func (r *report) generateHTMLFile(dash Dashboard) error {
-	var file afero.File
+func (r *report) generateHTMLFile(dash Dashboard, images PanelImages) (string, error) {
 	var tmpl *template.Template
 	var err error
 
@@ -264,53 +266,49 @@ func (r *report) generateHTMLFile(dash Dashboard) error {
 		},
 	}
 
-	// Make a file handle for HTML file
-	if file, err = r.options.vfs.Create(r.htmlPath()); err != nil {
-		return fmt.Errorf("error creating HTML file at %v : %v", r.htmlPath(), err)
-	}
-	defer file.Close()
-
 	// Make a new template for body of the report
 	if tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml"); err != nil {
-		return fmt.Errorf("error parsing report template: %v", err)
+		return "", fmt.Errorf("error parsing report template: %w", err)
 	}
 
 	// Template data
-	data := templateData{dash, *r.options, time.Now().Local().In(r.options.location()).Format(time.RFC850)}
+	data := templateData{dash, *r.options, images, time.Now().Local().In(r.options.location()).Format(time.RFC850)}
 
 	// Render the template for body of the report
-	if err = tmpl.ExecuteTemplate(file, "report.gohtml", data); err != nil {
-		return fmt.Errorf("error executing report template: %v", err)
+	bufReport := &bytes.Buffer{}
+	if err = tmpl.ExecuteTemplate(bufReport, "report.gohtml", data); err != nil {
+		return "", fmt.Errorf("error executing report template: %w", err)
 	}
 
 	// Make a new template for header of the report
 	if tmpl, err = template.New("header").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml"); err != nil {
-		return fmt.Errorf("error parsing header template: %v", err)
+		return "", fmt.Errorf("error parsing header template: %w", err)
 	}
 
 	// Render the template for header of the report
 	bufHeader := &bytes.Buffer{}
 	if err = tmpl.ExecuteTemplate(bufHeader, "header.gohtml", data); err != nil {
-		return fmt.Errorf("error executing header template: %v", err)
+		return "", fmt.Errorf("error executing header template: %w", err)
 	}
 	r.options.header = bufHeader.String()
 
 	// Make a new template for footer of the report
 	if tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml"); err != nil {
-		return fmt.Errorf("error parsing footer template: %v", err)
+		return "", fmt.Errorf("error parsing footer template: %w", err)
 	}
 
 	// Render the template for footer of the report
 	bufFooter := &bytes.Buffer{}
 	if err = tmpl.ExecuteTemplate(bufFooter, "footer.gohtml", data); err != nil {
-		return fmt.Errorf("error executing footer template: %v", err)
+		return "", fmt.Errorf("error executing footer template: %w", err)
 	}
 	r.options.footer = bufFooter.String()
-	return nil
+
+	return bufReport.String(), nil
 }
 
 // Render HTML page into PDF using Chromium
-func (r *report) renderPDF() ([]byte, error) {
+func (r *report) renderPDF(htmlReport string) ([]byte, error) {
 	var realPath string
 	var err error
 
@@ -326,14 +324,9 @@ func (r *report) renderPDF() ([]byte, error) {
 	defer cancel()
 
 	// capture pdf
-	// NOTE: We can improve this by using in memory base64 encoded PNG images and
-	// using SetDocumentContent of chromedp without having to have access to underlying
-	// filesystem.
-	// This will need a bit of refactoring of the code tho
-	// Ref: https://github.com/chromedp/chromedp/issues/941#issuecomment-961181348
 	var buf []byte
-	if err := chromedp.Run(
-		ctx, r.printToPDF(fmt.Sprintf("file://%s", filepath.Join(realPath, reportHTML)), &buf),
+	if err = chromedp.Run(
+		ctx, r.printToPDF(htmlReport, &buf),
 	); err != nil {
 		return nil, fmt.Errorf("error rendering PDF: %v", err)
 	}
@@ -348,9 +341,17 @@ func (r *report) renderPDF() ([]byte, error) {
 }
 
 // Print to PDF using headless Chromium
-func (r *report) printToPDF(url string, res *[]byte) chromedp.Tasks {
+func (r *report) printToPDF(html string, res *[]byte) chromedp.Tasks {
 	return chromedp.Tasks{
-		chromedp.Navigate(url),
+		chromedp.Navigate("about:blank"),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			frameTree, err := page.GetFrameTree().Do(ctx)
+			if err != nil {
+				return err
+			}
+
+			return page.SetDocumentContent(frameTree.Frame.ID, html).Do(ctx)
+		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 
 			var pageParams *page.PrintToPDFParams
