@@ -7,7 +7,6 @@ export const testIds = {
     dashboardMode: "data-testid ac-dashboard-mode",
     tz: "data-testid ac-timezone",
     logo: "data-testid ac-logo",
-    persistData: "data-testid ac-persist-data",
     maxWorkers: "data-testid ac-max-workers",
     submit: "data-testid ac-submit-form",
   },

@@ -27,7 +27,7 @@
          Page <span class="pageNumber"></span> of <span class="totalPages"></span>
          {{- if .Logo}}
          <div class="content-footer-right">
-            <img src="data:image/png;base64,{{.Logo}}" height="25" alt="Logo" />
+            <img src="{{embed .Logo}}" height="25" alt="Logo" />
          </div>
          {{- end}}
       </div>

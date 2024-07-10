@@ -103,11 +103,3 @@ apps:
       # applies globally to all generated reports
       #
       maxRenderWorkers: 2
-
-      # Persist PNG files, generated HTML files and PDF for debugging. These files can
-      # be found at $GF_PATHS_DATA/reports/debug folder
-      #
-      # This can be changed from Grafana UI as well and this configuration parameter
-      # applies globally to all generated reports
-      #
-      persistData: false

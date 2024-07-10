@@ -18,7 +18,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
-	"github.com/spf13/afero"
 )
 
 const PLUGIN_NAME = "mahendrapaipuri-dashboardreporter-app"
@@ -43,7 +42,6 @@ type Config struct {
 	TimeZone         string `json:"timeZone"`
 	EncodedLogo      string `json:"logo"`
 	MaxRenderWorkers int    `json:"maxRenderWorkers"`
-	PersistData      bool   `json:"persistData"`
 	DataPath         string
 	IncludePanelIDs  []int
 	ExcludePanelIDs  []int
@@ -82,9 +80,9 @@ func (c *Config) String() string {
 		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; "+
 			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Time Zone: %s; Encoded Logo: %s; "+
 			"Max Renderer Workers: %d; "+
-			"Persist Data: %t; Included Panel IDs: %s; Excluded Panel IDs: %s",
+			"Included Panel IDs: %s; Excluded Panel IDs: %s",
 		c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
-		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.PersistData,
+		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers,
 		includedPanelIDs, excludedPanelIDs,
 	)
 }
@@ -102,7 +100,6 @@ type App struct {
 	httpClient       *http.Client
 	config           *Config
 	secrets          *Secrets
-	vfs              *afero.BasePathFs
 	newGrafanaClient func(client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, options *ReportOptions) (Report, error)
 }
@@ -214,23 +211,6 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	// Trim trailing slash in app URL
 	config.AppURL = strings.TrimRight(config.AppURL, "/")
 
-	/*
-		Create a virtual FS with /var/lib/grafana as base path. In cloud context,
-		probably this is the only directory with write permissions. We cannot rely
-		on /tmp as containers started in read-only mode will not be able to write to
-		/tmp.
-
-		We need a reports directory to save ephermeral files and images, print HTML
-		into PDF. We will clean them up after each request and so we will use this
-		reports directory to store these files.
-	*/
-	vfs := afero.NewBasePathFs(afero.NewOsFs(), config.DataPath).(*afero.BasePathFs)
-
-	// Create a reports dir inside this GF_PATHS_DATA folder
-	if err = vfs.MkdirAll("reports", 0750); err != nil {
-		return nil, fmt.Errorf("failed to create a reports directory in %s: %w", config.DataPath, err)
-	}
-
 	// Set chrome options
 	config.ChromeOptions = append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.NoSandbox,
@@ -288,9 +268,6 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 
 	// Add secrets to app
 	app.secrets = &secrets
-
-	// Set VFS instance to app
-	app.vfs = vfs
 
 	// Add Grafana client and report factory makers
 	app.newGrafanaClient = NewGrafanaClient

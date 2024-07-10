@@ -7,11 +7,9 @@ toolchain go1.22.5
 require (
 	github.com/chromedp/cdproto v0.0.0-20240626232640-f933b107c653
 	github.com/chromedp/chromedp v0.9.5
-	github.com/google/uuid v1.6.0
 	github.com/grafana/grafana-plugin-sdk-go v0.236.0
 	github.com/magefile/mage v1.15.0
 	github.com/smartystreets/goconvey v1.8.1
-	github.com/spf13/afero v1.11.0
 )
 
 require (
@@ -38,6 +36,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grafana/otel-profiling-go v0.5.1 // indirect
