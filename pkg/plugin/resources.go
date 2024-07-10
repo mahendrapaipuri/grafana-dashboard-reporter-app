@@ -171,7 +171,6 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			dashUID:   dashboardUID,
 			timeRange: timeRange,
 			config:    a.config,
-			vfs:       a.vfs,
 		},
 	)
 	if err != nil {
@@ -186,9 +185,6 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		ctxLogger.Error("error generating report", "err", err)
 		http.Error(w, "error generating report", http.StatusInternalServerError)
 		return
-	}
-	if !a.config.PersistData {
-		defer report.Clean()
 	}
 
 	// Add PDF file name to header

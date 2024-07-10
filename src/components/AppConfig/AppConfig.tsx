@@ -7,7 +7,6 @@ import {
   Field,
   Input,
   FieldSet,
-  Switch,
   RadioButtonGroup,
   SecretInput,
 } from "@grafana/ui";
@@ -29,7 +28,6 @@ export type JsonData = {
   timeZone?: string;
   logo?: string;
   maxRenderWorkers?: number;
-  persistData?: boolean;
 };
 
 type State = {
@@ -57,10 +55,6 @@ type State = {
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
   maxRenderWorkersChanged: boolean;
-  // Whether to persist templated files for debugging
-  persistData: boolean;
-  // If persistData has changed
-  persistDataChanged: boolean;
   // Tells us if the Service Account's token is set.
   // Set to `true` ONLY if it has already been set and haven't been changed.
   // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
@@ -87,8 +81,6 @@ export const AppConfig = ({ plugin }: Props) => {
     logoChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
-    persistData: jsonData?.persistData || false,
-    persistDataChanged: false,
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
@@ -144,7 +136,6 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-
   const onChangeLogo = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
@@ -158,14 +149,6 @@ export const AppConfig = ({ plugin }: Props) => {
       ...state,
       maxRenderWorkers: event.target.valueAsNumber,
       maxRenderWorkersChanged: true,
-    });
-  };
-
-  const onChangePersistData = (event: ChangeEvent<HTMLInputElement>) => {
-    setState({
-      ...state,
-      persistData: event.target.checked,
-      persistDataChanged: true,
     });
   };
 
@@ -208,7 +191,6 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
-                    persistData: state.persistData,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -245,7 +227,6 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
-                    persistData: state.persistData,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -362,20 +343,6 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
-        {/* Persist data */}
-        <Field
-          label="Persist Data Files"
-          description="Persist templated data files for debugging. Files will be kept at $GF_DATA_PATH/reports/debug folder on server."
-          data-testid={testIds.appConfig.persistData}
-          className={s.marginTop}
-        >
-          <Switch
-            id="persit-data"
-            value={state.persistData}
-            onChange={onChangePersistData}
-          />
-        </Field>
-
         {/* Max workers */}
         <Field
           label="Maximum Render Workers"
@@ -410,7 +377,6 @@ export const AppConfig = ({ plugin }: Props) => {
                   dashboardMode: state.dashboardMode,
                   timeZone: state.timeZone,
                   logo: state.logo,
-                  persistData: state.persistData,
                 },
                 // This cannot be queried later by the frontend.
                 // We don't want to override it in case it was set previously and left untouched now.
@@ -428,7 +394,6 @@ export const AppConfig = ({ plugin }: Props) => {
                 !state.timeZoneChanged &&
                 !state.logoChanged &&
                 !state.maxRenderWorkersChanged &&
-                !state.persistDataChanged &&
                 !state.saToken
             )}
           >

@@ -222,10 +222,6 @@ Besides there are two special query parameters available namely:
 - `Maximum Render Workers`: Number of concurrent workers to create PNGs of panels in the
   dashboard. Do not use too high value as it starve the machine
 
-- `Persist Data`: Enable it to inspect the generated HTML files from templates 
-  and dashboard data. Use it to only debug the issues. When this option is turned on,
-  the data files will be retained at `/var/lib/grafana/plugins/reports/debug` folder.
-
 ## Using plugin
 
 ### Using Grafana web UI
@@ -334,12 +330,6 @@ error messages will be as follows:
 - If `chromium` fails to run, it suggests that there are missing dependent libraries on 
 the host. In that case, we advise to install `chromium` on the machine which will 
 install all the dependent libraries.
-
-- If the generated report is malformed, we suggest to turn on `Persist Data Files` 
-config option of the plugin from Grafana UI and re-run the report generation. Now, 
-the files created by the plugin will be persisted at `$GF_DATA_PATH/reports/debug` folder. 
-While reporting bugs, please attach the found `report.html` along with JSON model of 
-dashboard.
 
 ## Development
 

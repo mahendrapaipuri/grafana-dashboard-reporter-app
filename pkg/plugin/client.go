@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -25,7 +26,7 @@ var (
 // Client is a Grafana API client
 type GrafanaClient interface {
 	Dashboard(dashUID string) (Dashboard, error)
-	PanelPNG(p Panel, dashUID string, t TimeRange) (io.ReadCloser, error)
+	PanelPNG(p Panel, dashUID string, t TimeRange) (string, error)
 }
 
 // grafanaClient is the struct that will implement required interfaces
@@ -232,13 +233,13 @@ func (g grafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 	return dashboardData, nil
 }
 
-func (g grafanaClient) PanelPNG(p Panel, dashUID string, t TimeRange) (io.ReadCloser, error) {
+func (g grafanaClient) PanelPNG(p Panel, dashUID string, t TimeRange) (string, error) {
 	panelURL := g.getPanelURL(p, dashUID, t)
 
 	// Create a new request for panel
 	req, err := http.NewRequest(http.MethodGet, panelURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request for %s: %v", panelURL, err)
+		return "", fmt.Errorf("error creating request for %s: %v", panelURL, err)
 	}
 
 	// Forward auth headers
@@ -247,7 +248,7 @@ func (g grafanaClient) PanelPNG(p Panel, dashUID string, t TimeRange) (io.ReadCl
 	// Make request
 	resp, err := g.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error executing request for %s: %v", panelURL, err)
+		return "", fmt.Errorf("error executing request for %s: %v", panelURL, err)
 	}
 
 	// Do multiple tries to get panel before giving up
@@ -256,14 +257,20 @@ func (g grafanaClient) PanelPNG(p Panel, dashUID string, t TimeRange) (io.ReadCl
 		time.Sleep(delay)
 		resp, err = g.client.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("error executing retry request for %s: %v", panelURL, err)
+			return "", fmt.Errorf("error executing retry request for %s: %v", panelURL, err)
 		}
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("error rendering panel: %s", resp.Status)
+		return "", fmt.Errorf("error rendering panel: %s", resp.Status)
 	}
-	return resp.Body, nil
+
+	bytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body of panel PNG: %v", err)
+	}
+	defer resp.Body.Close()
+	return toBase64(bytes), nil
 }
 
 func (g grafanaClient) getPanelURL(p Panel, dashUID string, t TimeRange) string {
@@ -296,4 +303,9 @@ func (g grafanaClient) getPanelURL(p Panel, dashUID string, t TimeRange) string 
 		}
 	}
 	return g.panelAPIEndpoint(dashUID, values)
+}
+
+// toBase64 encodes bytes to base64 string
+func toBase64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
 }

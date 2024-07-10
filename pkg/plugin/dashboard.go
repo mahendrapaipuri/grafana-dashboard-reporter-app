@@ -49,10 +49,11 @@ type GridPos struct {
 
 // Panel represents a Grafana dashboard panel
 type Panel struct {
-	ID      int     `json:"id"`
-	Type    string  `json:"type"`
-	Title   string  `json:"title"`
-	GridPos GridPos `json:"gridPos"`
+	ID           int     `json:"id"`
+	Type         string  `json:"type"`
+	Title        string  `json:"title"`
+	GridPos      GridPos `json:"gridPos"`
+	EncodedImage string
 }
 
 // Is panel single stat?

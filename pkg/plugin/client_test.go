@@ -91,7 +91,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 		for _, cl := range cases {
 			grf := cl.client
 			grf.PanelPNG(
-				Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
+				Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}, ""},
 				"testDash",
 				TimeRange{"now-1h", "now"},
 			)
@@ -139,7 +139,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 
 			Convey("The client should request grid layout panels with width=2400 and height=216", func() {
 				grf.PanelPNG(
-					Panel{44, "graph", "title", GridPos{6, 24, 0, 0}},
+					Panel{44, "graph", "title", GridPos{6, 24, 0, 0}, ""},
 					"testDash",
 					TimeRange{"now", "now-1h"},
 				)
@@ -167,7 +167,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		grf := NewGrafanaClient(&testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
 
 		_, err := grf.PanelPNG(
-			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
+			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}, ""},
 			"testDash",
 			TimeRange{"now-1h", "now"},
 		)
@@ -186,7 +186,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		grf := NewGrafanaClient(&testClient, &Secrets{}, &Config{AppURL: ts.URL}, url.Values{})
 
 		_, err := grf.PanelPNG(
-			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}},
+			Panel{44, "singlestat", "title", GridPos{0, 0, 0, 0}, ""},
 			"testDash",
 			TimeRange{"now-1h", "now"},
 		)
