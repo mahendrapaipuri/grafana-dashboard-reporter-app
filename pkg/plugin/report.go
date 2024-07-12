@@ -2,19 +2,16 @@ package plugin
 
 import (
 	"bytes"
-	"context"
 	"embed"
 	"fmt"
 	"html/template"
 	"math"
-	"os"
 	"reflect"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 )
@@ -291,63 +288,20 @@ func (r *report) renderPDF() ([]byte, error) {
 	// var realPath string
 	var err error
 
-	// create context
-	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), r.options.config.ChromeOptions...)
-	defer allocCtxCancel()
-	ctx, cancel := chromedp.NewContext(allocCtx)
+	// Create a new tab
+	ctx, cancel := chromedp.NewContext(r.options.config.BrowserContext)
 	defer cancel()
 
 	// capture pdf
 	var buf []byte
 	if err = chromedp.Run(
-		ctx, r.printToPDF(&buf),
-	); err != nil {
+		ctx,
+		printToPDF(r.options.html, r.options.IsLandscapeOrientation(),
+			&buf,
+		)); err != nil {
 		return nil, fmt.Errorf("error rendering PDF: %v", err)
 	}
 	return buf, err
-}
-
-// printToPDF prints to PDF using headless Chromium
-func (r *report) printToPDF(res *[]byte) chromedp.Tasks {
-	return chromedp.Tasks{
-		chromedp.Navigate("about:blank"),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			frameTree, err := page.GetFrameTree().Do(ctx)
-			if err != nil {
-				return err
-			}
-
-			return page.SetDocumentContent(frameTree.Frame.ID, r.options.html.body).Do(ctx)
-		}),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-
-			var pageParams *page.PrintToPDFParams
-			// In CI mode do not add header and footer for visual comparison
-			if os.Getenv("__REPORTER_APP_CI_MODE") == "true" {
-				pageParams = page.PrintToPDF().
-					WithPreferCSSPageSize(true)
-			} else {
-				pageParams = page.PrintToPDF().
-					WithDisplayHeaderFooter(true).
-					WithHeaderTemplate(r.options.html.header).
-					WithFooterTemplate(r.options.html.footer).
-					WithPreferCSSPageSize(true)
-			}
-
-			// If landscape add it to page params
-			if r.options.IsLandscapeOrientation() {
-				pageParams = pageParams.WithLandscape(true)
-			}
-
-			// Finally execute and get PDF buffer
-			buf, _, err := pageParams.Do(ctx)
-			if err != nil {
-				return err
-			}
-			*res = buf
-			return nil
-		}),
-	}
 }
 
 // // truncateBase64Encoding replaces base64 encodings with truncated encodings.

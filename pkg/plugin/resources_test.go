@@ -41,7 +41,7 @@ func TestReportResource(t *testing.T) {
 	t.Setenv("GF_PATHS_DATA", t.TempDir())
 
 	// Initialize app
-	inst, err := NewApp(context.Background(), backend.AppInstanceSettings{})
+	inst, err := NewDashboardReporterApp(context.Background(), backend.AppInstanceSettings{})
 	if err != nil {
 		t.Fatalf("new app: %s", err)
 	}

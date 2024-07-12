@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
@@ -20,6 +21,96 @@ import (
 		- https://github.com/chromedp/chromedp/issues/87
 		- https://github.com/chromedp/examples/tree/master
 */
+
+// newBrowserInstance allocates a new chromium browser, starts the instance
+// and returns the context
+func newBrowserInstance(ctx context.Context) (context.Context, func(), error) {
+	// Set chrome options
+	chromeOptions := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.NoSandbox,
+		chromedp.DisableGPU,
+		// Seems like this is critical. When it is not turned on there are no errors
+		// and plugin will exit without rendering any panels. Not sure why the error
+		// handling is failing here. So, add this option as default just to avoid
+		// those cases
+		//
+		// Ref: https://github.com/chromedp/chromedp/issues/492#issuecomment-543223861
+		chromedp.Flag("ignore-certificate-errors", "1"),
+	)
+
+	// Create a new browser allocator
+	/*
+		The side-effect here is everytime the settings are updated from Grafana UI
+		the current App instance will be disposed and a new app instance is created.
+		The disposed app instance will call `Dispose()` receiver after few seconds
+		which will eventually clean up browser instance.
+
+		When there is a API request in progress, most likely that request will end up
+		with context deadline error as browser instance will be cleaned up. But there
+		will be a new browser straight away and subsequent request will pass.
+
+		As it is only users with `Admin` role can update the Settings from Grafana UI
+		it is not normal that these will be updated regularly. So, we can live with
+		this side-effect without running into deep issues.
+	*/
+	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(ctx, chromeOptions...)
+
+	// start a browser (and an empty tab) so we can add more tabs to the browser
+	browserCtx, browserCtxCancel := chromedp.NewContext(allocCtx)
+	if err := chromedp.Run(browserCtx); err != nil {
+		return nil, func() {}, fmt.Errorf("couldn't create browser context: %s", err)
+	}
+
+	// To gracefully close browser and its tabs
+	ctxCancelFuncs := func() {
+		browserCtxCancel()
+		allocCtxCancel()
+	}
+	return browserCtx, ctxCancelFuncs, nil
+}
+
+// printToPDF returns chroms tasks that print the requested HTML into a PDF
+func printToPDF(html HTMLContent, isLandscapeOrientation bool, res *[]byte) chromedp.Tasks {
+	return chromedp.Tasks{
+		chromedp.Navigate("about:blank"),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			frameTree, err := page.GetFrameTree().Do(ctx)
+			if err != nil {
+				return err
+			}
+
+			return page.SetDocumentContent(frameTree.Frame.ID, html.body).Do(ctx)
+		}),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+
+			var pageParams *page.PrintToPDFParams
+			// In CI mode do not add header and footer for visual comparison
+			if os.Getenv("__REPORTER_APP_CI_MODE") == "true" {
+				pageParams = page.PrintToPDF().
+					WithPreferCSSPageSize(true)
+			} else {
+				pageParams = page.PrintToPDF().
+					WithDisplayHeaderFooter(true).
+					WithHeaderTemplate(html.header).
+					WithFooterTemplate(html.footer).
+					WithPreferCSSPageSize(true)
+			}
+
+			// If landscape add it to page params
+			if isLandscapeOrientation {
+				pageParams = pageParams.WithLandscape(true)
+			}
+
+			// Finally execute and get PDF buffer
+			buf, _, err := pageParams.Do(ctx)
+			if err != nil {
+				return err
+			}
+			*res = buf
+			return nil
+		}),
+	}
+}
 
 // enableLifeCylceEevnts enables the chromedp life cycle events
 func enableLifeCycleEvents() chromedp.ActionFunc {

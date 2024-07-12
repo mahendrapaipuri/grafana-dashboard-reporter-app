@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -18,9 +17,16 @@ import (
 
 // Javascripts vars
 var (
-	errorLock        = sync.RWMutex{}
-	unCollapseRowsJS = `[...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0].click())`
-	dashboardDataJS  = `[...document.getElementsByClassName('react-grid-item')].map((e) => ({"width": e.style.width, "height": e.style.height, "transform": e.style.transform, "id": e.getAttribute("data-panelid")}))`
+	errorLock = sync.RWMutex{}
+	// JS to uncollapse rows for different Grafana versions.
+	// Seems like executing JS corresponding to v10 on v11 or v11 on v10
+	// does not have any side-effect, so we will always execute both of them. This
+	// avoids more logic to detect Grafana version
+	unCollapseRowsJS = map[string]string{
+		"v10": `[...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0].click())`,
+		"v11": `[...document.querySelectorAll("[data-testid='dashboard-row-container']")].map((e) => [...e.querySelectorAll("[aria-expanded=false]")].map((e) => e.click()))`,
+	}
+	dashboardDataJS = `[...document.getElementsByClassName('react-grid-item')].map((e) => ({"width": e.style.width, "height": e.style.height, "transform": e.style.transform, "id": e.getAttribute("data-panelid")}))`
 )
 
 // Client is a Grafana API client
@@ -193,10 +199,8 @@ func (g grafanaClient) dashboardFromAPI(dashUID string) ([]byte, error) {
 func (g grafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, error) {
 	dashURL := g.dashBrowserURL(dashUID)
 
-	// Create new context
-	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(context.Background(), g.config.ChromeOptions...)
-	defer allocCtxCancel()
-	ctx, cancel := chromedp.NewContext(allocCtx)
+	// Create a new tab
+	ctx, cancel := chromedp.NewContext(g.config.BrowserContext)
 	defer cancel()
 
 	// Always prefer cookie over token
@@ -214,21 +218,16 @@ func (g grafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 
 	// Fetch dashboard data
 	var unCollapseOut, dashboardData []interface{}
+	// If full dashboard mode is requested, add js that uncollapses rows
 	if g.config.DashboardMode == "full" {
-		if err := chromedp.Run(ctx,
-			tasks,
-			chromedp.Evaluate(unCollapseRowsJS, &unCollapseOut),
-			chromedp.Evaluate(dashboardDataJS, &dashboardData),
-		); err != nil {
-			return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %s", dashURL, err)
+		for _, jsExpr := range unCollapseRowsJS {
+			tasks = append(tasks, chromedp.Evaluate(jsExpr, &unCollapseOut))
 		}
-	} else {
-		if err := chromedp.Run(ctx,
-			tasks,
-			chromedp.Evaluate(dashboardDataJS, &dashboardData),
-		); err != nil {
-			return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %s", dashURL, err)
-		}
+	}
+	// JS that will fetch dashboard model
+	tasks = append(tasks, chromedp.Evaluate(dashboardDataJS, &dashboardData))
+	if err := chromedp.Run(ctx, tasks); err != nil {
+		return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %s", dashURL, err)
 	}
 	return dashboardData, nil
 }
