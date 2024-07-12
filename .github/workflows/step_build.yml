@@ -1,0 +1,68 @@
+name: build
+run-name: Build and Unit Tests
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable --prefer-offline
+
+      - name: Check types
+        run: yarn typecheck
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Unit tests
+        run: yarn test:ci
+
+      - name: Build frontend
+        run: yarn build
+
+      - name: Check for backend
+        id: check-for-backend
+        run: |
+          if [ -f "Magefile.go" ]
+          then
+            echo "has-backend=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Go environment
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Test backend
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: magefile/mage-action@v3
+        with:
+          version: latest
+          args: coverage
+
+      - name: Build backend
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: magefile/mage-action@v3
+        with:
+          version: latest
+          args: build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist
+          retention-days: 1

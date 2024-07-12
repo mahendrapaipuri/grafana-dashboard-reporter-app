@@ -8,7 +8,7 @@ services:
       context: ../.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-10.4.2}
+        grafana_version: ${GRAFANA_VERSION:-11.1.0}
     ports:
       - 3080:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
@@ -25,6 +25,7 @@ services:
       - GF_SERVER_HTTP_PORT=${GF_SERVER_HTTP_PORT:-3000}
       - GF_LOG_LEVEL=${GF_LOG_LEVEL:-info}
       - GF_DATAPROXY_LOGGING=true
+      - GF_APP_URL=http://localhost:3000
       # allow anonymous admin so we don't have to set up a password to start testing
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_AUTH_BASIC_ENABLED=true
@@ -62,7 +63,7 @@ services:
       context: ../.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-10.4.2}
+        grafana_version: ${GRAFANA_VERSION:-11.1.0}
     ports:
       - 3443:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
@@ -94,6 +95,7 @@ services:
       - GF_SERVER_PROTOCOL=https
       - GF_SERVER_CERT_KEY=/etc/grafana/tls/localhost.key
       - GF_SERVER_CERT_FILE=/etc/grafana/tls/localhost.crt
+      - IGNORE_HTTPS_ERRORS=true
       # Grafana image renderer
       - GF_RENDERING_SERVER_URL=http://renderer_tls:8081/render
       - GF_RENDERING_CALLBACK_URL=https://grafana_tls:${GF_SERVER_HTTP_PORT:-3000}/

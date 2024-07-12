@@ -1,0 +1,94 @@
+name: e2e-tests
+run-name: End2End tests
+
+on:
+  workflow_call:
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Grafana v10
+          - grafana-version: 10.4.5
+          # Grafana v11
+          - grafana-version: 11.1.0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable --prefer-offline
+
+      # Install chrome as we will use it in e2e tests
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          install-dependencies: true
+
+      - name: Run e2e tests
+        run: |
+          # Upload/Download artifacts wont preserve permissions
+          # https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
+          # Add +x bits on executables
+          chmod -R +x dist/gpx_*
+
+          GRAFANA_VERSION=${{ matrix.grafana-version }} yarn e2e:server:up
+
+          # Sleep for a while for containers to be up and running
+          sleep 20
+
+          # Run e2e tests
+          yarn e2e
+
+          # Run API tests
+          yarn e2e:report
+
+          # yarn e2e:server:down
+
+      - name: Compare PDF report from plain server
+        uses: nowsprinting/diff-pdf-action@v1
+        with:
+          file1: default.pdf
+          file2: .ci/reports/default.pdf
+          options: --verbose
+      
+      - name: Compare PDF report from TLS server
+        uses: nowsprinting/diff-pdf-action@v1
+        with:
+          file1: alternative.pdf
+          file2: .ci/reports/alternative.pdf
+          options: --verbose
+
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+        with:
+          dest: docker-logs
+
+      - name: Upload UI Test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-output-${{ matrix.grafana-version }}
+          path: |
+            test-results
+            docker-logs
+            default.pdf
+            alternative.pdf
+          retention-days: 1

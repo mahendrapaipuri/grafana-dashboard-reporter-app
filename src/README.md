@@ -138,7 +138,9 @@ The following configuration parameters are directly tied to Grafana instance
   is set, that will take the precedence over the value configured in the provisioning file. 
 
 - `skipTlsCheck`: If Grafana instance is configured to use TLS with self signed certificates
-  set this parameter to `true` to skip TLS certificate check.
+  set this parameter to `true` to skip TLS certificate check. This can be set using 
+  environment variable `IGNORE_HTTPS_ERRORS` as well. If the environment variable is 
+  found, it will take precedence over the value set it the config.
 
 > [!IMPORTANT] 
 > These config parameters are dependent on Grafana instance 
@@ -176,9 +178,10 @@ All the configuration parameters can only be modified by `Admin` role from Grafa
   [IANA format](https://www.iana.org/time-zones). By default, local Grafana server's 
   time zone will be used.
 
-- `Branding Logo`: This parameter takes a base64 encoded png image that will be included
+- `Branding Logo`: This parameter takes a base64 encoded image that will be included
   in the footer of each page in the report. Typically, operators can include their 
-  organization logos to have "customized" reports.
+  organization logos to have "customized" reports. Images of format PNG and JPG are 
+  accepted.
 
 #### Overriding report settings
 
