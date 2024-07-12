@@ -2,17 +2,10 @@ package plugin
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
 
-	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -32,123 +25,32 @@ var (
 	_ backend.CheckHealthHandler    = (*App)(nil)
 )
 
-// Plugin config settings
-type Config struct {
-	AppURL           string `json:"appUrl"`
-	SkipTLSCheck     bool   `json:"skipTlsCheck"`
-	Orientation      string `json:"orientation"`
-	Layout           string `json:"layout"`
-	DashboardMode    string `json:"dashboardMode"`
-	TimeZone         string `json:"timeZone"`
-	EncodedLogo      string `json:"logo"`
-	MaxRenderWorkers int    `json:"maxRenderWorkers"`
-	DataPath         string
-	IncludePanelIDs  []int
-	ExcludePanelIDs  []int
-	ChromeOptions    []func(*chromedp.ExecAllocator)
-}
-
-// String implements the stringer interface of Config
-func (c *Config) String() string {
-	var encodedLogo string
-	if c.EncodedLogo != "" {
-		encodedLogo = "[truncated]"
-	} else {
-		encodedLogo = ""
-	}
-
-	var includedPanelIDs, excludedPanelIDs string
-	if len(c.IncludePanelIDs) > 0 {
-		var panelIDs []string
-		for _, id := range c.IncludePanelIDs {
-			panelIDs = append(panelIDs, strconv.Itoa(id))
-		}
-		includedPanelIDs = strings.Join(panelIDs, ",")
-	} else {
-		includedPanelIDs = "all"
-	}
-	if len(c.ExcludePanelIDs) > 0 {
-		var panelIDs []string
-		for _, id := range c.ExcludePanelIDs {
-			panelIDs = append(panelIDs, strconv.Itoa(id))
-		}
-		excludedPanelIDs = strings.Join(panelIDs, ",")
-	} else {
-		excludedPanelIDs = "none"
-	}
-	return fmt.Sprintf(
-		"Grafana App URL: %s; Skip TLS Check: %t; Grafana Data Path: %s; "+
-			"Orientation: %s; Layout: %s; Dashboard Mode: %s; Time Zone: %s; Encoded Logo: %s; "+
-			"Max Renderer Workers: %d; "+
-			"Included Panel IDs: %s; Excluded Panel IDs: %s",
-		c.AppURL, c.SkipTLSCheck, c.DataPath, c.Orientation, c.Layout,
-		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers,
-		includedPanelIDs, excludedPanelIDs,
-	)
-}
-
-// Plugin secret settings
-type Secrets struct {
-	cookieHeader string
-	token        string
-	cookies      []string // Slice of name, value pairs of all cookies applicable to current domain
-}
-
 // App is the backend plugin which can respond to api queries.
 type App struct {
 	backend.CallResourceHandler
 	httpClient       *http.Client
 	config           *Config
 	secrets          *Secrets
+	ctxCancelFuncs   func()
 	newGrafanaClient func(client *http.Client, secrets *Secrets, config *Config, variables url.Values) GrafanaClient
 	newReport        func(logger log.Logger, grafanaClient GrafanaClient, options *ReportOptions) (Report, error)
 }
 
-// Default config
-var defaultConfig Config
-
 // Keep a state of current provisioned config
-var currentAppConfig Config
+var currentAppConfig *Config
 
-func init() {
-	// Get Grafana data path based on path of current executable
-	pluginExe, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-
-	// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
-	// Now we attempt to get install_dir directory which is Grafana data path
-	dataPath := filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
-
-	// Populate defaultConfig
-	defaultConfig = Config{
-		DataPath:         dataPath,
-		Orientation:      "portrait",
-		Layout:           "simple",
-		DashboardMode:    "default",
-		TimeZone:         "",
-		EncodedLogo:      "",
-		MaxRenderWorkers: 2,
-	}
-}
-
-// DefaultConfig returns an instance of default config
-func DefaultConfig() Config {
-	return defaultConfig
-}
-
-// NewAppConfig returns an instance of current app's provisioned config
-func NewAppConfig() Config {
+// currentDashboardReporterAppConfig returns an instance of current app's provisioned config
+func currentDashboardReporterAppConfig() *Config {
 	return currentAppConfig
 }
 
 // NewApp creates a new example *App instance.
-func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instancemgmt.Instance, error) {
+func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSettings) (instancemgmt.Instance, error) {
 	var app App
 
 	// Get context logger for debugging
 	ctxLogger := log.DefaultLogger.FromContext(ctx)
+	ctxLogger.Info("new instance of plugin app created")
 
 	// Use a httpadapter (provided by the SDK) for resource calls. This allows us
 	// to use a *http.ServeMux for resource calls, so we can map multiple routes
@@ -157,30 +59,17 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 	app.registerRoutes(mux)
 	app.CallResourceHandler = httpadapter.New(mux)
 
-	// Always start with a default config so that when the plugin is not provisioned
-	// with a config, we will still have "non-null" config to work with
-	var config = DefaultConfig()
-	// Update plugin settings defaults
-	if settings.JSONData != nil && string(settings.JSONData) != "null" {
-		if err := json.Unmarshal(settings.JSONData, &config); err == nil {
-			ctxLogger.Info("provisioned config", "config", config.String())
-		} else {
-			ctxLogger.Error("failed to load plugin config", "err", err)
-		}
+	// Load plugin settings
+	config, secrets, err := loadSettings(settings.JSONData, settings.DecryptedSecureJSONData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dashboard-reporter plugin app instance: %s", err)
+	}
+	ctxLogger.Info("provisioned config", "config", config.String())
+	if secrets.token != "" {
+		ctxLogger.Info("service account token configured")
 	}
 
-	// Fetch token, if configured in SecureJSONData
-	var secrets Secrets
-	if settings.DecryptedSecureJSONData != nil {
-		if saToken, ok := settings.DecryptedSecureJSONData["saToken"]; ok {
-			if saToken != "" {
-				secrets = Secrets{token: saToken}
-				ctxLogger.Info("service account token configured")
-			}
-		}
-	}
-
-	// Make HTTP client
+	// Get default HTTP client options
 	opts, err := settings.HTTPClientOptions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error in http client options: %w", err)
@@ -191,83 +80,29 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 		opts.TLS = &httpclient.TLSOptions{InsecureSkipVerify: true}
 	}
 
+	// Make a new HTTP client
 	if app.httpClient, err = httpclient.New(opts); err != nil {
 		return nil, fmt.Errorf("error in httpclient new: %w", err)
 	}
 
-	// Seems like accessing env vars is not encouraged
-	// Ref: https://github.com/grafana/plugin-validator/blob/eb71abbbead549fd7697371b25c226faba19b252/pkg/analysis/passes/coderules/semgrep-rules.yaml#L13-L28
-	//
-	// appURL set from the env var will always take the highest precedence
-	if os.Getenv("GF_APP_URL") != "" {
-		config.AppURL = os.Getenv("GF_APP_URL")
-		ctxLogger.Debug("using Grafana app URL from environment variable", "GF_APP_URL", config.AppURL)
-	}
-
-	if config.AppURL == "" {
-		return nil, fmt.Errorf("grafana app URL not found. Please set it in provisioned config")
-	}
-
-	// Trim trailing slash in app URL
-	config.AppURL = strings.TrimRight(config.AppURL, "/")
-
-	// Set chrome options
-	config.ChromeOptions = append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.NoSandbox,
-		chromedp.DisableGPU,
-		// Seems like this is critical. When it is not turned on there are no errors
-		// and plugin will exit without rendering any panels. Not sure why the error
-		// handling is failing here. So, add this option as default just to avoid
-		// those cases
-		//
-		// Ref: https://github.com/chromedp/chromedp/issues/492#issuecomment-543223861
-		chromedp.Flag("ignore-certificate-errors", "1"),
-	)
-
-	/*
-		Attempt to use chrome shipped from grafana-image-renderer. If not found,
-		use the chromium browser installed on the host.
-
-		We check for the GF_PATHS_DATA env variable and if not found we use default
-		/var/lib/grafana. We do a walk dir in $GF_PATHS_DATA/plugins/grafana-image-render
-		and try to find `chrome` executable. If we find it, we use it as chrome
-		executable for rendering the PDF report.
-	*/
-
-	// Chrome executable path
-	var chromeExec string
-
-	// Walk through grafana-image-renderer plugin dir to find chrome executable
-	err = filepath.Walk(filepath.Join(config.DataPath, "plugins", "grafana-image-renderer"),
-		func(path string, info fs.FileInfo, err error) error {
-			// prevent panic by handling failure accessing a path
-			if err != nil {
-				return err
-			}
-			if !info.IsDir() && info.Name() == "chrome" {
-				chromeExec = path
-				return nil
-			}
-			return nil
-		})
+	// Create a new browser instance
+	browserCtx, ctxCancelFuncs, err := newBrowserInstance(context.Background())
 	if err != nil {
-		ctxLogger.Warn("failed to walk through grafana-image-renderer data dir", "err", err)
+		return nil, fmt.Errorf("failed to start browser: %w", err)
 	}
+	app.ctxCancelFuncs = ctxCancelFuncs
 
-	// If chrome is found in grafana-image-renderer plugin dir, use it
-	if chromeExec != "" {
-		ctxLogger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
-		config.ChromeOptions = append(config.ChromeOptions, chromedp.ExecPath(chromeExec))
-	}
+	// Use the same browser instance for all API requests
+	config.BrowserContext = browserCtx
 
 	// Set current App's config
 	currentAppConfig = config
 
 	// Make config
-	app.config = &config
+	app.config = config
 
 	// Add secrets to app
-	app.secrets = &secrets
+	app.secrets = secrets
 
 	// Add Grafana client and report factory makers
 	app.newGrafanaClient = NewGrafanaClient
@@ -278,8 +113,10 @@ func NewApp(ctx context.Context, settings backend.AppInstanceSettings) (instance
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created.
 func (a *App) Dispose() {
-	// cleanup reports dir
-	// a.config.vfs.RemoveAll("reports")
+	// cleanup old chromium instances
+	ctxLogger := log.DefaultLogger.FromContext(context.Background())
+	ctxLogger.Info("disposing chromium from old plugin app instance")
+	a.ctxCancelFuncs()
 }
 
 // CheckHealth handles health checks sent from Grafana to the plugin.

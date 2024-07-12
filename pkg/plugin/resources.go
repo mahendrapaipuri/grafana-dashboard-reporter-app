@@ -94,8 +94,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
 
 	// Always start with new instance of app config for each request
-	configInstance := NewAppConfig()
-	a.config = &configInstance
+	a.config = currentDashboardReporterAppConfig()
 
 	// Get custom settings if provided in Plugin settings
 	// Seems like when json.RawMessage is nil, it actually returns []byte("null"). So
@@ -163,7 +162,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		variables,
 	)
 
-	// Make a new Report to put all PNGs into a LateX template and compile it into a PDF
+	// Make a new Report to put all PNGs into a HTML template and print it into a PDF
 	report, err := a.newReport(
 		ctxLogger,
 		grafanaClient,
