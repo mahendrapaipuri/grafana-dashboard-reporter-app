@@ -68,7 +68,7 @@ func TestSettings(t *testing.T) {
 func TestSettingsWithEnvVars(t *testing.T) {
 	// Set env vars
 	t.Setenv("GF_APP_URL", "https://localhost:3000")
-	t.Setenv("IGNORE_HTTPS_ERRORS", "true")
+	t.Setenv("GF_REPORTER_PLUGIN_IGNORE_HTTPS_ERRORS", "true")
 
 	Convey("When creating a new config from empty JSONData", t, func() {
 		const configJSON = `{}`

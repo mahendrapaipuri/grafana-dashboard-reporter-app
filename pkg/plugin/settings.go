@@ -94,9 +94,8 @@ func loadSettings(data json.RawMessage, secureData map[string]string) (*Config, 
 	if os.Getenv("GF_APP_URL") != "" {
 		config.AppURL = os.Getenv("GF_APP_URL")
 	}
-	// grafana-image-renderer uses IGNORE_HTTPS_ERRORS to skip TLS check and we
-	// leverage it here
-	if os.Getenv("IGNORE_HTTPS_ERRORS") != "" || os.Getenv("GF_REPORTER_PLUGIN_IGNORE_HTTPS_ERRORS") != "" {
+	// Only allow configuring using GF_* env vars
+	if os.Getenv("GF_REPORTER_PLUGIN_IGNORE_HTTPS_ERRORS") != "" {
 		config.SkipTLSCheck = true
 	}
 

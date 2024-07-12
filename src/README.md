@@ -139,7 +139,7 @@ The following configuration parameters are directly tied to Grafana instance
 
 - `skipTlsCheck`: If Grafana instance is configured to use TLS with self signed certificates
   set this parameter to `true` to skip TLS certificate check. This can be set using 
-  environment variable `IGNORE_HTTPS_ERRORS` as well. If the environment variable is 
+  environment variable `GF_REPORTER_PLUGIN_IGNORE_HTTPS_ERRORS` as well. If the environment variable is 
   found, it will take precedence over the value set it the config.
 
 > [!IMPORTANT] 
