@@ -8,6 +8,9 @@ export const testIds = {
     tz: "data-testid ac-timezone",
     logo: "data-testid ac-logo",
     maxWorkers: "data-testid ac-max-workers",
+    headerTemplate: "data-testid ac-header-template",
+    reportTemplate: "data-testid ac-report-template",
+    footerTemplate: "data-testid ac-footer-template",
     submit: "data-testid ac-submit-form",
   },
   Status: {

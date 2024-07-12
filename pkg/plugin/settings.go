@@ -19,6 +19,9 @@ type Config struct {
 	TimeZone         string `json:"timeZone"`
 	EncodedLogo      string `json:"logo"`
 	MaxRenderWorkers int    `json:"maxRenderWorkers"`
+	HeaderTemplate   string `json:"headerTemplate"`
+	ReportTemplate   string `json:"reportTemplate"`
+	FooterTemplate   string `json:"footerTemplate"`
 	IncludePanelIDs  []int
 	ExcludePanelIDs  []int
 	BrowserContext   context.Context

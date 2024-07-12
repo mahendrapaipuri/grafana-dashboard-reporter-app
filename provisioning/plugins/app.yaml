@@ -103,3 +103,11 @@ apps:
       # applies globally to all generated reports
       #
       maxRenderWorkers: 2
+
+      # Report template to use for generating reports. This is an advanced feature.
+      # This can be used to customize the report generation process. The template should be
+      # a valid Go template.
+      #
+      headerTemplate: ''
+      reportTemplate: ''
+      footerTemplate: ''

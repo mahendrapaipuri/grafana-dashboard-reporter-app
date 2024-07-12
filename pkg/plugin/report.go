@@ -240,7 +240,13 @@ func (r *report) generateHTMLFile() error {
 	}
 
 	// Make a new template for body of the report
-	if tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml"); err != nil {
+	if r.options.config.ReportTemplate != "" {
+		tmpl, err = template.New("report").Funcs(funcMap).Parse(fmt.Sprintf(`{{define "report.gohtml"}}%s{{end}}`, r.options.config.ReportTemplate))
+	} else {
+		tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml")
+	}
+
+	if err != nil {
 		return fmt.Errorf("error parsing report template: %w", err)
 	}
 
@@ -256,7 +262,13 @@ func (r *report) generateHTMLFile() error {
 	// r.logger.Debug("Templated HTML body", "content", truncateBase64Encoding(r.options.html.body))
 
 	// Make a new template for header of the report
-	if tmpl, err = template.New("header").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml"); err != nil {
+	if r.options.config.HeaderTemplate != "" {
+		tmpl, err = template.New("report").Funcs(funcMap).Parse(fmt.Sprintf(`{{define "header.gohtml"}}%s{{end}}`, r.options.config.HeaderTemplate))
+	} else {
+		tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml")
+	}
+
+	if err != nil {
 		return fmt.Errorf("error parsing header template: %w", err)
 	}
 
@@ -269,7 +281,13 @@ func (r *report) generateHTMLFile() error {
 	// r.logger.Debug("Templated HTML header", "content", truncateBase64Encoding(r.options.html.header))
 
 	// Make a new template for footer of the report
-	if tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml"); err != nil {
+	if r.options.config.FooterTemplate != "" {
+		tmpl, err = template.New("report").Funcs(funcMap).Parse(fmt.Sprintf(`{{define "footer.gohtml"}}%s{{end}}`, r.options.config.FooterTemplate))
+	} else {
+		tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml")
+	}
+
+	if err != nil {
 		return fmt.Errorf("error parsing footer template: %w", err)
 	}
 

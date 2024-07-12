@@ -10,6 +10,7 @@ import {
   FieldSet,
   RadioButtonGroup,
   SecretInput,
+  TextArea,
 } from "@grafana/ui";
 import {
   PluginConfigPageProps,
@@ -29,6 +30,9 @@ export type JsonData = {
   timeZone?: string;
   logo?: string;
   maxRenderWorkers?: number;
+  headerTemplate?: string;
+  reportTemplate?: string;
+  footerTemplate?: string;
 };
 
 type State = {
@@ -56,6 +60,18 @@ type State = {
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
   maxRenderWorkersChanged: boolean;
+  // Content of header template
+  headerTemplate: string;
+  // If headerTemplate has changed
+  headerTemplateChanged: boolean;
+  // Content of report template
+  reportTemplate: string;
+  // If reportTemplate has changed
+  reportTemplateChanged: boolean;
+  // Content of footer template
+  footerTemplate: string;
+  // If footerTemplate has changed
+  footerTemplateChanged: boolean;
   // Tells us if the Service Account's token is set.
   // Set to `true` ONLY if it has already been set and haven't been changed.
   // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
@@ -82,6 +98,12 @@ export const AppConfig = ({ plugin }: Props) => {
     logoChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
+    headerTemplate: jsonData?.headerTemplate || "",
+    headerTemplateChanged: false,
+    reportTemplate: jsonData?.reportTemplate || "",
+    reportTemplateChanged: false,
+    footerTemplate: jsonData?.footerTemplate || "",
+    footerTemplateChanged: false,
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
@@ -153,6 +175,30 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangeHeaderTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setState({
+      ...state,
+      headerTemplate: event.target.value,
+      headerTemplateChanged: true,
+    });
+  };
+
+  const onChangeReportTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setState({
+      ...state,
+      reportTemplate: event.target.value,
+      reportTemplateChanged: true,
+    });
+  };
+
+  const onChangeFooterTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setState({
+      ...state,
+      footerTemplate: event.target.value,
+      footerTemplateChanged: true,
+    });
+  };
+
   const onResetSaToken = () =>
     setState({
       ...state,
@@ -192,6 +238,9 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
+                    headerTemplate: state.headerTemplate,
+                    reportTemplate: state.reportTemplate,
+                    footerTemplate: state.footerTemplate,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -228,6 +277,9 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
+                    headerTemplate: state.headerTemplate,
+                    reportTemplate: state.reportTemplate,
+                    footerTemplate: state.footerTemplate,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -380,6 +432,55 @@ export const AppConfig = ({ plugin }: Props) => {
             onChange={onChangeMaxWorkers}
           />
         </Field>
+
+
+        {/* Header Template */}
+        <Field
+          label="Header Report Template"
+          description="Header Report Template to use for generating reports. If not set, default template will be used. Template should be in go template syntax. See https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/templates/header.gohtml for default template."
+          data-testid={testIds.appConfig.headerTemplate}
+          className={s.marginTop}
+        >
+          <TextArea
+            id="headerTemplate"
+            rows={30}
+            className={s.textarea}
+            label={`Header Report Template`}
+            onChange={onChangeHeaderTemplate}
+          >{state.headerTemplate}</TextArea>
+        </Field>
+
+        {/* Report Template */}
+        <Field
+          label="Report Template"
+          description="Report Template to use for generating reports. If not set, default template will be used. Template should be in go template syntax. See https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/templates/report.gohtml for default template."
+          data-testid={testIds.appConfig.reportTemplate}
+          className={s.marginTop}
+        >
+          <TextArea
+            id="reportTemplate"
+            rows={30}
+            className={s.textarea}
+            label={`Report Template`}
+            onChange={onChangeReportTemplate}
+          >{state.reportTemplate}</TextArea>
+        </Field>
+
+        {/* Report Template */}
+        <Field
+          label="Footer Report Template"
+          description="Footer Report Template to use for generating reports. If not set, default template will be used. Template should be in go template syntax. See https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/templates/footer.gohtml for default template."
+          data-testid={testIds.appConfig.footerTemplate}
+          className={s.marginTop}
+        >
+          <TextArea
+            id="footerTemplate"
+            rows={30}
+            className={s.textarea}
+            label={`Footer Footer Template`}
+            onChange={onChangeFooterTemplate}
+          >{state.footerTemplate}</TextArea>
+        </Field>
       </ConfigSection>
 
       <div className={s.marginTop}>
@@ -445,6 +546,9 @@ const getStyles = (theme: GrafanaTheme2) => ({
   reportSettings: css({
     paddingTop: "32px",
   }),
+  textarea: css`
+    width: 480px;
+  `,
 });
 
 const updatePluginAndReload = async (pluginId: string, data: Partial<PluginMeta<JsonData>>) => {
