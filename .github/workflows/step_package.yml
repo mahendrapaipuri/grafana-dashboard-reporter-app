@@ -1,0 +1,88 @@
+name: package
+run-name: Package plugin
+
+on:
+  workflow_call:
+
+jobs:
+  package:
+    name: package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist
+
+      # Remove this once plugin review has been submitted
+      - name: Package plugin
+        # Grafana Labs review needs the plugin file in zip format with sha1 checksum
+        run: |
+          # Upload/Download artifacts wont preserve permissions
+          # https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
+          # Add +x bits on executables
+          chmod -R +x dist/gpx_*
+          
+          mv dist mahendrapaipuri-dashboardreporter-app
+          zip mahendrapaipuri-dashboardreporter-app-nightly.zip mahendrapaipuri-dashboardreporter-app -r
+          sha1sum mahendrapaipuri-dashboardreporter-app-nightly.zip | cut -f1 -d' ' > mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
+
+      - name: Validate plugin
+        run: |
+          zip plugin-app.zip pkg/ src/ package.json go.* Magefile.go -r
+          git clone --depth 1 --branch v0.16.1 https://github.com/grafana/plugin-validator
+          pushd ./plugin-validator/pkg/cmd/plugincheck2
+          go install
+          popd
+          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
+        shell: bash
+
+      # Check if bootstrap script is working for latest release and nightly release
+      - name: Check bootstrap script
+        run: |
+          mkdir -p latest
+          cd latest
+          ../scripts/bootstrap-dashboard-reporter-app.sh
+          cd ..
+
+          mkdir -p nightly
+          cd nightly
+          NIGHTLY=1 ../scripts/bootstrap-dashboard-reporter-app.sh
+          cd ..
+        shell: bash
+
+      - name: Upload plugin artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-artifacts
+          path: |
+            mahendrapaipuri-dashboardreporter-app-nightly.zip
+            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
+          retention-days: 3
+      
+      - name: Release nightly
+        uses: softprops/action-gh-release@v1
+        # Only run on main branch
+        if: github.ref == 'refs/heads/main'
+        with:
+          prerelease: true
+          name: nightly
+          tag_name: nightly
+          files: |
+            mahendrapaipuri-dashboardreporter-app-nightly.zip
+            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
+          fail_on_unmatched_files: true
+          body: |
+            # Latest Build Complete! :rocket:
+            
+            For the public download links of these build artifacts, please see:
+            <https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/tag/nightly>

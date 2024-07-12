@@ -11,10 +11,9 @@ apps:
 
     jsonData:
       appUrl: https://localhost:3000
-      skipTlsCheck: true
       orientation: portrait
       layout: simple
-      dashboardMode: default
+      dashboardMode: full
       timeZone: ''
       logo: ''
       maxRenderWorkers: 2

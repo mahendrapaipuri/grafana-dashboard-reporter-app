@@ -9,171 +9,26 @@ on:
     branches:
       - main
 
+permissions:
+  # All nested workflows will inherit these permissions and so no need to declare
+  # in each step file
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/step_build.yml
+
+  e2e-tests:
+    needs: [build]
+    uses: ./.github/workflows/step_e2e-tests.yml
+
+  package:
+    needs: [build, e2e-tests]
+    uses: ./.github/workflows/step_package.yml
     # For nightly build releases
     permissions:
       contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      # Install chrome as we will use it in unit tests
-      - uses: browser-actions/setup-chrome@v1
-        with:
-          install-dependencies: true
-
-      - name: Install dependencies
-        run: yarn install --immutable --prefer-offline
-
-      - name: Check types
-        run: yarn typecheck
-
-      - name: Lint
-        run: yarn lint
-
-      - name: Unit tests
-        run: yarn test:ci
-
-      - name: Build frontend
-        run: yarn build
-
-      - name: Check for backend
-        id: check-for-backend
-        run: |
-          if [ -f "Magefile.go" ]
-          then
-            echo "has-backend=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Setup Go environment
-        if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Test backend
-        if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: magefile/mage-action@v3
-        with:
-          version: latest
-          args: coverage
-
-      - name: Build backend
-        if: steps.check-for-backend.outputs.has-backend == 'true'
-        uses: magefile/mage-action@v3
-        with:
-          version: latest
-          args: build
-  
-      - name: Run e2e tests
-        run: |
-          yarn e2e:server:up
-
-          # Sleep for a while for containers to be up and running
-          sleep 20
-
-          # Run e2e tests
-          yarn e2e
-
-          # Run API tests
-          yarn e2e:report
-
-          # yarn e2e:server:down
-
-      - name: Compare PDF report from plain server
-        uses: nowsprinting/diff-pdf-action@v1
-        with:
-          file1: default.pdf
-          file2: .ci/reports/default.pdf
-          options: --verbose
-      
-      - name: Compare PDF report from TLS server
-        uses: nowsprinting/diff-pdf-action@v1
-        with:
-          file1: alternative.pdf
-          file2: .ci/reports/alternative.pdf
-          options: --verbose
-
-      # Remove this once plugin review has been submitted
-      - name: Package plugin
-        # Grafana Labs review needs the plugin file in zip format with sha1 checksum
-        run: |
-          mv dist mahendrapaipuri-dashboardreporter-app
-          zip mahendrapaipuri-dashboardreporter-app-nightly.zip mahendrapaipuri-dashboardreporter-app -r
-          sha1sum mahendrapaipuri-dashboardreporter-app-nightly.zip | cut -f1 -d' ' > mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
-
-      - name: Validate plugin
-        run: |
-          zip plugin-app.zip pkg/ src/ package.json go.* Magefile.go -r
-          git clone --depth 1 --branch v0.16.1 https://github.com/grafana/plugin-validator
-          pushd ./plugin-validator/pkg/cmd/plugincheck2
-          go install
-          popd
-          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
-        shell: bash
-
-      # Check if bootstrap script is working for latest release and nightly release
-      - name: Check bootstrap script
-        run: |
-          mkdir -p latest
-          cd latest
-          ../scripts/bootstrap-dashboard-reporter-app.sh
-          cd ..
-
-          mkdir -p nightly
-          cd nightly
-          NIGHTLY=1 ../scripts/bootstrap-dashboard-reporter-app.sh
-          cd ..
-        shell: bash
-
-      - name: Upload plugin artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: plugin-artifacts
-          path: |
-            mahendrapaipuri-dashboardreporter-app-nightly.zip
-            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
-          retention-days: 3
-
-      - name: Collect docker logs on failure
-        if: failure()
-        uses: jwalton/gh-docker-logs@v2
-        with:
-          dest: docker-logs
-
-      - name: Upload UI Test artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-test-output
-          path: |
-            test-results
-            docker-logs
-            default.pdf
-            alternative.pdf
-          retention-days: 1
-
-      - name: Release nightly
-        uses: softprops/action-gh-release@v1
-        # Only run on main branch
-        if: github.ref == 'refs/heads/main'
-        with:
-          prerelease: true
-          name: nightly
-          tag_name: nightly
-          files: |
-            mahendrapaipuri-dashboardreporter-app-nightly.zip
-            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
-          fail_on_unmatched_files: true
-          body: |
-            # Latest Build Complete! :rocket:
-            
-            For the public download links of these build artifacts, please see:
-            <https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/tag/nightly>
