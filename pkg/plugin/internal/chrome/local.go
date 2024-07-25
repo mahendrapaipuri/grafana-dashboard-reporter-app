@@ -10,10 +10,8 @@ import (
 )
 
 type LocalInstance struct {
+	allocCtx   context.Context
 	browserCtx context.Context
-
-	browserCtxCancel context.CancelFunc
-	allocCtxCancel   context.CancelFunc
 }
 
 // NewLocalBrowserInstance creates a new local browser instance
@@ -52,11 +50,11 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 		it is not normal that these will be updated regularly. So, we can live with
 		this side-effect without running into deep issues.
 	*/
-	allocCtx, allocCtxCancel := chromedp.NewExecAllocator(ctx, chromeOptions...)
+	allocCtx, _ := chromedp.NewExecAllocator(ctx, chromeOptions...)
 
 	// start a browser (and an empty tab) so we can add more tabs to the browser
 	chromeLogger := logger.With("subsystem", "chromium")
-	browserCtx, browserCtxCancel := chromedp.NewContext(allocCtx,
+	browserCtx, _ := chromedp.NewContext(allocCtx,
 		chromedp.WithErrorf(chromeLogger.Error),
 		chromedp.WithLogf(chromeLogger.Debug),
 	)
@@ -66,28 +64,33 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	}
 
 	return &LocalInstance{
+		allocCtx,
 		browserCtx,
-		browserCtxCancel,
-		allocCtxCancel,
 	}, nil
 }
 
-func (i *LocalInstance) NewTab(ctx context.Context, _ log.Logger, _ *config.Config) *Tab {
-	// start a browser (and an empty tab) so we can add more tabs to the browser
-	ctx, cancel := chromedp.NewContext(i.browserCtx)
+func (i *LocalInstance) Name() string {
+	return "local"
+}
+
+func (i *LocalInstance) NewTab(logger log.Logger, conf *config.Config) *Tab {
+	ctx, _ := chromedp.NewContext(i.browserCtx)
 
 	return &Tab{
-		ctx:    ctx,
-		cancel: cancel,
+		ctx: ctx,
 	}
 }
 
-func (i *LocalInstance) Close() {
-	if i.browserCtxCancel != nil {
-		i.browserCtxCancel()
+func (i *LocalInstance) Close(logger log.Logger) {
+	if i.browserCtx != nil {
+		if err := chromedp.Cancel(i.browserCtx); err != nil {
+			logger.Error("got error from cancel browser context", "error", err)
+		}
 	}
 
-	if i.allocCtxCancel != nil {
-		i.allocCtxCancel()
+	if i.allocCtx != nil {
+		if err := chromedp.Cancel(i.allocCtx); err != nil {
+			logger.Error("got error from cancel browser allocator context", "error", err)
+		}
 	}
 }

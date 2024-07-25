@@ -78,6 +78,8 @@ jobs:
           --enable-automation
           --password-store=basic
           --use-mock-keychain &
+          
+          echo "CHROME_REMOTE_ADDR=ws://localhost:44251" >> $GITHUB_ENV
 
       - name: Setup Go environment
         if: steps.check-for-backend.outputs.has-backend == 'true'

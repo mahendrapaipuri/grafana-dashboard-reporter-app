@@ -5,9 +5,12 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+var logger = log.NewNullLogger()
 
 func TestDashboard(t *testing.T) {
 	Convey("When creating a new dashboard from Grafana dashboard JSON and browser data", t, func() {
@@ -32,7 +35,7 @@ func TestDashboard(t *testing.T) {
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
-		dash, _ := New([]byte(dashJSON), dashData, url.Values{}, &config.Config{})
+		dash, _ := New(logger, []byte(dashJSON), dashData, url.Values{}, &config.Config{})
 
 		Convey("Panels should contain all panels from dashboard browser data", func() {
 			So(dash.Panels, ShouldHaveLength, 3)
@@ -64,7 +67,7 @@ func TestDashboard(t *testing.T) {
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
-		dash, _ := New([]byte(dashJSON), dashData, url.Values{}, &config.Config{})
+		dash, _ := New(logger, []byte(dashJSON), dashData, url.Values{}, &config.Config{})
 
 		Convey("Panels should contain all panels from dashboard JSON model", func() {
 			So(dash.Panels, ShouldHaveLength, 5)
@@ -84,7 +87,7 @@ func TestVariableValues(t *testing.T) {
 		vars := url.Values{}
 		vars.Add("var-one", "oneval")
 		vars.Add("var-two", "twoval")
-		dash, _ := New([]byte(v5DashJSON), nil, vars, &config.Config{})
+		dash, _ := New(logger, []byte(v5DashJSON), nil, vars, &config.Config{})
 
 		Convey("The dashboard should contain the variable values in a random order", func() {
 			So(dash.VariableValues, ShouldContainSubstring, "oneval")

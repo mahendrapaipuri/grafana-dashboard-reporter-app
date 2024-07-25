@@ -23,25 +23,22 @@ apps:
       saToken: ''
 
     jsonData:
-      # appUrl is at which Grafana can be accessible. The plugin will make API requests
-      # to Grafana to get individual panel in each dashboard to generate reports. These API
-      # requests will be made to this URL. For most of the deployments the default value 
-      # will work. 
+      # url is at which Grafana can be accessible from the plugin.
+      # The plugin will make API requests to Grafana to get individual panel in each dashboard to generate reports.
+      # These API requests will be made to this URL.
+      # For most of the deployments the default value http://localhost:3000 will work.
+      # If remoteChromeAddr is set, validate that the URL is reachable from the chrome instance
       # 
-      # If the Grafana is configured to use cookie_samesite "strict", the default localhost:3000
-      # will not work as the plugin will forward cookie in the API requests and "strict" policy
-      # will not make cookie set on URL Grafana is exposed (eg mygrafana.example.com) on 
-      # localhost:3000. In this case, please use appUrl as `mygrafana.example.com`
-      # 
-      # The app URL set in GF_APP_URL env variable will always have the highest precedence
-      # and will override the value set here
+      # If unset, the plugin will use the configured app URL from Grafana settings.
       #
-      appUrl: http://localhost:3000
+      url: http://localhost:3000
 
       # If Grafana is using HTTPS with self signed certificates, set this parameter to true
-      # to skip TLS certificate verification
+      # to skip TLS certificate verification.
       #
-      skipTlsCheck: false
+      # This is not recommended for production environments.
+      #
+      tlsSkipVerify: false
 
       # Orientation of the report. Possible values are portrait and landscape
       #
@@ -97,6 +94,13 @@ apps:
       #
       logo: ''
 
+      # Maximum number of workers for interacting with chrome browser.
+      #
+      # This can be changed from Grafana UI as well and this configuration parameter
+      # applies globally to all generated reports
+      #
+      maxBrowserWorkers: 2
+
       # Maximum number of workers for generating panel PNGs.
       #
       # This can be changed from Grafana UI as well and this configuration parameter
@@ -105,4 +109,4 @@ apps:
       maxRenderWorkers: 2
 
       # A remote address for a running chrome instance. If empty, a local chrome browser will be executed
-      remoteChromeAddr: 'ws://chrome:9222/'
+      remoteChromeAddr: 'ws://localhost:9222/'

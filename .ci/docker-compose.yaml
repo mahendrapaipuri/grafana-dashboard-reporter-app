@@ -42,7 +42,7 @@ services:
       - GF_RENDERING_SERVER_URL=http://renderer_plain:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana_plain:${GF_SERVER_HTTP_PORT:-3000}/
       - GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true
-      - GF_LOG_FILTERS=rendering:debug
+      - "GF_LOG_FILTERS=rendering:debug plugin.mahendrapaipuri-dashboardreporter-app:debug"
       # Set CI mode to remove header in report
       - __REPORTER_APP_CI_MODE=true
   renderer_plain:

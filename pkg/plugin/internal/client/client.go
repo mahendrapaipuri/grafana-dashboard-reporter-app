@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,11 +17,11 @@ import (
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/dashboard"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/worker"
 )
 
 // Javascripts vars
 var (
-	errorLock = sync.RWMutex{}
 	// JS to uncollapse rows for different Grafana versions.
 	// Seems like executing JS corresponding to v10 on v11 or v11 on v10
 	// does not have any side-effect, so we will always execute both of them. This
@@ -53,6 +52,7 @@ type GrafanaClient struct {
 	conf           *config.Config
 	httpClient     *http.Client
 	chromeInstance chrome.Instance
+	workerPools    worker.Pools
 	appURL         string
 	credential     Credential
 	queryParams    url.Values
@@ -66,6 +66,7 @@ func New(
 	conf *config.Config,
 	httpClient *http.Client,
 	chromeInstance chrome.Instance,
+	workerPools worker.Pools,
 	appURL string,
 	credential Credential,
 	queryParams url.Values,
@@ -75,6 +76,7 @@ func New(
 		conf,
 		httpClient,
 		chromeInstance,
+		workerPools,
 		appURL,
 		credential,
 		queryParams,
@@ -90,50 +92,54 @@ func (g GrafanaClient) setCredentials(r *http.Request) {
 
 // Dashboard fetches dashboard from Grafana
 func (g GrafanaClient) Dashboard(ctx context.Context, dashUID string) (dashboard.Dashboard, error) {
-	// Start a wait group
-	wg := &sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	wg.Add(2)
 
 	// Spawn go routines to get dashboard from API and browser
-	var dashboardBytes []byte
-	var dashboardData []interface{}
-	var allErrs, err error
+	var (
+		dashboardBytes     []byte
+		dashboardData      []interface{}
+		errBrowser, errAPI error
+	)
+
 	// Get dashboard model from API
 	go func() {
-		dashboardBytes, err = g.dashboardFromAPI(ctx, dashUID)
-		if err != nil {
-			errorLock.Lock()
-			allErrs = errors.Join(err, allErrs)
-			errorLock.Unlock()
-		}
+		defer wg.Done()
 
-		// Mark routine as done
-		wg.Done()
+		dashboardBytes, errAPI = g.dashboardFromAPI(ctx, dashUID)
+		if errAPI != nil {
+			errAPI = fmt.Errorf("error fetching dashboard from API: %w", errAPI)
+		}
 	}()
 
 	// Get dashboard model from browser
-	go func() {
-		dashboardData, err = g.dashboardFromBrowser(ctx, dashUID)
-		if err != nil {
-			errorLock.Lock()
-			allErrs = errors.Join(err, allErrs)
-			errorLock.Unlock()
+	g.workerPools[worker.Browser].Do(func() {
+		defer wg.Done()
+
+		dashboardData, errBrowser = g.dashboardFromBrowser(dashUID)
+		if errBrowser != nil {
+			errBrowser = fmt.Errorf("error fetching dashboard from browser: %w", errBrowser)
 		}
+	})
 
-		// Mark routine as done
-		wg.Done()
-	}()
-
-	// Wait for go routines
 	wg.Wait()
 
-	// Build dashboard model from JSON and data
-	grafanaDashboard, err := dashboard.New(dashboardBytes, dashboardData, g.queryParams, g.conf)
-	if err != nil {
-		allErrs = errors.Join(err, allErrs)
+	if errBrowser != nil {
+		// If the browser errors, that's fine, we can still use the API
+		g.logger.Warn("error fetching dashboard from browser, falling back to API", "error", errBrowser)
 	}
 
-	return grafanaDashboard, allErrs
+	if errAPI != nil {
+		return dashboard.Dashboard{}, fmt.Errorf("error fetching dashboard: %w", errAPI)
+	}
+
+	// Build dashboard model from JSON and data
+	grafanaDashboard, err := dashboard.New(g.logger, dashboardBytes, dashboardData, g.queryParams, g.conf)
+	if err != nil {
+		return dashboard.Dashboard{}, fmt.Errorf("error building dashboard model: %w", err)
+	}
+
+	return grafanaDashboard, nil
 }
 
 // dashboardFromAPI fetches dashboard JSON model from Grafana API and returns response body.
@@ -173,22 +179,27 @@ func (g GrafanaClient) dashboardFromAPI(ctx context.Context, dashUID string) ([]
 }
 
 // dashboardFromBrowser fetches dashboard model from Grafana chromium browser instance
-func (g GrafanaClient) dashboardFromBrowser(ctx context.Context, dashUID string) ([]interface{}, error) {
+func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, error) {
 	// Get dashboard URL
 	dashURL := fmt.Sprintf("%s/d/%s/_?%s", g.appURL, dashUID, g.queryParams.Encode())
 
 	// Create a new tab
-	tab := g.chromeInstance.NewTab(ctx, g.logger, g.conf)
-	defer tab.Close()
+	tab := g.chromeInstance.NewTab(g.logger, g.conf)
+	defer tab.Close(g.logger)
 
-	headers := map[string]any{}
+	var headers map[string]any
 	if g.credential.HeaderName != "" {
-		headers[g.credential.HeaderName] = g.credential.HeaderValue
+		headers = map[string]any{
+			g.credential.HeaderName: g.credential.HeaderValue,
+		}
 	}
 
-	tasks := make(chromedp.Tasks, 0, 4+len(unCollapseRowsJS)+1)
+	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle")
+	if err != nil {
+		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
+	}
 
-	tasks = append(tasks, chrome.SetHeaders(dashURL, headers)...)
+	tasks := make(chromedp.Tasks, 0, len(unCollapseRowsJS)+1)
 
 	// If full dashboard mode is requested, add js that uncollapses rows
 	if g.conf.DashboardMode == "full" {
@@ -204,6 +215,10 @@ func (g GrafanaClient) dashboardFromBrowser(ctx context.Context, dashUID string)
 	tasks = append(tasks, chromedp.Evaluate(dashboardDataJS, &dashboardData))
 	if err := tab.Run(tasks); err != nil {
 		return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %w", dashURL, err)
+	}
+
+	if len(dashboardData) == 0 {
+		return nil, ErrJavaScriptReturnedNoData
 	}
 
 	return dashboardData, nil
@@ -245,12 +260,17 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 		return "", fmt.Errorf("error rendering panel: %s", resp.Status)
 	}
 
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading response body of panel PNG: %v", err)
+	}
+
 	sb := &bytes.Buffer{}
-	sb.Grow(base64.StdEncoding.DecodedLen(int(resp.ContentLength)))
+	sb.Grow(base64.StdEncoding.EncodedLen(int(resp.ContentLength)))
 
-	decoder := base64.NewDecoder(base64.StdEncoding, resp.Body)
+	encoder := base64.NewEncoder(base64.StdEncoding, sb)
 
-	if _, err = io.Copy(sb, decoder); err != nil {
+	if _, err = encoder.Write(b); err != nil {
 		return "", fmt.Errorf("error reading response body of panel PNG: %v", err)
 	}
 
