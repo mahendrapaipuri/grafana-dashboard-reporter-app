@@ -2,9 +2,11 @@ package client
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/dashboard"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/worker"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -73,11 +76,72 @@ func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 				Layout:        "simple",
 				DashboardMode: "default",
 			}
-			grf := New(log.NewNullLogger(), conf, http.DefaultClient, chromeInstance, ts.URL, credential, url.Values{})
+
+			ctx := context.Background()
+			workerPools := worker.Pools{
+				worker.Browser:  worker.New(ctx, 6),
+				worker.Renderer: worker.New(ctx, 2),
+			}
+			grf := New(log.NewNullLogger(), conf, http.DefaultClient, chromeInstance, workerPools, ts.URL, credential, url.Values{})
 			_, err := grf.Dashboard(context.Background(), "randomDashUID")
 
 			Convey("It should receive no errors", func() {
-				So(err, ShouldBeError, dashboard.ErrNoPanels)
+				So(errors.Unwrap(err), ShouldBeError, dashboard.ErrNoDashboardData)
+			})
+
+			Convey("It should use the v5 dashboards endpoint", func() {
+				So(requestURI, ShouldContain, "/api/dashboards/uid/randomDashUID")
+			})
+			Convey("It should use cookie", func() {
+				So(requestCookie, ShouldEqual, "cookie")
+			})
+		})
+	})
+}
+
+func TestGrafanaClientFetchesDashboardWithRemoteChrome(t *testing.T) {
+	// Skip test if chrome is not available
+	chromeRemoteAddr, ok := os.LookupEnv("CHROME_REMOTE_ADDR")
+	if !ok {
+		t.Skip("CHROME_REMOTE_ADDR unset. Skipping test")
+	}
+
+	Convey("When fetching a Dashboard", t, func() {
+		chromeInstance, err := chrome.NewRemoteBrowserInstance(context.Background(), log.NewNullLogger(), chromeRemoteAddr)
+		Convey("setup a chrome browser should not error", func() {
+			So(err, ShouldBeNil)
+		})
+
+		var requestURI []string
+		requestCookie := ""
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestURI = append(requestURI, r.RequestURI)
+			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+
+			if _, err := w.Write([]byte(`{"dashboard": {"title": "foo","panels":[{"type":"singlestat", "id":0}]}}`)); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}))
+		defer ts.Close()
+
+		Convey("When using the Grafana httpClient", func() {
+			credential := Credential{HeaderName: backend.CookiesHeaderName, HeaderValue: "cookie"}
+			conf := &config.Config{
+				Layout:        "simple",
+				DashboardMode: "default",
+			}
+
+			ctx := context.Background()
+			workerPools := worker.Pools{
+				worker.Browser:  worker.New(ctx, 6),
+				worker.Renderer: worker.New(ctx, 2),
+			}
+			grf := New(log.NewNullLogger(), conf, http.DefaultClient, chromeInstance, workerPools, ts.URL, credential, url.Values{})
+			_, err := grf.Dashboard(context.Background(), "randomDashUID")
+
+			Convey("It should receive no errors", func() {
+				So(errors.Unwrap(err), ShouldBeError, dashboard.ErrNoDashboardData)
 			})
 
 			Convey("It should use the v5 dashboards endpoint", func() {
@@ -110,12 +174,17 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 		variables.Add("var-host", "servername")
 		variables.Add("var-port", "adapter")
 
+		ctx := context.Background()
+		workerPools := worker.Pools{
+			worker.Browser:  worker.New(ctx, 6),
+			worker.Renderer: worker.New(ctx, 2),
+		}
 		cases := map[string]struct {
 			client      Grafana
 			pngEndpoint string
 		}{
 			"httpClient": {
-				New(log.NewNullLogger(), conf, http.DefaultClient, nil, ts.URL, credential, variables),
+				New(log.NewNullLogger(), conf, http.DefaultClient, nil, workerPools, ts.URL, credential, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -158,14 +227,13 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 				So(requestURI, ShouldContainSubstring, "height=500")
 			})
 		}
-
 		conf.Layout = "grid"
 		casesGridLayout := map[string]struct {
 			client      Grafana
 			pngEndpoint string
 		}{
 			"httpClient": {
-				New(log.NewNullLogger(), conf, http.DefaultClient, nil, ts.URL, credential, variables),
+				New(log.NewNullLogger(), conf, http.DefaultClient, nil, workerPools, ts.URL, credential, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -200,7 +268,12 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := New(log.NewNullLogger(), &config.Config{}, http.DefaultClient, nil, ts.URL, Credential{}, url.Values{})
+		ctx := context.Background()
+		workerPools := worker.Pools{
+			worker.Browser:  worker.New(ctx, 6),
+			worker.Renderer: worker.New(ctx, 2),
+		}
+		grf := New(log.NewNullLogger(), &config.Config{}, http.DefaultClient, nil, workerPools, ts.URL, Credential{}, url.Values{})
 
 		_, err := grf.PanelPNG(context.Background(), "testDash",
 			dashboard.Panel{ID: 44, Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
@@ -218,7 +291,12 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		grf := New(log.NewNullLogger(), &config.Config{}, http.DefaultClient, nil, ts.URL, Credential{}, url.Values{})
+		ctx := context.Background()
+		workerPools := worker.Pools{
+			worker.Browser:  worker.New(ctx, 6),
+			worker.Renderer: worker.New(ctx, 2),
+		}
+		grf := New(log.NewNullLogger(), &config.Config{}, http.DefaultClient, nil, workerPools, ts.URL, Credential{}, url.Values{})
 
 		_, err := grf.PanelPNG(context.Background(), "testDash",
 			dashboard.Panel{ID: 44, Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},

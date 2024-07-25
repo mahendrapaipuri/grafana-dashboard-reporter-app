@@ -38,7 +38,7 @@ services:
       # Grafana image renderer
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:${GF_SERVER_HTTP_PORT:-3000}/
-      - GF_LOG_FILTERS=rendering:debug
+      - "GF_LOG_FILTERS=rendering:debug plugin.mahendrapaipuri-dashboardreporter-app:debug"
   renderer:
     image: grafana/grafana-image-renderer:latest
     environment:
@@ -54,5 +54,5 @@ services:
   chrome:
     image: chromedp/headless-shell:latest
     shm_size: 2G
-    ports:
-      - 9222
+    init: true
+    network_mode: service:grafana

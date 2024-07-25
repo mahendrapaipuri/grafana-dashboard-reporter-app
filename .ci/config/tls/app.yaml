@@ -5,9 +5,6 @@ apps:
     org_id: 1
     org_name: Main Org.
     disabled: false
-    
-    secureJsonData:
-      saToken: ''
 
     jsonData:
       appUrl: https://localhost:3000
@@ -16,6 +13,6 @@ apps:
       dashboardMode: full
       timeZone: ''
       logo: ''
-      maxRenderWorkers: 2
+      maxBrowserWorkers: 10
+      maxRenderWorkers: 10
       persistData: false
-      remoteChromeAddr: ''

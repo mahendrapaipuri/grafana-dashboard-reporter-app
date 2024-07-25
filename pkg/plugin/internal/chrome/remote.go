@@ -8,32 +8,35 @@ import (
 )
 
 type RemoteInstance struct {
-	browserCtx context.Context
-
-	browserCtxCancel context.CancelFunc
-	allocCtxCancel   context.CancelFunc
+	allocCtx       context.Context
+	allocCtxCancel context.CancelFunc
 }
 
 // NewRemoteBrowserInstance creates a new remote browser instance
-func NewRemoteBrowserInstance(_ context.Context, _ log.Logger, _ bool) (*RemoteInstance, error) {
-	// we don't need to do anything here. We are connecting to a remote browser if needed.
-	return &RemoteInstance{}, nil
+func NewRemoteBrowserInstance(ctx context.Context, _ log.Logger, remoteChromeAddr string) (*RemoteInstance, error) {
+	allocCtx, allocCtxCancel := chromedp.NewRemoteAllocator(ctx, remoteChromeAddr)
+
+	return &RemoteInstance{allocCtx, allocCtxCancel}, nil
 }
 
-func (i *RemoteInstance) NewTab(ctx context.Context, logger log.Logger, conf *config.Config) *Tab {
-	allocCtx, allocCtxCancel := chromedp.NewRemoteAllocator(ctx, conf.RemoteChromeAddr)
+func (i *RemoteInstance) Name() string {
+	return "remote"
+}
 
+func (i *RemoteInstance) NewTab(logger log.Logger, conf *config.Config) *Tab {
 	chromeLogger := logger.With("subsystem", "chromium")
-	browserCtx, browserCtxCancel := chromedp.NewContext(allocCtx,
+	browserCtx, _ := chromedp.NewContext(i.allocCtx,
 		chromedp.WithErrorf(chromeLogger.Error),
 		chromedp.WithLogf(chromeLogger.Debug),
 	)
 
 	return &Tab{
-		parentCtxCancel: allocCtxCancel,
-		ctx:             browserCtx,
-		cancel:          browserCtxCancel,
+		ctx: browserCtx,
 	}
 }
 
-func (i *RemoteInstance) Close() {}
+func (i *RemoteInstance) Close(_ log.Logger) {
+	if i.allocCtxCancel != nil {
+		i.allocCtxCancel()
+	}
+}

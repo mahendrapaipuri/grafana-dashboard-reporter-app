@@ -30,8 +30,9 @@ type PDFOptions struct {
 }
 
 type Instance interface {
-	NewTab(ctx context.Context, logger log.Logger, conf *config.Config) *Tab
-	Close()
+	NewTab(logger log.Logger, conf *config.Config) *Tab
+	Name() string
+	Close(logger log.Logger)
 }
 
 // enableLifeCycleEvents enables the chromedp life cycle events
@@ -51,18 +52,6 @@ func enableLifeCycleEvents() chromedp.ActionFunc {
 	}
 }
 
-// navigateAndWaitFor navigates the browser to the given URL and waits for it to
-// load until a given event occurs
-func navigateAndWaitFor(url string, eventName string) chromedp.ActionFunc {
-	return func(ctx context.Context) error {
-		_, _, _, err := page.Navigate(url).Do(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to navigate: %w", err)
-		}
-		return waitFor(ctx, eventName)
-	}
-}
-
 // waitFor blocks until eventName is received.
 // Examples of events you can wait for:
 //
@@ -74,32 +63,36 @@ func navigateAndWaitFor(url string, eventName string) chromedp.ActionFunc {
 // This is not super reliable, I've already found incidental cases where
 // networkIdle was sent before load. It's probably smart to see how
 // puppeteer implements this exactly.
-func waitFor(ctx context.Context, eventName string) error {
-	ch := make(chan struct{})
-	cctx, cancel := context.WithCancel(ctx)
-	chromedp.ListenTarget(cctx, func(ev interface{}) {
-		switch e := ev.(type) {
-		case *page.EventLifecycleEvent:
-			if e.Name == eventName {
-				cancel()
-				close(ch)
+func waitFor(eventName string) chromedp.ActionFunc {
+	return func(ctx context.Context) error {
+		ch := make(chan struct{})
+		cctx, cancel := context.WithCancel(ctx)
+		chromedp.ListenTarget(cctx, func(ev interface{}) {
+			switch e := ev.(type) {
+			case *page.EventLifecycleEvent:
+				if e.Name == eventName {
+					cancel()
+					close(ch)
+				}
 			}
+		})
+		select {
+		case <-ch:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
 		}
-	})
-	select {
-	case <-ch:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
 	}
 }
 
 // SetHeaders returns a task list that sets the passed headers.
-func SetHeaders(u string, headers map[string]any) chromedp.Tasks {
+func setHeaders(headers map[string]any) chromedp.Tasks {
+	if headers == nil {
+		return chromedp.Tasks{}
+	}
+
 	return chromedp.Tasks{
 		network.Enable(),
 		network.SetExtraHTTPHeaders(headers),
-		enableLifeCycleEvents(),
-		navigateAndWaitFor(u, "networkIdle"),
 	}
 }

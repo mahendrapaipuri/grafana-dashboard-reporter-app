@@ -11,17 +11,18 @@ const SaToken = "saToken"
 
 // Config contains plugin settings
 type Config struct {
-	URL              string `json:"url"`
-	TLSSkipVerify    string `json:"tlsSkipVerify"`
-	Orientation      string `json:"orientation"`
-	Layout           string `json:"layout"`
-	DashboardMode    string `json:"dashboardMode"`
-	TimeZone         string `json:"timeZone"`
-	EncodedLogo      string `json:"logo"`
-	MaxRenderWorkers int    `json:"maxRenderWorkers"`
-	RemoteChromeAddr string `json:"remoteChromeAddr"`
-	IncludePanelIDs  []int
-	ExcludePanelIDs  []int
+	URL               string `json:"url"`
+	TLSSkipVerify     bool   `json:"tlsSkipVerify"`
+	Orientation       string `json:"orientation"`
+	Layout            string `json:"layout"`
+	DashboardMode     string `json:"dashboardMode"`
+	TimeZone          string `json:"timeZone"`
+	EncodedLogo       string `json:"logo"`
+	MaxBrowserWorkers int    `json:"maxBrowserWorkers"`
+	MaxRenderWorkers  int    `json:"maxRenderWorkers"`
+	RemoteChromeAddr  string `json:"remoteChromeAddr"`
+	IncludePanelIDs   []int
+	ExcludePanelIDs   []int
 
 	// Secrets
 	Token string
@@ -54,13 +55,19 @@ func (c *Config) String() string {
 		excludedPanelIDs = strings.Join(panelIDs, ",")
 	}
 
+	appURL := "unset"
+	if c.URL != "" {
+		appURL = c.URL
+	}
+
 	return fmt.Sprintf(
 		"Orientation: %s; Layout: %s; Dashboard Mode: %s; Time Zone: %s; Encoded Logo: %s; "+
-			"Max Renderer Workers: %d; "+
-			"Included Panel IDs: %s; Excluded Panel IDs: %s",
+			"Max Renderer Workers: %d; Max Browser Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
+			"TLS Skip verifiy: %v; Included Panel IDs: %s; Excluded Panel IDs: %s",
 		c.Orientation, c.Layout,
-		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers,
-		includedPanelIDs, excludedPanelIDs,
+		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers,
+		c.RemoteChromeAddr, appURL,
+		c.TLSSkipVerify, includedPanelIDs, excludedPanelIDs,
 	)
 }
 
@@ -69,12 +76,13 @@ func Load(data json.RawMessage, secureData map[string]string) (*Config, error) {
 	// Always start with a default config so that when the plugin is not provisioned
 	// with a config, we will still have "non-null" config to work with
 	var config = &Config{
-		Orientation:      "portrait",
-		Layout:           "simple",
-		DashboardMode:    "default",
-		TimeZone:         "",
-		EncodedLogo:      "",
-		MaxRenderWorkers: 2,
+		Orientation:       "portrait",
+		Layout:            "simple",
+		DashboardMode:     "default",
+		TimeZone:          "",
+		EncodedLogo:       "",
+		MaxBrowserWorkers: 6,
+		MaxRenderWorkers:  2,
 	}
 
 	// Fetch token, if configured in SecureJSONData

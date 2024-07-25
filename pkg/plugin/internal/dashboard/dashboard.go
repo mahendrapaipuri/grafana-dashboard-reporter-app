@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
 )
 
@@ -115,7 +116,7 @@ func variablesValues(queryParams url.Values) string {
 
 // New creates Dashboard from Grafana's internal JSON dashboard model
 // fetched from Grafana API and browser
-func New(dashJSON []byte, dashData []interface{}, queryParams url.Values, config *config.Config) (Dashboard, error) {
+func New(log log.Logger, dashJSON []byte, dashData []interface{}, queryParams url.Values, config *config.Config) (Dashboard, error) {
 	var dash map[string]Dashboard
 	if err := json.Unmarshal(dashJSON, &dash); err != nil {
 		return Dashboard{}, fmt.Errorf("failed to unmarshal dashboard JSON: %w", err)
@@ -128,11 +129,12 @@ func New(dashJSON []byte, dashData []interface{}, queryParams url.Values, config
 	}
 
 	// Attempt to update panels from browser data
-	// If there are no errors, update the panels from browser dashabord model and
+	// If there are no errors, update the panels from browser dashboard model and
 	// return
 	var panels []Panel
 	var err error
 	if panels, err = panelsFromBrowser(dashData); err != nil {
+		log.Warn("failed to get panels from browser data", "error", err)
 		// If we fail to get panels from browser data, get them from dashboard JSON model
 		// and correct grid positions
 		panels = panelsFromJSON(dashboard.RowOrPanels, config.DashboardMode)
@@ -149,13 +151,16 @@ func New(dashJSON []byte, dashData []interface{}, queryParams url.Values, config
 // panelsFromBrowser creates slice of panels from the data fetched from browser's DOM model
 func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	// If dashData is nil return
-	if dashData == nil {
+	if dashData == nil || len(dashData) == 0 {
 		return nil, ErrNoDashboardData
 	}
 
-	var panels []Panel
-	var allErrs error
-	var err error
+	var (
+		allErrs error
+		err     error
+		panels  []Panel
+	)
+
 	// Iterate over the slice of interfaces and build each panel
 	for _, p := range dashData {
 		var id, x, y, w, h, vInt, xInt, yInt int
@@ -187,7 +192,7 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 						y = yInt / scales["height"]
 					}
 				} else {
-					allErrs = errors.Join(fmt.Errorf("failed to capture X and Y coordinate regex groups"), allErrs)
+					allErrs = errors.Join(errors.New("failed to capture X and Y coordinate regex groups"), allErrs)
 				}
 			case "id":
 				if id, err = strconv.Atoi(v.(string)); err != nil {

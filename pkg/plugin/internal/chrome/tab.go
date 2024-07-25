@@ -2,28 +2,65 @@ package chrome
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 
-	"github.com/chromedp/cdproto/io"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"golang.org/x/net/context"
 )
 
 type Tab struct {
-	parentCtxCancel context.CancelFunc
-	ctx             context.Context
-	cancel          context.CancelFunc
+	ctx context.Context
 }
 
-func (t *Tab) Close() {
-	if t.cancel != nil {
-		t.cancel()
+func (t *Tab) Close(logger log.Logger) {
+	if t.ctx != nil {
+		var err error
+
+		// Clear browser cookies to ensure no session is left
+		if err = chromedp.Run(t.ctx, network.ClearBrowserCookies()); err != nil {
+			logger.Error("got error from clear browser cookies", "error", err)
+		}
+
+		if err = chromedp.Cancel(t.ctx); err != nil {
+			logger.Error("got error from cancel tab context", "error", err)
+		}
+	}
+}
+
+// NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page
+func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string) error {
+	err := t.Run(enableLifeCycleEvents())
+	if err != nil {
+		return fmt.Errorf("error enable lifecycle events: %w", err)
 	}
 
-	if t.parentCtxCancel != nil {
-		t.cancel()
+	if headers != nil {
+		err = t.Run(setHeaders(headers))
+		if err != nil {
+			return fmt.Errorf("error set headers: %w", err)
+		}
 	}
+
+	resp, err := chromedp.RunResponse(t.ctx, chromedp.Navigate(addr))
+	if err != nil {
+		return fmt.Errorf("failed navigate to %s: %w", addr, err)
+	}
+
+	if resp.Status != http.StatusOK {
+		return fmt.Errorf("status code is %d:%s", resp.Status, resp.StatusText)
+	}
+
+	err = t.Run(waitFor(eventName))
+	if err != nil {
+		return fmt.Errorf("error waiting for %s on page %s: %w", eventName, addr, err)
+	}
+
+	return nil
 }
 
 func (t *Tab) Run(actions chromedp.Action) error {
@@ -35,9 +72,7 @@ func (t *Tab) Context() context.Context {
 }
 
 // PrintToPDF returns chroms tasks that print the requested HTML into a PDF and returns the PDF stream handle
-func (t *Tab) PrintToPDF(options PDFOptions) (io.StreamHandle, error) {
-	var stream io.StreamHandle
-
+func (t *Tab) PrintToPDF(options PDFOptions, writer io.Writer) error {
 	err := chromedp.Run(t.ctx, chromedp.Tasks{
 		chromedp.Navigate("about:blank"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -74,9 +109,16 @@ func (t *Tab) PrintToPDF(options PDFOptions) (io.StreamHandle, error) {
 			}
 
 			// Finally execute and get PDF buffer
-			_, stream, err = pageParams.Do(ctx)
+			_, stream, err := pageParams.Do(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to print to PDF: %w", err)
+			}
+
+			reader := NewStreamReader(ctx, stream)
+			defer reader.Close()
+
+			if _, err = io.Copy(writer, reader); err != nil {
+				return fmt.Errorf("failed to copy PDF stream: %w", err)
 			}
 
 			return nil
@@ -84,8 +126,8 @@ func (t *Tab) PrintToPDF(options PDFOptions) (io.StreamHandle, error) {
 	})
 
 	if err != nil {
-		return stream, fmt.Errorf("error rendering PDF: %w", err)
+		return fmt.Errorf("error rendering PDF: %w", err)
 	}
 
-	return stream, nil
+	return nil
 }

@@ -10,6 +10,7 @@ require (
 	github.com/grafana/grafana-plugin-sdk-go v0.236.0
 	github.com/magefile/mage v1.15.0
 	github.com/smartystreets/goconvey v1.8.1
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/net v0.25.0
 )
 
@@ -22,6 +23,7 @@ require (
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elazarl/goproxy v0.0.0-20240618083138-03be62527ccb // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/getkin/kin-openapi v0.125.0 // indirect
@@ -67,6 +69,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.54.0 // indirect

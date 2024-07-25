@@ -29,6 +29,7 @@ export type JsonData = {
   dashboardMode?: string;
   timeZone?: string;
   logo?: string;
+  maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
   remoteChromeAddr?: string;
 };
@@ -62,6 +63,10 @@ type State = {
   logo: string;
   // If logo has changed
   logoChanged: boolean;
+  // Maximum browser workers
+  maxBrowserWorkers: number;
+  // If maxRenderWorkers has changed
+  maxBrowserWorkersChanged: boolean;
   // Maximum rendering workers
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
@@ -98,6 +103,8 @@ export const AppConfig = ({ plugin }: Props) => {
     timeZoneChanged: false,
     logo: jsonData?.logo || "",
     logoChanged: false,
+    maxBrowserWorkers: jsonData?.maxBrowserWorkers || 2,
+    maxBrowserWorkersChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
     remoteChromeAddr: jsonData?.remoteChromeAddr || "",
@@ -177,7 +184,15 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-  const onChangeMaxWorkers = (event: ChangeEvent<HTMLInputElement>) => {
+  const onChangeMaxBrowserWorkers = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      maxBrowserWorkers: event.target.valueAsNumber,
+      maxBrowserWorkersChanged: true,
+    });
+  };
+
+  const onChangeMaxRenderWorkers = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
       maxRenderWorkers: event.target.valueAsNumber,
@@ -226,6 +241,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   jsonData: {
                     url: state.url,
                     tlsSkipVerify: state.tlsSkipVerify,
+                    maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
@@ -263,6 +279,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   jsonData: {
                     url: state.url,
                     tlsSkipVerify: state.tlsSkipVerify,
+                    maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     orientation: state.orientation,
                     layout: state.layout,
@@ -405,7 +422,24 @@ export const AppConfig = ({ plugin }: Props) => {
         isCollapsible
         isInitiallyOpen={false}
       >
-        {/* Max workers */}
+        {/* Max browser workers */}
+        <Field
+          label="Maximum Browser Workers"
+          description="Maximum number of workers for interacting with chrome browser. Default is 6."
+          className={s.marginTop}
+        >
+          <Input
+            type="number"
+            width={60}
+            id="max-browser-workers"
+            data-testid={testIds.appConfig.maxBrowserWorkers}
+            label={`Maximum Browser Workers`}
+            pattern={`[0-9]{1,2}`}
+            value={state.maxBrowserWorkers}
+            onChange={onChangeMaxBrowserWorkers}
+          />
+        </Field>
+        {/* Max render workers */}
         <Field
           label="Maximum Render Workers"
           description="Maximum number of workers for rendering panels into PNGs. Default is 2."
@@ -414,12 +448,12 @@ export const AppConfig = ({ plugin }: Props) => {
           <Input
             type="number"
             width={60}
-            id="max-workers"
-            data-testid={testIds.appConfig.maxWorkers}
+            id="max-render-workers"
+            data-testid={testIds.appConfig.maxRenderWorkers}
             label={`Maximum Render Workers`}
             pattern={`[0-9]{1,2}`}
             value={state.maxRenderWorkers}
-            onChange={onChangeMaxWorkers}
+            onChange={onChangeMaxRenderWorkers}
           />
         </Field>
 
@@ -483,6 +517,7 @@ export const AppConfig = ({ plugin }: Props) => {
               jsonData: {
                 url: state.url,
                 tlsSkipVerify: state.tlsSkipVerify,
+                maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
                 orientation: state.orientation,
                 layout: state.layout,
@@ -508,6 +543,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.dashboardModeChanged &&
               !state.timeZoneChanged &&
               !state.logoChanged &&
+              !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
               !state.remoteChromeAddr &&
               !state.saToken

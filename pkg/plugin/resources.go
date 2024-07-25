@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
-	"github.com/chromedp/cdproto/io"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
@@ -42,7 +42,7 @@ func getDashboardVariables(r *http.Request) url.Values {
 
 // handleReport handles creating a PDF report from a given dashboard UID
 // GET /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report
-func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
+func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 
@@ -59,6 +59,7 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Get Dashboard ID
 	dashboardUID := req.URL.Query().Get("dashUid")
 	if dashboardUID == "" {
+		ctxLogger.Debug("Query parameter dashUid not found")
 		http.Error(w, "Query parameter dashUid not found", http.StatusBadRequest)
 
 		return
@@ -77,6 +78,70 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if req.URL.Query().Has("layout") {
+		conf.Layout = req.URL.Query().Get("layout")
+		if conf.Layout != "simple" && conf.Layout != "grid" {
+			ctxLogger.Debug("invalid layout parameter: " + conf.Layout)
+			http.Error(w, "invalid layout parameter: "+conf.Layout, http.StatusBadRequest)
+
+			return
+		}
+	}
+
+	if req.URL.Query().Has("orientation") {
+		conf.Orientation = req.URL.Query().Get("orientation")
+		if conf.Orientation != "portrait" && conf.Orientation != "landscape" {
+			ctxLogger.Debug("invalid orientation parameter: " + conf.Orientation)
+			http.Error(w, "invalid orientation parameter: "+conf.Orientation, http.StatusBadRequest)
+
+			return
+		}
+	}
+
+	if req.URL.Query().Has("dashboardMode") {
+		conf.DashboardMode = req.URL.Query().Get("dashboardMode")
+		if conf.DashboardMode != "default" && conf.DashboardMode != "full" {
+			ctxLogger.Warn("invalid dashboardMode parameter: " + conf.DashboardMode)
+			http.Error(w, "invalid dashboardMode parameter: "+conf.DashboardMode, http.StatusBadRequest)
+
+			return
+		}
+	}
+
+	if req.URL.Query().Has("timeZone") {
+		conf.TimeZone = req.URL.Query().Get("timeZone")
+	}
+
+	if req.URL.Query().Has("includePanelID") {
+		conf.IncludePanelIDs = make([]int, len(req.URL.Query()["includePanelID"]))
+
+		for i, stringID := range req.URL.Query()["includePanelID"] {
+			conf.IncludePanelIDs[i], err = strconv.Atoi(stringID)
+			if err != nil {
+				ctxLogger.Debug("invalid includePanelID parameter: " + err.Error())
+				http.Error(w, "invalid includePanelID parameter: "+err.Error(), http.StatusBadRequest)
+
+				return
+			}
+		}
+	}
+
+	if req.URL.Query().Has("excludePanelID") {
+		conf.ExcludePanelIDs = make([]int, len(req.URL.Query()["excludePanelID"]))
+
+		for i, stringID := range req.URL.Query()["excludePanelID"] {
+			conf.ExcludePanelIDs[i], err = strconv.Atoi(stringID)
+			if err != nil {
+				ctxLogger.Debug("invalid includePanelID parameter: " + err.Error())
+				http.Error(w, "invalid excludePanelID parameter: "+err.Error(), http.StatusBadRequest)
+
+				return
+			}
+		}
+	}
+
+	ctxLogger.Info(fmt.Sprintf("generate report using config: %s", conf.String()))
+
 	var grafanaAppURL string
 	if conf.URL != "" {
 		grafanaAppURL = conf.URL
@@ -89,6 +154,8 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
+
+	grafanaAppURL = strings.TrimSuffix(grafanaAppURL, "/")
 
 	var credential client.Credential
 
@@ -137,22 +204,25 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	timeRange := dashboard.NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
 	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
 
-	// Make a new Grafana client to get dashboard JSON model and Panel PNGs
+	// Make app new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := client.New(
 		ctxLogger,
 		conf,
-		a.httpClient,
-		a.chromeInstance,
+		app.httpClient,
+		app.chromeInstance,
+		app.workerPools,
 		grafanaAppURL,
 		credential,
 		variables,
 	)
+	ctxLogger.Info(fmt.Sprintf("generate report using %s chrome", app.chromeInstance.Name()))
 
-	// Make a new Report to put all PNGs into a HTML template and print it into a PDF
+	// Make app new Report to put all PNGs into app HTML template and print it into app PDF
 	pdfReport, err := report.New(
 		ctxLogger,
 		conf,
-		a.chromeInstance,
+		app.chromeInstance,
+		app.workerPools,
 		grafanaClient,
 		&report.Options{
 			DashUID:     dashboardUID,
@@ -168,53 +238,22 @@ func (a *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Add PDF file name to Header
+	addFilenameHeader(w, pdfReport.Title())
+
 	// Generate report
-	steam, err := pdfReport.Generate(req.Context())
-	if err != nil {
+	if err = pdfReport.Generate(req.Context(), w); err != nil {
 		ctxLogger.Error("error generating report", "err", err)
 		http.Error(w, "error generating report", http.StatusInternalServerError)
 
 		return
 	}
 
-	// Add PDF file name to Header
-	addFilenameHeader(w, pdfReport.Title())
-
-	reader := io.Read(steam)
-
-	var (
-		data string
-		eol  bool
-	)
-
-	for {
-		data, eol, err = reader.Do(req.Context())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-
-		if _, err = w.Write([]byte(data)); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-
-		if eol {
-			break
-		}
-	}
-
-	if err = io.Close(steam).Do(req.Context()); err != nil {
-		ctxLogger.Warn("unable to close report", "user", currentUser, "dash_uid", dashboardUID)
-	}
-
 	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
 }
 
 // handlePing is an example HTTP GET resource that returns an OK response.
-func (a *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
+func (app *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", "text/plan")
 	if _, err := w.Write([]byte("OK")); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -225,7 +264,7 @@ func (a *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 }
 
 // registerRoutes takes a *http.ServeMux and registers some HTTP handlers.
-func (a *App) registerRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/report", a.handleReport)
-	mux.HandleFunc("/healthz", a.handleHealth)
+func (app *App) registerRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/report", app.handleReport)
+	mux.HandleFunc("/healthz", app.handleHealth)
 }

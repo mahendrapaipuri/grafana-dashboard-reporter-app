@@ -6,19 +6,18 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"math"
+	"io"
 	"reflect"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/chromedp/cdproto/io"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/client"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/dashboard"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/worker"
 )
 
 // Embed the entire directory.
@@ -109,19 +108,21 @@ type PDF struct {
 	client         client.Grafana
 	logger         log.Logger
 	options        *Options
+	workerPools    worker.Pools
 
 	grafanaDashboard dashboard.Dashboard
 	pdfOptions       chrome.PDFOptions
 }
 
 // New creates a new PDF struct.
-func New(logger log.Logger, conf *config.Config, chromeInstance chrome.Instance, client client.Grafana, options *Options) (*PDF, error) {
+func New(logger log.Logger, conf *config.Config, chromeInstance chrome.Instance, workerPools worker.Pools, client client.Grafana, options *Options) (*PDF, error) {
 	return &PDF{
 		chromeInstance: chromeInstance,
 		conf:           conf,
 		client:         client,
 		logger:         logger,
 		options:        options,
+		workerPools:    workerPools,
 		pdfOptions: chrome.PDFOptions{
 			Orientation: options.Orientation,
 		},
@@ -134,15 +135,17 @@ func (r *PDF) fetchDashboard(ctx context.Context) error {
 	// Get dashboard JSON model
 	r.grafanaDashboard, err = r.client.Dashboard(ctx, r.options.DashUID)
 	if err != nil {
+		r.logger.Warn("error(s) fetching dashboard model and data", "err", err, "dash_uid", r.options.DashUID)
+
 		return fmt.Errorf("error fetching dashboard %s: %w", r.options.DashUID, err)
 	}
 
 	// If we get empty dashboard model, return error
 	if reflect.DeepEqual(dashboard.Dashboard{}, r.grafanaDashboard) {
+		r.logger.Warn("error(s) fetching dashboard model and data", "err", err, "dash_uid", r.options.DashUID)
+
 		return fmt.Errorf("empty fetching dashboard %s", r.options.DashUID)
 	}
-
-	r.logger.Warn("error(s) fetching dashboard model and data", "err", err, "dash_uid", r.options.DashUID)
 
 	return nil
 }
@@ -150,30 +153,35 @@ func (r *PDF) fetchDashboard(ctx context.Context) error {
 // Generate returns the PDF.pdf file.
 // After reading this file, it should be Closed()
 // After closing the file, call PDF.Clean() to delete the file as well the temporary build files
-func (r *PDF) Generate(ctx context.Context) (io.StreamHandle, error) {
+func (r *PDF) Generate(ctx context.Context, writer io.Writer) error {
 	var err error
 
 	if err = r.fetchDashboard(ctx); err != nil {
-		return "", err
+		return err
 	}
 
 	// Render panel PNGs in parallel using max workers configured in plugin
 	if err = r.renderPNGsParallel(ctx); err != nil {
-		return "", fmt.Errorf("error rendering PNGs in parallel for dashboard %s: %w", r.grafanaDashboard.Title, err)
+		return fmt.Errorf("error rendering PNGs in parallel for dashboard %s: %w", r.grafanaDashboard.Title, err)
 	}
 
 	// Generate HTML file with fetched panel PNGs
 	if err = r.generateHTMLFile(); err != nil {
-		return "", fmt.Errorf("error generating HTML file for dashboard %s: %w", r.grafanaDashboard.Title, err)
+		return fmt.Errorf("error generating HTML file for dashboard %s: %w", r.grafanaDashboard.Title, err)
 	}
+
+	errCh := make(chan error)
+
+	r.workerPools[worker.Browser].Do(func() {
+		errCh <- r.renderPDF(ctx, writer)
+	})
 
 	// Print HTML page into PDF
-	pdfStream, err := r.renderPDF(ctx)
-	if err != nil {
-		return "", fmt.Errorf("error rendering PDF for dashboard %s: %w", r.grafanaDashboard.Title, err)
+	if err = <-errCh; err != nil {
+		return fmt.Errorf("error rendering PDF for dashboard %s: %w", r.grafanaDashboard.Title, err)
 	}
 
-	return pdfStream, nil
+	return nil
 }
 
 // Title returns the dashboard title parsed from the dashboard definition
@@ -183,38 +191,29 @@ func (r *PDF) Title() string {
 
 // renderPNGsParallel renders panel PNGs in parallel using configured number of workers
 func (r *PDF) renderPNGsParallel(ctx context.Context) error {
-	// buffer all panels on a channel
-	panels := make(chan int, len(r.grafanaDashboard.Panels))
-	for iPanel := range r.grafanaDashboard.Panels {
-		panels <- iPanel
-	}
-	close(panels)
+	numPanels := len(r.grafanaDashboard.Panels)
+	errs := make(chan error, numPanels)
 
-	// fetch images in parallel form Grafana sever.
-	// limit concurrency using a worker pool to avoid overwhelming grafana
-	// for dashboards with many panels.
-	var wg sync.WaitGroup
-	workers := int(math.Max(1, math.Min(float64(r.conf.MaxRenderWorkers), float64(runtime.NumCPU()))))
-	wg.Add(workers)
-	errs := make(chan error, len(r.grafanaDashboard.Panels)) // routines can return errors on a channel
-	for i := 0; i < workers; i++ {
-		go func(panels <-chan int, errs chan<- error) {
+	wg := sync.WaitGroup{}
+	wg.Add(numPanels)
+
+	for iPanel := range numPanels {
+		r.workerPools[worker.Renderer].Do(func() {
 			defer wg.Done()
 
-			for iPanel := range panels {
-				if err := r.renderPNG(ctx, iPanel); err != nil {
-					errs <- err
-				}
-			}
-		}(panels, errs)
+			errs <- r.renderPNG(ctx, iPanel)
+		})
 	}
+
 	wg.Wait()
 	close(errs)
 
 	for err := range errs {
-		if err != nil {
-			return fmt.Errorf("error rendering PNG: %w", err)
+		if err == nil {
+			continue
 		}
+
+		return fmt.Errorf("error rendering PNG: %w", err)
 	}
 
 	return nil
@@ -281,7 +280,6 @@ func (r *PDF) generateHTMLFile() error {
 		return fmt.Errorf("error executing PDF template: %v", err)
 	}
 	r.pdfOptions.Body = bufBody.String()
-	// r.logger.Debug("Templated HTML Body", "content", truncateBase64Encoding(r.options.html.Body))
 
 	// Make a new template for Header of the PDF
 	if tmpl, err = template.New("header").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml"); err != nil {
@@ -294,7 +292,6 @@ func (r *PDF) generateHTMLFile() error {
 		return fmt.Errorf("error executing Header template: %w", err)
 	}
 	r.pdfOptions.Header = bufHeader.String()
-	// r.logger.Debug("Templated HTML Header", "content", truncateBase64Encoding(r.options.html.Header))
 
 	// Make a new template for Footer of the PDF
 	if tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml"); err != nil {
@@ -307,21 +304,21 @@ func (r *PDF) generateHTMLFile() error {
 		return fmt.Errorf("error executing Footer template: %w", err)
 	}
 	r.pdfOptions.Footer = bufFooter.String()
-	// r.logger.Debug("Templated HTML Footer", "content", truncateBase64Encoding(r.options.html.Footer))
+
 	return nil
 }
 
 // renderPDF renders HTML page into PDF using Chromium
-func (r *PDF) renderPDF(ctx context.Context) (io.StreamHandle, error) {
+func (r *PDF) renderPDF(ctx context.Context, writer io.Writer) error {
 	// Create a new tab
-	tab := r.chromeInstance.NewTab(ctx, r.logger, r.conf)
-	defer tab.Close()
+	tab := r.chromeInstance.NewTab(r.logger, r.conf)
+	defer tab.Close(r.logger)
 
-	stream, err := tab.PrintToPDF(r.pdfOptions)
+	err := tab.PrintToPDF(r.pdfOptions, writer)
 
 	if err != nil {
-		return stream, fmt.Errorf("error rendering PDF: %w", err)
+		return fmt.Errorf("error rendering PDF: %w", err)
 	}
 
-	return stream, err
+	return nil
 }
