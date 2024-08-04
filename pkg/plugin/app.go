@@ -11,9 +11,9 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/worker"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 )
 
 const Name = "mahendrapaipuri-dashboardreporter-app"
