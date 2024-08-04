@@ -44,9 +44,10 @@ func (m *mockGrafanaClient) Dashboard(_ context.Context, _ string) (dashboard.Da
 	return dashboard.New(logger, []byte(dashJSON), nil, m.variables, &config.Config{})
 }
 
-func (m *mockGrafanaClient) PanelPNG(_ context.Context, _ string, _ dashboard.Panel, _ dashboard.TimeRange) (string, error) {
+func (m *mockGrafanaClient) PanelPNG(_ context.Context, _ string, _ dashboard.Panel, _ dashboard.TimeRange) (dashboard.PanelImage, error) {
 	m.getPanelCallCount++
-	return "iVBORw0KGgofsdfsdfsdf", nil
+
+	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MineType: "invalid"}, nil
 }
 
 func TestReport(t *testing.T) {
@@ -138,12 +139,13 @@ func (e *errClient) Dashboard(_ context.Context, _ string) (dashboard.Dashboard,
 }
 
 // Produce an error on the 2nd panel fetched
-func (e *errClient) PanelPNG(_ context.Context, _ string, _ dashboard.Panel, _ dashboard.TimeRange) (string, error) {
+func (e *errClient) PanelPNG(_ context.Context, _ string, _ dashboard.Panel, _ dashboard.TimeRange) (dashboard.PanelImage, error) {
 	e.getPanelCallCount++
 	if e.getPanelCallCount == 2 {
-		return "", errors.New("the second panel has some problem")
+		return dashboard.PanelImage{}, errors.New("the second panel has some problem")
 	}
-	return "iVBORw0KGgofsdfsdfsdf", nil
+
+	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MineType: "invalid"}, nil
 }
 
 func TestReportErrorHandling(t *testing.T) {
