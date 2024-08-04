@@ -47,7 +47,7 @@ func (m *mockGrafanaClient) Dashboard(_ context.Context, _ string) (dashboard.Da
 func (m *mockGrafanaClient) PanelPNG(_ context.Context, _ string, _ dashboard.Panel, _ dashboard.TimeRange) (dashboard.PanelImage, error) {
 	m.getPanelCallCount++
 
-	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MineType: "invalid"}, nil
+	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MineType: "image/png"}, nil
 }
 
 func TestReport(t *testing.T) {
@@ -72,7 +72,7 @@ func TestReport(t *testing.T) {
 		err = rep.fetchDashboard(ctx)
 
 		Convey("It should have one", func() {
-			So(errors.Unwrap(err), ShouldBeError, dashboard.ErrNoDashboardData)
+			So(errors.Is(err, dashboard.ErrNoDashboardData), ShouldBeTrue)
 			So(rep.grafanaDashboard, ShouldNotBeNil)
 		})
 
@@ -145,7 +145,7 @@ func (e *errClient) PanelPNG(_ context.Context, _ string, _ dashboard.Panel, _ d
 		return dashboard.PanelImage{}, errors.New("the second panel has some problem")
 	}
 
-	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MineType: "invalid"}, nil
+	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MineType: "image/png"}, nil
 }
 
 func TestReportErrorHandling(t *testing.T) {

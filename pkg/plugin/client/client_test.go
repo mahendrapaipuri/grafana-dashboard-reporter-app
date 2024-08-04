@@ -86,7 +86,7 @@ func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 			_, err := grf.Dashboard(context.Background(), "randomDashUID")
 
 			Convey("It should receive no errors", func() {
-				So(errors.Unwrap(err), ShouldBeError, dashboard.ErrNoDashboardData)
+				So(errors.Is(err, dashboard.ErrNoDashboardData), ShouldBeTrue)
 			})
 
 			Convey("It should use the v5 dashboards endpoint", func() {
@@ -101,9 +101,9 @@ func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 
 func TestGrafanaClientFetchesDashboardWithRemoteChrome(t *testing.T) {
 	// Skip test if chrome is not available
-	chromeRemoteAddr, ok := os.LookupEnv("CHROME_REMOTE_ADDR")
+	chromeRemoteAddr, ok := os.LookupEnv("CHROME_REMOTE_URL")
 	if !ok {
-		t.Skip("CHROME_REMOTE_ADDR unset. Skipping test")
+		t.Skip("CHROME_REMOTE_URL unset. Skipping test")
 	}
 
 	Convey("When fetching a Dashboard", t, func() {
@@ -141,7 +141,7 @@ func TestGrafanaClientFetchesDashboardWithRemoteChrome(t *testing.T) {
 			_, err := grf.Dashboard(context.Background(), "randomDashUID")
 
 			Convey("It should receive no errors", func() {
-				So(errors.Unwrap(err), ShouldBeError, dashboard.ErrNoDashboardData)
+				So(errors.Is(err, dashboard.ErrNoDashboardData), ShouldBeTrue)
 			})
 
 			Convey("It should use the v5 dashboards endpoint", func() {
