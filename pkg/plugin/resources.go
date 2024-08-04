@@ -160,20 +160,15 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	var credential client.Credential
 
 	switch {
-	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
+	case req.Header.Get(backend.CookiesHeaderName) != "":
 		credential = client.Credential{
-			HeaderName:  backend.OAuthIdentityTokenHeaderName,
-			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
+			HeaderName:  backend.CookiesHeaderName,
+			HeaderValue: req.Header.Get(backend.CookiesHeaderName),
 		}
 	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
 		credential = client.Credential{
 			HeaderName:  backend.OAuthIdentityTokenHeaderName,
 			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
-		}
-	case req.Header.Get(backend.OAuthIdentityIDTokenHeaderName) != "":
-		credential = client.Credential{
-			HeaderName:  backend.OAuthIdentityIDTokenHeaderName,
-			HeaderValue: req.Header.Get(backend.OAuthIdentityIDTokenHeaderName),
 		}
 	default:
 		saToken, err := grafanaConfig.PluginAppClientSecret()
@@ -252,7 +247,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
 }
 
-// handlePing is an example HTTP GET resource that returns an OK response.
+// handleHealth is an example HTTP GET resource that returns an OK response.
 func (app *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", "text/plan")
 	if _, err := w.Write([]byte("OK")); err != nil {

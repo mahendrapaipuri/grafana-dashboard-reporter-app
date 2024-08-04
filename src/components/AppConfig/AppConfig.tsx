@@ -22,7 +22,7 @@ import { getBackendSrv } from "@grafana/runtime";
 import { testIds } from "../testIds";
 
 export type JsonData = {
-  appURL?: string;
+  appUrl?: string;
   tlsSkipVerify?: boolean;
   orientation?: string;
   layout?: string;
@@ -36,9 +36,9 @@ export type JsonData = {
 
 type State = {
   // URL of grafana (override auto-detection)
-  appURL: string;
-  // If appURL has changed
-  appURLChanged: boolean;
+  appUrl: string;
+  // If appUrl has changed
+  appUrlChanged: boolean;
   // Skip TLS verification to grafana
   tlsSkipVerify: boolean;
   // If tlsSkipVerify has changed
@@ -89,8 +89,8 @@ export const AppConfig = ({ plugin }: Props) => {
   const s = useStyles2(getStyles);
   const { enabled, pinned, jsonData, secureJsonFields } = plugin.meta;
   const [state, setState] = useState<State>({
-    appURL: jsonData?.appURL || "",
-    appURLChanged: false,
+    appUrl: jsonData?.appUrl || "",
+    appUrlChanged: false,
     tlsSkipVerify: jsonData?.tlsSkipVerify || false,
     tlsSkipVerifyChanged: false,
     orientation: jsonData?.orientation || "portrait",
@@ -131,8 +131,8 @@ export const AppConfig = ({ plugin }: Props) => {
   const onChangeURL = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
-      appURL: event.target.value,
-      appURLChanged: true,
+      appUrl: event.target.value,
+      appUrlChanged: true,
     });
   };
 
@@ -239,7 +239,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   enabled: true,
                   pinned: true,
                   jsonData: {
-                    appURL: state.appURL,
+                    appUrl: state.appUrl,
                     tlsSkipVerify: state.tlsSkipVerify,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
@@ -277,7 +277,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   enabled: false,
                   pinned: false,
                   jsonData: {
-                    appURL: state.appURL,
+                    appUrl: state.appUrl,
                     tlsSkipVerify: state.tlsSkipVerify,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
@@ -422,54 +422,19 @@ export const AppConfig = ({ plugin }: Props) => {
         isCollapsible
         isInitiallyOpen={false}
       >
-        {/* Max browser workers */}
-        <Field
-          label="Maximum Browser Workers"
-          description="Maximum number of workers for interacting with chrome browser. Default is 6."
-          className={s.marginTop}
-        >
-          <Input
-            type="number"
-            width={60}
-            id="max-browser-workers"
-            data-testid={testIds.appConfig.maxBrowserWorkers}
-            label={`Maximum Browser Workers`}
-            pattern={`[0-9]{1,2}`}
-            value={state.maxBrowserWorkers}
-            onChange={onChangeMaxBrowserWorkers}
-          />
-        </Field>
-        {/* Max render workers */}
-        <Field
-          label="Maximum Render Workers"
-          description="Maximum number of workers for rendering panels into PNGs. Default is 2."
-          className={s.marginTop}
-        >
-          <Input
-            type="number"
-            width={60}
-            id="max-render-workers"
-            data-testid={testIds.appConfig.maxRenderWorkers}
-            label={`Maximum Render Workers`}
-            pattern={`[0-9]{1,2}`}
-            value={state.maxRenderWorkers}
-            onChange={onChangeMaxRenderWorkers}
-          />
-        </Field>
-
         {/* Grafana Hostname */}
         <Field
           label="Grafana Hostname"
           description="Overrides the automatic grafana hostname detection. Use this if you have a reverse proxy in front of Grafana."
-          data-testid={testIds.appConfig.appURL}
+          data-testid={testIds.appConfig.appUrl}
           className={s.marginTop}
         >
           <Input
             type="url"
             width={60}
-            id="appURL"
+            id="appUrl"
             label={`Grafana Hostname`}
-            value={state.appURL}
+            value={state.appUrl}
             onChange={onChangeURL}
           />
         </Field>
@@ -488,7 +453,7 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
-        {/* Remote Chrome Addr */}
+        {/* Remote Chrome URL */}
         <Field
           label="Remote Chrome Addr"
           description="Address to a running chrome instance with an listening chrome remote debug socket"
@@ -504,6 +469,42 @@ export const AppConfig = ({ plugin }: Props) => {
             onChange={onChangeRemoteChromeURL}
           />
         </Field>
+
+        {/* Max browser workers */}
+        <Field
+          label="Maximum Browser Workers"
+          description="Maximum number of workers for interacting with chrome browser. Default is 6."
+          className={s.marginTop}
+        >
+          <Input
+            type="number"
+            width={60}
+            id="max-browser-workers"
+            data-testid={testIds.appConfig.maxBrowserWorkers}
+            label={`Maximum Browser Workers`}
+            pattern={`[0-9]{1,2}`}
+            value={state.maxBrowserWorkers}
+            onChange={onChangeMaxBrowserWorkers}
+          />
+        </Field>
+
+        {/* Max render workers */}
+        <Field
+          label="Maximum Render Workers"
+          description="Maximum number of workers for rendering panels into PNGs. Default is 2."
+          className={s.marginTop}
+        >
+          <Input
+            type="number"
+            width={60}
+            id="max-render-workers"
+            data-testid={testIds.appConfig.maxRenderWorkers}
+            label={`Maximum Render Workers`}
+            pattern={`[0-9]{1,2}`}
+            value={state.maxRenderWorkers}
+            onChange={onChangeMaxRenderWorkers}
+          />
+        </Field>
       </ConfigSection>
 
       <div className={s.marginTop}>
@@ -515,7 +516,7 @@ export const AppConfig = ({ plugin }: Props) => {
               enabled,
               pinned,
               jsonData: {
-                appURL: state.appURL,
+                appUrl: state.appUrl,
                 tlsSkipVerify: state.tlsSkipVerify,
                 maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
@@ -536,7 +537,7 @@ export const AppConfig = ({ plugin }: Props) => {
             })
           }
           disabled={Boolean(
-            !state.appURL &&
+            !state.appUrl &&
               !state.tlsSkipVerify &&
               !state.layoutChanged &&
               !state.orientationChanged &&

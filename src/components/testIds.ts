@@ -1,6 +1,6 @@
 export const testIds = {
   appConfig: {
-    appURL: "data-testid ac-url",
+    appUrl: "data-testid ac-url",
     tlsSkipVerify: "data-testid ac-tls-skip-verify",
     saToken: "data-testid ac-sa-token",
     container: "data-testid ac-container",
