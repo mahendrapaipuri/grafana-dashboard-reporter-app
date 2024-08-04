@@ -259,6 +259,10 @@ func (r *PDF) generateHTMLFile() error {
 			}
 			return template.URL(base64Content)
 		},
+
+		"url": func(url string) template.URL {
+			return template.URL(url)
+		},
 	}
 
 	// Make a new template for Body of the PDF
