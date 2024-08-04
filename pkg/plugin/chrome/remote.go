@@ -13,8 +13,8 @@ type RemoteInstance struct {
 }
 
 // NewRemoteBrowserInstance creates a new remote browser instance
-func NewRemoteBrowserInstance(ctx context.Context, _ log.Logger, remoteChromeAddr string) (*RemoteInstance, error) {
-	allocCtx, allocCtxCancel := chromedp.NewRemoteAllocator(ctx, remoteChromeAddr)
+func NewRemoteBrowserInstance(ctx context.Context, _ log.Logger, remoteChromeURL string) (*RemoteInstance, error) {
+	allocCtx, allocCtxCancel := chromedp.NewRemoteAllocator(ctx, remoteChromeURL)
 
 	return &RemoteInstance{allocCtx, allocCtxCancel}, nil
 }

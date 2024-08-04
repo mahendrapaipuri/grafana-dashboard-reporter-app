@@ -143,8 +143,8 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	ctxLogger.Info(fmt.Sprintf("generate report using config: %s", conf.String()))
 
 	var grafanaAppURL string
-	if conf.URL != "" {
-		grafanaAppURL = conf.URL
+	if conf.AppURL != "" {
+		grafanaAppURL = conf.AppURL
 	} else {
 		grafanaAppURL, err = grafanaConfig.AppURL()
 		if err != nil {

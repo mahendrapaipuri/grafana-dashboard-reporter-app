@@ -11,7 +11,7 @@ const SaToken = "saToken"
 
 // Config contains plugin settings
 type Config struct {
-	URL               string `json:"url"`
+	AppURL            string `json:"appURL"`
 	TLSSkipVerify     bool   `json:"tlsSkipVerify"`
 	Orientation       string `json:"orientation"`
 	Layout            string `json:"layout"`
@@ -20,7 +20,7 @@ type Config struct {
 	EncodedLogo       string `json:"logo"`
 	MaxBrowserWorkers int    `json:"maxBrowserWorkers"`
 	MaxRenderWorkers  int    `json:"maxRenderWorkers"`
-	RemoteChromeAddr  string `json:"remoteChromeAddr"`
+	RemoteChromeURL   string `json:"remoteChromeURL"`
 	IncludePanelIDs   []int
 	ExcludePanelIDs   []int
 
@@ -56,8 +56,8 @@ func (c *Config) String() string {
 	}
 
 	appURL := "unset"
-	if c.URL != "" {
-		appURL = c.URL
+	if c.AppURL != "" {
+		appURL = c.AppURL
 	}
 
 	return fmt.Sprintf(
@@ -66,7 +66,7 @@ func (c *Config) String() string {
 			"TLS Skip verifiy: %v; Included Panel IDs: %s; Excluded Panel IDs: %s",
 		c.Orientation, c.Layout,
 		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers,
-		c.RemoteChromeAddr, appURL,
+		c.RemoteChromeURL, appURL,
 		c.TLSSkipVerify, includedPanelIDs, excludedPanelIDs,
 	)
 }
