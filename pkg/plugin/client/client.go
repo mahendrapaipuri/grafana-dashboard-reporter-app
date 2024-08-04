@@ -38,7 +38,7 @@ var getPanelRetrySleepTime = time.Duration(10) * time.Second
 // Grafana is a Grafana API httpClient
 type Grafana interface {
 	Dashboard(ctx context.Context, dashUID string) (dashboard.Dashboard, error)
-	PanelPNG(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (string, error)
+	PanelPNG(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (dashboard.PanelImage, error)
 }
 
 type Credential struct {
@@ -224,13 +224,13 @@ func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 	return dashboardData, nil
 }
 
-func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (string, error) {
+func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (dashboard.PanelImage, error) {
 	panelURL := g.getPanelURL(p, dashUID, t)
 
 	// Create a new request for panel
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, panelURL, nil)
 	if err != nil {
-		return "", fmt.Errorf("error creating request for %s: %v", panelURL, err)
+		return dashboard.PanelImage{}, fmt.Errorf("error creating request for %s: %v", panelURL, err)
 	}
 
 	// Forward auth headers
@@ -239,7 +239,7 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 	// Make request
 	resp, err := g.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("error executing request for %s: %v", panelURL, err)
+		return dashboard.PanelImage{}, fmt.Errorf("error executing request for %s: %v", panelURL, err)
 	}
 
 	// Do multiple tries to get panel before giving up
@@ -250,19 +250,19 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 		time.Sleep(delay)
 		resp, err = g.httpClient.Do(req)
 		if err != nil {
-			return "", fmt.Errorf("error executing retry request for %s: %v", panelURL, err)
+			return dashboard.PanelImage{}, fmt.Errorf("error executing retry request for %s: %v", panelURL, err)
 		}
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("error rendering panel: %s", resp.Status)
+		return dashboard.PanelImage{}, fmt.Errorf("error rendering panel: %s", resp.Status)
 	}
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("error reading response body of panel PNG: %v", err)
+		return dashboard.PanelImage{}, fmt.Errorf("error reading response body of panel PNG: %v", err)
 	}
 
 	sb := &bytes.Buffer{}
@@ -271,10 +271,13 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 	encoder := base64.NewEncoder(base64.StdEncoding, sb)
 
 	if _, err = encoder.Write(b); err != nil {
-		return "", fmt.Errorf("error reading response body of panel PNG: %v", err)
+		return dashboard.PanelImage{}, fmt.Errorf("error reading response body of panel PNG: %v", err)
 	}
 
-	return sb.String(), nil
+	return dashboard.PanelImage{
+		Image:    sb.String(),
+		MineType: "image/png",
+	}, nil
 }
 
 func (g GrafanaClient) getPanelURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {

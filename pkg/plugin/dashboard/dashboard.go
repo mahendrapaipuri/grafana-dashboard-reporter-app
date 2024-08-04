@@ -56,7 +56,12 @@ type Panel struct {
 	Type         string  `json:"type"`
 	Title        string  `json:"title"`
 	GridPos      GridPos `json:"gridPos"`
-	EncodedImage string
+	EncodedImage PanelImage
+}
+
+type PanelImage struct {
+	Image    string
+	MineType string
 }
 
 // IsSingleStat returns true if panel is of type SingleStat
@@ -305,4 +310,8 @@ func filterPanels(panels []Panel, config *config.Config) []Panel {
 		}
 	}
 	return filteredPanels
+}
+
+func (p PanelImage) String() string {
+	return fmt.Sprintf("data:%s;base64,%s", p.MineType, p.Image)
 }
