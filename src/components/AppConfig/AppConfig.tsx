@@ -22,7 +22,7 @@ import { getBackendSrv } from "@grafana/runtime";
 import { testIds } from "../testIds";
 
 export type JsonData = {
-  url?: string;
+  appURL?: string;
   tlsSkipVerify?: boolean;
   orientation?: string;
   layout?: string;
@@ -31,14 +31,14 @@ export type JsonData = {
   logo?: string;
   maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
-  remoteChromeAddr?: string;
+  remoteChromeURL?: string;
 };
 
 type State = {
   // URL of grafana (override auto-detection)
-  url: string;
-  // If url has changed
-  urlChanged: boolean;
+  appURL: string;
+  // If appURL has changed
+  appURLChanged: boolean;
   // Skip TLS verification to grafana
   tlsSkipVerify: boolean;
   // If tlsSkipVerify has changed
@@ -72,9 +72,9 @@ type State = {
   // If maxRenderWorkers has changed
   maxRenderWorkersChanged: boolean;
   // Address of an chrome remote instance
-  remoteChromeAddr: string;
-  // If remoteChromeAddrChanged has changed
-  remoteChromeAddrChanged: boolean;
+  remoteChromeURL: string;
+  // If remoteChromeURLChanged has changed
+  remoteChromeURLChanged: boolean;
   // Tells us if the Service Account's token is set.
   // Set to `true` ONLY if it has already been set and haven't been changed.
   // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
@@ -89,8 +89,8 @@ export const AppConfig = ({ plugin }: Props) => {
   const s = useStyles2(getStyles);
   const { enabled, pinned, jsonData, secureJsonFields } = plugin.meta;
   const [state, setState] = useState<State>({
-    url: jsonData?.url || "",
-    urlChanged: false,
+    appURL: jsonData?.appURL || "",
+    appURLChanged: false,
     tlsSkipVerify: jsonData?.tlsSkipVerify || false,
     tlsSkipVerifyChanged: false,
     orientation: jsonData?.orientation || "portrait",
@@ -107,8 +107,8 @@ export const AppConfig = ({ plugin }: Props) => {
     maxBrowserWorkersChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
-    remoteChromeAddr: jsonData?.remoteChromeAddr || "",
-    remoteChromeAddrChanged: false,
+    remoteChromeURL: jsonData?.remoteChromeURL || "",
+    remoteChromeURLChanged: false,
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
@@ -131,8 +131,8 @@ export const AppConfig = ({ plugin }: Props) => {
   const onChangeURL = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
-      url: event.target.value,
-      urlChanged: true,
+      appURL: event.target.value,
+      appURLChanged: true,
     });
   };
 
@@ -200,11 +200,11 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-  const onChangeRemoteChromeAddr = (event: ChangeEvent<HTMLInputElement>) => {
+  const onChangeRemoteChromeURL = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
-      remoteChromeAddr: event.target.value,
-      remoteChromeAddrChanged: true,
+      remoteChromeURL: event.target.value,
+      remoteChromeURLChanged: true,
     });
   };
 
@@ -239,7 +239,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   enabled: true,
                   pinned: true,
                   jsonData: {
-                    url: state.url,
+                    appURL: state.appURL,
                     tlsSkipVerify: state.tlsSkipVerify,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
@@ -248,7 +248,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
-                    remoteChromeAddr: state.remoteChromeAddr,
+                    remoteChromeURL: state.remoteChromeURL,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -277,7 +277,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   enabled: false,
                   pinned: false,
                   jsonData: {
-                    url: state.url,
+                    appURL: state.appURL,
                     tlsSkipVerify: state.tlsSkipVerify,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
@@ -286,7 +286,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
-                    remoteChromeAddr: state.remoteChromeAddr,
+                    remoteChromeURL: state.remoteChromeURL,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -461,15 +461,15 @@ export const AppConfig = ({ plugin }: Props) => {
         <Field
           label="Grafana Hostname"
           description="Overrides the automatic grafana hostname detection. Use this if you have a reverse proxy in front of Grafana."
-          data-testid={testIds.appConfig.url}
+          data-testid={testIds.appConfig.appURL}
           className={s.marginTop}
         >
           <Input
             type="url"
             width={60}
-            id="url"
+            id="appURL"
             label={`Grafana Hostname`}
-            value={state.url}
+            value={state.appURL}
             onChange={onChangeURL}
           />
         </Field>
@@ -492,16 +492,16 @@ export const AppConfig = ({ plugin }: Props) => {
         <Field
           label="Remote Chrome Addr"
           description="Address to a running chrome instance with an listening chrome remote debug socket"
-          data-testid={testIds.appConfig.remoteChromeAddr}
+          data-testid={testIds.appConfig.remoteChromeURL}
           className={s.marginTop}
         >
           <Input
             type="url"
             width={60}
-            id="remoteChromeAddr"
+            id="remoteChromeURL"
             label={`Remote Chrome Addr`}
-            value={state.remoteChromeAddr}
-            onChange={onChangeRemoteChromeAddr}
+            value={state.remoteChromeURL}
+            onChange={onChangeRemoteChromeURL}
           />
         </Field>
       </ConfigSection>
@@ -515,7 +515,7 @@ export const AppConfig = ({ plugin }: Props) => {
               enabled,
               pinned,
               jsonData: {
-                url: state.url,
+                appURL: state.appURL,
                 tlsSkipVerify: state.tlsSkipVerify,
                 maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
@@ -524,7 +524,7 @@ export const AppConfig = ({ plugin }: Props) => {
                 dashboardMode: state.dashboardMode,
                 timeZone: state.timeZone,
                 logo: state.logo,
-                remoteChromeAddr: state.remoteChromeAddr,
+                remoteChromeURL: state.remoteChromeURL,
               },
               // This cannot be queried later by the frontend.
               // We don't want to override it in case it was set previously and left untouched now.
@@ -536,7 +536,7 @@ export const AppConfig = ({ plugin }: Props) => {
             })
           }
           disabled={Boolean(
-            !state.url &&
+            !state.appURL &&
               !state.tlsSkipVerify &&
               !state.layoutChanged &&
               !state.orientationChanged &&
@@ -545,7 +545,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.logoChanged &&
               !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
-              !state.remoteChromeAddr &&
+              !state.remoteChromeURL &&
               !state.saToken
           )}
         >

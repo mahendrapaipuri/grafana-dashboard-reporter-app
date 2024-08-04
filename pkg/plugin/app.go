@@ -89,11 +89,11 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	// Create a new browser instance
 	var chromeInstance chrome.Instance
 
-	switch conf.RemoteChromeAddr {
+	switch conf.RemoteChromeURL {
 	case "":
 		chromeInstance, err = chrome.NewLocalBrowserInstance(context.Background(), app.ctxLogger, opts.TLS.InsecureSkipVerify)
 	default:
-		chromeInstance, err = chrome.NewRemoteBrowserInstance(context.Background(), app.ctxLogger, conf.RemoteChromeAddr)
+		chromeInstance, err = chrome.NewRemoteBrowserInstance(context.Background(), app.ctxLogger, conf.RemoteChromeURL)
 	}
 
 	if err != nil {
