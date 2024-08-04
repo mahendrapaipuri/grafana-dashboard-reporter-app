@@ -130,7 +130,7 @@ func New(log log.Logger, dashJSON []byte, dashData []interface{}, queryParams ur
 	// Get dashboard from map
 	dashboard, ok := dash["dashboard"]
 	if !ok {
-		return Dashboard{}, fmt.Errorf("no dashboard model found in Grafana API response")
+		return Dashboard{}, fmt.Errorf("API response: %w", ErrNoDashboardData)
 	}
 
 	// Attempt to update panels from browser data
@@ -157,7 +157,7 @@ func New(log log.Logger, dashJSON []byte, dashData []interface{}, queryParams ur
 func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	// If dashData is nil return
 	if dashData == nil || len(dashData) == 0 {
-		return nil, ErrNoDashboardData
+		return nil, fmt.Errorf("browser: %w", ErrNoDashboardData)
 	}
 
 	var (
