@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/internal/worker"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	"github.com/stretchr/testify/assert"
 )
 
