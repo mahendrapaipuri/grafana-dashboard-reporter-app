@@ -31,7 +31,7 @@ apps:
       # 
       # If unset, the plugin will use the configured app URL from Grafana settings.
       #
-      url: http://localhost:3000
+      appUrl: http://localhost:3000
 
       # If Grafana is using HTTPS with self signed certificates, set this parameter to true
       # to skip TLS certificate verification.

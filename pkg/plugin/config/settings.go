@@ -11,7 +11,7 @@ const SaToken = "saToken"
 
 // Config contains plugin settings
 type Config struct {
-	AppURL            string `json:"appURL"`
+	AppURL            string `json:"appUrl"`
 	TLSSkipVerify     bool   `json:"tlsSkipVerify"`
 	Orientation       string `json:"orientation"`
 	Layout            string `json:"layout"`

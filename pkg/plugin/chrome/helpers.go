@@ -6,8 +6,6 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"golang.org/x/net/context"
 )
 
@@ -19,21 +17,6 @@ import (
 		- https://github.com/chromedp/chromedp/issues/87
 		- https://github.com/chromedp/examples/tree/master
 */
-
-// PDFOptions contains the templated HTML Body, Header and Footer strings
-type PDFOptions struct {
-	Header string
-	Body   string
-	Footer string
-
-	Orientation string
-}
-
-type Instance interface {
-	NewTab(logger log.Logger, conf *config.Config) *Tab
-	Name() string
-	Close(logger log.Logger)
-}
 
 // enableLifeCycleEvents enables the chromedp life cycle events
 func enableLifeCycleEvents() chromedp.ActionFunc {
