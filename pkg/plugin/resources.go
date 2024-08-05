@@ -47,6 +47,8 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	conf := app.conf
+
 	var err error
 
 	// Get context logger which we will use everywhere
@@ -68,44 +70,44 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
 
 	if req.URL.Query().Has("layout") {
-		app.conf.Layout = req.URL.Query().Get("layout")
-		if app.conf.Layout != "simple" && app.conf.Layout != "grid" {
-			ctxLogger.Debug("invalid layout parameter: " + app.conf.Layout)
-			http.Error(w, "invalid layout parameter: "+app.conf.Layout, http.StatusBadRequest)
+		conf.Layout = req.URL.Query().Get("layout")
+		if conf.Layout != "simple" && conf.Layout != "grid" {
+			ctxLogger.Debug("invalid layout parameter: " + conf.Layout)
+			http.Error(w, "invalid layout parameter: "+conf.Layout, http.StatusBadRequest)
 
 			return
 		}
 	}
 
 	if req.URL.Query().Has("orientation") {
-		app.conf.Orientation = req.URL.Query().Get("orientation")
-		if app.conf.Orientation != "portrait" && app.conf.Orientation != "landscape" {
-			ctxLogger.Debug("invalid orientation parameter: " + app.conf.Orientation)
-			http.Error(w, "invalid orientation parameter: "+app.conf.Orientation, http.StatusBadRequest)
+		conf.Orientation = req.URL.Query().Get("orientation")
+		if conf.Orientation != "portrait" && conf.Orientation != "landscape" {
+			ctxLogger.Debug("invalid orientation parameter: " + conf.Orientation)
+			http.Error(w, "invalid orientation parameter: "+conf.Orientation, http.StatusBadRequest)
 
 			return
 		}
 	}
 
 	if req.URL.Query().Has("dashboardMode") {
-		app.conf.DashboardMode = req.URL.Query().Get("dashboardMode")
-		if app.conf.DashboardMode != "default" && app.conf.DashboardMode != "full" {
-			ctxLogger.Warn("invalid dashboardMode parameter: " + app.conf.DashboardMode)
-			http.Error(w, "invalid dashboardMode parameter: "+app.conf.DashboardMode, http.StatusBadRequest)
+		conf.DashboardMode = req.URL.Query().Get("dashboardMode")
+		if conf.DashboardMode != "default" && conf.DashboardMode != "full" {
+			ctxLogger.Warn("invalid dashboardMode parameter: " + conf.DashboardMode)
+			http.Error(w, "invalid dashboardMode parameter: "+conf.DashboardMode, http.StatusBadRequest)
 
 			return
 		}
 	}
 
 	if req.URL.Query().Has("timeZone") {
-		app.conf.TimeZone = req.URL.Query().Get("timeZone")
+		conf.TimeZone = req.URL.Query().Get("timeZone")
 	}
 
 	if req.URL.Query().Has("includePanelID") {
-		app.conf.IncludePanelIDs = make([]int, len(req.URL.Query()["includePanelID"]))
+		conf.IncludePanelIDs = make([]int, len(req.URL.Query()["includePanelID"]))
 
 		for i, stringID := range req.URL.Query()["includePanelID"] {
-			app.conf.IncludePanelIDs[i], err = strconv.Atoi(stringID)
+			conf.IncludePanelIDs[i], err = strconv.Atoi(stringID)
 			if err != nil {
 				ctxLogger.Debug("invalid includePanelID parameter: " + err.Error())
 				http.Error(w, "invalid includePanelID parameter: "+err.Error(), http.StatusBadRequest)
@@ -116,10 +118,10 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if req.URL.Query().Has("excludePanelID") {
-		app.conf.ExcludePanelIDs = make([]int, len(req.URL.Query()["excludePanelID"]))
+		conf.ExcludePanelIDs = make([]int, len(req.URL.Query()["excludePanelID"]))
 
 		for i, stringID := range req.URL.Query()["excludePanelID"] {
-			app.conf.ExcludePanelIDs[i], err = strconv.Atoi(stringID)
+			conf.ExcludePanelIDs[i], err = strconv.Atoi(stringID)
 			if err != nil {
 				ctxLogger.Debug("invalid includePanelID parameter: " + err.Error())
 				http.Error(w, "invalid excludePanelID parameter: "+err.Error(), http.StatusBadRequest)
@@ -129,11 +131,11 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	ctxLogger.Info(fmt.Sprintf("generate report using config: %s", app.conf.String()))
+	ctxLogger.Info(fmt.Sprintf("generate report using config: %s", conf.String()))
 
 	var grafanaAppURL string
-	if app.conf.AppURL != "" {
-		grafanaAppURL = app.conf.AppURL
+	if conf.AppURL != "" {
+		grafanaAppURL = conf.AppURL
 	} else {
 		grafanaAppURL, err = grafanaConfig.AppURL()
 		if err != nil {
@@ -162,14 +164,14 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	default:
 		saToken, err := grafanaConfig.PluginAppClientSecret()
 		if err != nil {
-			if app.conf.Token == "" {
+			if conf.Token == "" {
 				ctxLogger.Error("failed to get plugin app client secret", "err", err)
 				http.Error(w, "failed to get plugin app client secret", http.StatusInternalServerError)
 
 				return
 			}
 
-			saToken = app.conf.Token
+			saToken = conf.Token
 		}
 
 		credential = client.Credential{
@@ -191,7 +193,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Make app new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := client.New(
 		ctxLogger,
-		app.conf,
+		conf,
 		app.httpClient,
 		app.chromeInstance,
 		app.workerPools,
@@ -204,14 +206,14 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Make app new Report to put all PNGs into app HTML template and print it into app PDF
 	pdfReport, err := report.New(
 		ctxLogger,
-		app.conf,
+		conf,
 		app.chromeInstance,
 		app.workerPools,
 		grafanaClient,
 		&report.Options{
 			DashUID:     dashboardUID,
-			Layout:      app.conf.Layout,
-			Orientation: app.conf.Orientation,
+			Layout:      conf.Layout,
+			Orientation: conf.Orientation,
 			TimeRange:   timeRange,
 		},
 	)
