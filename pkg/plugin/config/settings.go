@@ -3,8 +3,13 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
+
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
+	"golang.org/x/net/context"
 )
 
 const SaToken = "saToken"
@@ -12,7 +17,6 @@ const SaToken = "saToken"
 // Config contains plugin settings
 type Config struct {
 	AppURL            string `json:"appUrl"`
-	TLSSkipVerify     bool   `json:"tlsSkipVerify"`
 	Orientation       string `json:"orientation"`
 	Layout            string `json:"layout"`
 	DashboardMode     string `json:"dashboardMode"`
@@ -23,6 +27,9 @@ type Config struct {
 	RemoteChromeURL   string `json:"remoteChromeURL"`
 	IncludePanelIDs   []int
 	ExcludePanelIDs   []int
+
+	// HTTP Client
+	HTTPClientOptions httpclient.Options
 
 	// Secrets
 	Token string
@@ -67,15 +74,15 @@ func (c *Config) String() string {
 		c.Orientation, c.Layout,
 		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers,
 		c.RemoteChromeURL, appURL,
-		c.TLSSkipVerify, includedPanelIDs, excludedPanelIDs,
+		c.HTTPClientOptions.TLS.InsecureSkipVerify, includedPanelIDs, excludedPanelIDs,
 	)
 }
 
 // Load loads the plugin settings from data sent by provisioned config or from Grafana UI
-func Load(data json.RawMessage, secureData map[string]string) (*Config, error) {
+func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, error) {
 	// Always start with a default config so that when the plugin is not provisioned
 	// with a config, we will still have "non-null" config to work with
-	var config = &Config{
+	var config = Config{
 		Orientation:       "portrait",
 		Layout:            "simple",
 		DashboardMode:     "default",
@@ -83,22 +90,45 @@ func Load(data json.RawMessage, secureData map[string]string) (*Config, error) {
 		EncodedLogo:       "",
 		MaxBrowserWorkers: 6,
 		MaxRenderWorkers:  2,
+		HTTPClientOptions: httpclient.Options{
+			TLS: &httpclient.TLSOptions{
+				InsecureSkipVerify: false,
+			},
+		},
 	}
 
 	// Fetch token, if configured in SecureJSONData
-	if secureData != nil {
-		if saToken, ok := secureData[SaToken]; ok && saToken != "" {
+	if settings.DecryptedSecureJSONData != nil {
+		if saToken, ok := settings.DecryptedSecureJSONData[SaToken]; ok && saToken != "" {
 			config.Token = saToken
 		}
 	}
 
 	// Update plugin settings defaults
-	if data == nil || string(data) == "null" {
+	if settings.JSONData == nil || string(settings.JSONData) == "null" {
 		return config, nil
 	}
 
-	if err := json.Unmarshal(data, &config); err != nil {
-		return nil, err
+	var err error
+
+	if err = json.Unmarshal(settings.JSONData, &config); err != nil {
+		return Config{}, err
+	}
+
+	// Get default HTTP client options
+	config.HTTPClientOptions, err = settings.HTTPClientOptions(ctx)
+	if err != nil {
+		return Config{}, fmt.Errorf("error in http client options: %w", err)
+	}
+
+	if config.HTTPClientOptions.TLS == nil {
+		config.HTTPClientOptions.TLS = &httpclient.TLSOptions{}
+	}
+
+	// Only allow configuring using GF_* env vars
+	// TODO Deprecated: Use tlsSkipVerify instead
+	if os.Getenv("GF_REPORTER_PLUGIN_IGNORE_HTTPS_ERRORS") != "" {
+		config.HTTPClientOptions.TLS.InsecureSkipVerify = true
 	}
 
 	return config, nil

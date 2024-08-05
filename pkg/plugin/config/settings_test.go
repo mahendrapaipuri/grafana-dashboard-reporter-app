@@ -1,9 +1,11 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -11,7 +13,7 @@ func TestSettings(t *testing.T) {
 	Convey("When creating a new config from minimum JSONData", t, func() {
 		const configJSON = `{}`
 		configData := json.RawMessage(configJSON)
-		config, err := Load(configData, nil)
+		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
 
 		Convey("Config should contain default config", func() {
 			So(err, ShouldBeNil)
@@ -25,7 +27,7 @@ func TestSettings(t *testing.T) {
 	Convey("When creating a new config from provisioned JSONData", t, func() {
 		const configJSON = `{"layout": "grid"}`
 		configData := json.RawMessage(configJSON)
-		config, err := Load(configData, nil)
+		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
 
 		Convey("Config should contain default config", func() {
 			So(err, ShouldBeNil)
@@ -42,7 +44,7 @@ func TestSettings(t *testing.T) {
 		secretsMap := map[string]string{
 			"saToken": "supersecrettoken",
 		}
-		config, err := Load(configData, secretsMap)
+		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData, DecryptedSecureJSONData: secretsMap})
 
 		Convey("Config should contain default config", func() {
 			So(err, ShouldBeNil)

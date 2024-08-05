@@ -73,7 +73,7 @@ func (i *LocalInstance) Name() string {
 	return "local"
 }
 
-func (i *LocalInstance) NewTab(logger log.Logger, conf *config.Config) *Tab {
+func (i *LocalInstance) NewTab(_ log.Logger, _ config.Config) *Tab {
 	ctx, _ := chromedp.NewContext(i.browserCtx)
 
 	return &Tab{

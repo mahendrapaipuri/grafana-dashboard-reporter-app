@@ -41,7 +41,7 @@ type mockGrafanaClient struct {
 }
 
 func (m *mockGrafanaClient) Dashboard(_ context.Context, _ string) (dashboard.Dashboard, error) {
-	return dashboard.New(logger, []byte(dashJSON), nil, m.variables, &config.Config{})
+	return dashboard.New(logger, config.Config{}, []byte(dashJSON), nil, m.variables)
 }
 
 func (m *mockGrafanaClient) PanelPNG(_ context.Context, _ string, _ dashboard.Panel, _ dashboard.TimeRange) (dashboard.PanelImage, error) {
@@ -63,7 +63,7 @@ func TestReport(t *testing.T) {
 			worker.Renderer: worker.New(ctx, 2),
 		}
 
-		rep, err := New(logger, &config.Config{}, nil, workerPools, gClient, &Options{
+		rep, err := New(logger, config.Config{}, nil, workerPools, gClient, &Options{
 			TimeRange: dashboard.TimeRange{From: "1453206447000", To: "1453213647000"},
 			DashUID:   "testDash",
 		})
@@ -135,7 +135,7 @@ type errClient struct {
 }
 
 func (e *errClient) Dashboard(_ context.Context, _ string) (dashboard.Dashboard, error) {
-	return dashboard.New(logger, []byte(dashJSON), nil, e.variables, &config.Config{})
+	return dashboard.New(logger, config.Config{}, []byte(dashJSON), nil, e.variables)
 }
 
 // Produce an error on the 2nd panel fetched
@@ -160,7 +160,7 @@ func TestReportErrorHandling(t *testing.T) {
 			worker.Renderer: worker.New(ctx, 2),
 		}
 
-		rep, err := New(logger, &config.Config{Layout: "simple"}, nil, workerPools, gClient, &Options{
+		rep, err := New(logger, config.Config{Layout: "simple"}, nil, workerPools, gClient, &Options{
 			TimeRange: dashboard.TimeRange{From: "1453206447000", To: "1453213647000"},
 			DashUID:   "testDash",
 		})

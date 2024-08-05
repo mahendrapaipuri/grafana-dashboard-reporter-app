@@ -121,7 +121,7 @@ func variablesValues(queryParams url.Values) string {
 
 // New creates Dashboard from Grafana's internal JSON dashboard model
 // fetched from Grafana API and browser
-func New(log log.Logger, dashJSON []byte, dashData []interface{}, queryParams url.Values, config *config.Config) (Dashboard, error) {
+func New(log log.Logger, config config.Config, dashJSON []byte, dashData []interface{}, queryParams url.Values) (Dashboard, error) {
 	var dash map[string]Dashboard
 	if err := json.Unmarshal(dashJSON, &dash); err != nil {
 		return Dashboard{}, fmt.Errorf("failed to unmarshal dashboard JSON: %w", err)
@@ -290,7 +290,7 @@ func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 
 // filterPanels filters the panels based on IncludePanelIDs and ExcludePanelIDs
 // config parameters
-func filterPanels(panels []Panel, config *config.Config) []Panel {
+func filterPanels(panels []Panel, config config.Config) []Panel {
 	// If config parameters are empty, return original panels
 	if len(config.IncludePanelIDs) == 0 && len(config.ExcludePanelIDs) == 0 {
 		return panels

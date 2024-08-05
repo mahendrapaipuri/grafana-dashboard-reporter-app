@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -33,6 +32,8 @@ type App struct {
 	backend.CallResourceHandler
 	httpClient *http.Client
 
+	conf config.Config
+
 	workerPools    worker.Pools
 	chromeInstance chrome.Instance
 	ctxLogger      log.Logger
@@ -40,7 +41,10 @@ type App struct {
 
 // NewDashboardReporterApp creates a new example *App instance.
 func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSettings) (instancemgmt.Instance, error) {
-	var app App
+	var (
+		app App
+		err error
+	)
 
 	// Get context logger for debugging
 	app.ctxLogger = log.DefaultLogger.FromContext(ctx)
@@ -53,47 +57,28 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	app.registerRoutes(mux)
 	app.CallResourceHandler = httpadapter.New(mux)
 
-	// Get default HTTP client options
-	opts, err := settings.HTTPClientOptions(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error in http client options: %w", err)
-	}
-
-	if opts.TLS == nil {
-		opts.TLS = &httpclient.TLSOptions{}
-	}
-
-	// Only allow configuring using GF_* env vars
-	// TODO Deprecated: Use tlsSkipVerify instead
-	if os.Getenv("GF_REPORTER_PLUGIN_IGNORE_HTTPS_ERRORS") != "" {
-		opts.TLS.InsecureSkipVerify = true
-	}
-
-	// Make a new HTTP client
-	if app.httpClient, err = httpclient.New(opts); err != nil {
-		return nil, fmt.Errorf("error in httpclient new: %w", err)
-	}
-
-	conf, err := config.Load(
-		settings.JSONData,
-		settings.DecryptedSecureJSONData,
-	)
+	app.conf, err = config.Load(ctx, settings)
 	if err != nil {
 		app.ctxLogger.Error("error loading config", "err", err)
 
 		return nil, fmt.Errorf("error loading config: %w", err)
 	}
 
-	app.ctxLogger.Info(fmt.Sprintf("staring plugin with initial config: %s", conf.String()))
+	app.ctxLogger.Info(fmt.Sprintf("starting plugin with initial config: %s", app.conf.String()))
+
+	// Make a new HTTP client
+	if app.httpClient, err = httpclient.New(app.conf.HTTPClientOptions); err != nil {
+		return nil, fmt.Errorf("error in httpclient new: %w", err)
+	}
 
 	// Create a new browser instance
 	var chromeInstance chrome.Instance
 
-	switch conf.RemoteChromeURL {
+	switch app.conf.RemoteChromeURL {
 	case "":
-		chromeInstance, err = chrome.NewLocalBrowserInstance(context.Background(), app.ctxLogger, opts.TLS.InsecureSkipVerify)
+		chromeInstance, err = chrome.NewLocalBrowserInstance(context.Background(), app.ctxLogger, app.conf.HTTPClientOptions.TLS.InsecureSkipVerify)
 	default:
-		chromeInstance, err = chrome.NewRemoteBrowserInstance(context.Background(), app.ctxLogger, conf.RemoteChromeURL)
+		chromeInstance, err = chrome.NewRemoteBrowserInstance(context.Background(), app.ctxLogger, app.conf.RemoteChromeURL)
 	}
 
 	if err != nil {
@@ -105,8 +90,8 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 
 	// Span Worker Pool across multiple instances
 	app.workerPools = worker.Pools{
-		worker.Browser:  worker.New(ctx, conf.MaxBrowserWorkers),
-		worker.Renderer: worker.New(ctx, conf.MaxRenderWorkers),
+		worker.Browser:  worker.New(ctx, app.conf.MaxBrowserWorkers),
+		worker.Renderer: worker.New(ctx, app.conf.MaxRenderWorkers),
 	}
 
 	return &app, nil

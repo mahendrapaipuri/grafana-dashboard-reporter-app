@@ -49,7 +49,7 @@ type Credential struct {
 // GrafanaClient is the struct that will implement required interfaces
 type GrafanaClient struct {
 	logger         log.Logger
-	conf           *config.Config
+	conf           config.Config
 	httpClient     *http.Client
 	chromeInstance chrome.Instance
 	workerPools    worker.Pools
@@ -63,7 +63,7 @@ type GrafanaClient struct {
 // queryParams are Grafana template variable url values of the form var-{name}={value}, e.g. var-host=dev
 func New(
 	logger log.Logger,
-	conf *config.Config,
+	conf config.Config,
 	httpClient *http.Client,
 	chromeInstance chrome.Instance,
 	workerPools worker.Pools,
@@ -134,7 +134,7 @@ func (g GrafanaClient) Dashboard(ctx context.Context, dashUID string) (dashboard
 	}
 
 	// Build dashboard model from JSON and data
-	grafanaDashboard, err := dashboard.New(g.logger, dashboardBytes, dashboardData, g.queryParams, g.conf)
+	grafanaDashboard, err := dashboard.New(g.logger, g.conf, dashboardBytes, dashboardData, g.queryParams)
 	if err != nil {
 		return dashboard.Dashboard{}, fmt.Errorf("error building dashboard model: %w", err)
 	}

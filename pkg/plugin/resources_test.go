@@ -28,7 +28,11 @@ func (s *mockCallResourceResponseSender) Send(response *backend.CallResourceResp
 // Test report resource
 func TestReportResource(t *testing.T) {
 	// Initialize app
-	inst, err := NewDashboardReporterApp(context.Background(), backend.AppInstanceSettings{})
+	inst, err := NewDashboardReporterApp(context.Background(), backend.AppInstanceSettings{
+		DecryptedSecureJSONData: map[string]string{
+			config.SaToken: "token",
+		},
+	})
 	if err != nil {
 		t.Fatalf("new app: %s", err)
 	}
@@ -68,11 +72,6 @@ func TestReportResource(t *testing.T) {
 					OrgID:    3,
 					PluginID: "my-plugin",
 					User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
-					AppInstanceSettings: &backend.AppInstanceSettings{
-						DecryptedSecureJSONData: map[string]string{
-							config.SaToken: "token",
-						},
-					},
 				},
 				Method: http.MethodGet,
 				Path:   "report?dashUid=testDash",
@@ -106,11 +105,6 @@ func TestReportResource(t *testing.T) {
 					OrgID:    3,
 					PluginID: "my-plugin",
 					User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
-					AppInstanceSettings: &backend.AppInstanceSettings{
-						DecryptedSecureJSONData: map[string]string{
-							config.SaToken: "token",
-						},
-					},
 				},
 				Method: http.MethodGet,
 				Path:   "report?dashUid=testDash&var-test=testValue",
@@ -126,11 +120,6 @@ func TestReportResource(t *testing.T) {
 						OrgID:    3,
 						PluginID: "my-plugin",
 						User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
-						AppInstanceSettings: &backend.AppInstanceSettings{
-							DecryptedSecureJSONData: map[string]string{
-								config.SaToken: "token",
-							},
-						},
 					},
 					Method: http.MethodGet,
 					Path:   "report?dashUid=testDash&var-test=testValue&apiToken=abcd",
