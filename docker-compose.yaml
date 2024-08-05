@@ -26,7 +26,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=${GF_AUTH_ANONYMOUS_ENABLED:-true}
       - GF_AUTH_LOGIN_COOKIE_NAME=${GF_AUTH_LOGIN_COOKIE_NAME:-grafana_session}
       - GF_AUTH_BASIC_ENABLED=${GF_AUTH_BASIC_ENABLED:-false}
-      #- GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       # skip login page
       # - GF_AUTH_DISABLE_LOGIN_FORM=true
       # We need to toggle external service accounts so that Grafana will get

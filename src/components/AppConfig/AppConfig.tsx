@@ -18,7 +18,7 @@ import {
   PluginMeta,
   GrafanaTheme2,
 } from "@grafana/data";
-import { getBackendSrv } from "@grafana/runtime";
+import { FetchResponse, getBackendSrv } from "@grafana/runtime";
 import { testIds } from "../testIds";
 
 export type JsonData = {
@@ -438,7 +438,7 @@ export const AppConfig = ({ plugin }: Props) => {
             onChange={onChangeURL}
           />
         </Field>
-        
+
         {/* Skip TLS verification */}
         <Field
           label="Skip TLS Verification"
@@ -579,15 +579,11 @@ const getStyles = (theme: GrafanaTheme2) => ({
 });
 
 const updatePluginAndReload = async (pluginId: string, data: Partial<PluginMeta<JsonData>>) => {
-  try {
-    await updatePlugin(pluginId, data);
-
-    // Reloading the page as the changes made here wouldn't be propagated to the actual plugin otherwise.
-    // This is not ideal, however unfortunately currently there is no supported way for updating the plugin state.
-    window.location.reload();
-  } catch (e) {
-    console.error('Error while updating the plugin', e);
-  }
+  await updatePlugin(pluginId, data).then((response: FetchResponse) => {
+    if (!response.ok) {
+      throw response.data;
+    }
+  });
 };
 
 export const updatePlugin = async (pluginId: string, data: Partial<PluginMeta>) => {

@@ -35,7 +35,7 @@ func TestDashboard(t *testing.T) {
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
-		dash, _ := New(logger, []byte(dashJSON), dashData, url.Values{}, &config.Config{})
+		dash, _ := New(logger, config.Config{}, []byte(dashJSON), dashData, url.Values{})
 
 		Convey("Panels should contain all panels from dashboard browser data", func() {
 			So(dash.Panels, ShouldHaveLength, 3)
@@ -67,7 +67,7 @@ func TestDashboard(t *testing.T) {
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
-		dash, _ := New(logger, []byte(dashJSON), dashData, url.Values{}, &config.Config{})
+		dash, _ := New(logger, config.Config{}, []byte(dashJSON), dashData, url.Values{})
 
 		Convey("Panels should contain all panels from dashboard JSON model", func() {
 			So(dash.Panels, ShouldHaveLength, 5)
@@ -87,7 +87,7 @@ func TestVariableValues(t *testing.T) {
 		vars := url.Values{}
 		vars.Add("var-one", "oneval")
 		vars.Add("var-two", "twoval")
-		dash, _ := New(logger, []byte(v5DashJSON), nil, vars, &config.Config{})
+		dash, _ := New(logger, config.Config{}, []byte(v5DashJSON), nil, vars)
 
 		Convey("The dashboard should contain the variable values in a random order", func() {
 			So(dash.VariableValues, ShouldContainSubstring, "oneval")
@@ -102,23 +102,23 @@ func TestFilterPanels(t *testing.T) {
 			{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7},
 		}
 		cases := map[string]struct {
-			Config *config.Config
+			Config config.Config
 			Result []Panel
 		}{
 			"include": {
-				&config.Config{
+				config.Config{
 					IncludePanelIDs: []int{1, 4, 6},
 				},
 				[]Panel{{ID: 1}, {ID: 4}, {ID: 6}},
 			},
 			"exclude": {
-				&config.Config{
+				config.Config{
 					ExcludePanelIDs: []int{2, 4, 3},
 				},
 				[]Panel{{ID: 1}, {ID: 5}, {ID: 6}, {ID: 7}},
 			},
 			"include_and_exclude": {
-				&config.Config{
+				config.Config{
 					ExcludePanelIDs: []int{2, 4, 3},
 					IncludePanelIDs: []int{1, 4, 6},
 				},

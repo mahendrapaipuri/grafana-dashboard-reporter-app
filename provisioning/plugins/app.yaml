@@ -27,7 +27,7 @@ apps:
       # The plugin will make API requests to Grafana to get individual panel in each dashboard to generate reports.
       # These API requests will be made to this URL.
       # For most of the deployments the default value http://localhost:3000 will work.
-      # If remoteChromeAddr is set, validate that the URL is reachable from the chrome instance
+      # If remoteChromeURL is set, validate that the URL is reachable from the chrome instance
       # 
       # If unset, the plugin will use the configured app URL from Grafana settings.
       #
@@ -109,4 +109,4 @@ apps:
       maxRenderWorkers: 2
 
       # A remote address for a running chrome instance. If empty, a local chrome browser will be executed
-      remoteChromeAddr: 'ws://localhost:9222/'
+      remoteChromeURL: 'ws://localhost:9222/'

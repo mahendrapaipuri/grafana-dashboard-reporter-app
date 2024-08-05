@@ -63,7 +63,7 @@ type templateData struct {
 	Date string
 
 	Dashboard dashboard.Dashboard
-	Conf      *config.Config
+	Conf      config.Config
 }
 
 // IsGridLayout returns true if layout config is grid
@@ -104,7 +104,7 @@ func (t templateData) VariableValues() string {
 // PDF represents a PDF report.
 type PDF struct {
 	chromeInstance chrome.Instance
-	conf           *config.Config
+	conf           config.Config
 	client         client.Grafana
 	logger         log.Logger
 	options        *Options
@@ -115,7 +115,7 @@ type PDF struct {
 }
 
 // New creates a new PDF struct.
-func New(logger log.Logger, conf *config.Config, chromeInstance chrome.Instance, workerPools worker.Pools, client client.Grafana, options *Options) (*PDF, error) {
+func New(logger log.Logger, conf config.Config, chromeInstance chrome.Instance, workerPools worker.Pools, client client.Grafana, options *Options) (*PDF, error) {
 	return &PDF{
 		chromeInstance: chromeInstance,
 		conf:           conf,

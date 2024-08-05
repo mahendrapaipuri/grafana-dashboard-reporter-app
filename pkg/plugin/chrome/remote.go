@@ -23,7 +23,7 @@ func (i *RemoteInstance) Name() string {
 	return "remote"
 }
 
-func (i *RemoteInstance) NewTab(logger log.Logger, conf *config.Config) *Tab {
+func (i *RemoteInstance) NewTab(logger log.Logger, _ config.Config) *Tab {
 	chromeLogger := logger.With("subsystem", "chromium")
 	browserCtx, _ := chromedp.NewContext(i.allocCtx,
 		chromedp.WithErrorf(chromeLogger.Error),

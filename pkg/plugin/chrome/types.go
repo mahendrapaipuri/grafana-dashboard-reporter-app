@@ -15,7 +15,7 @@ type PDFOptions struct {
 }
 
 type Instance interface {
-	NewTab(logger log.Logger, conf *config.Config) *Tab
+	NewTab(logger log.Logger, conf config.Config) *Tab
 	Name() string
 	Close(logger log.Logger)
 }

@@ -72,7 +72,7 @@ func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 
 		Convey("When using the Grafana httpClient", func() {
 			credential := Credential{HeaderName: backend.CookiesHeaderName, HeaderValue: "cookie"}
-			conf := &config.Config{
+			conf := config.Config{
 				Layout:        "simple",
 				DashboardMode: "default",
 			}
@@ -127,7 +127,7 @@ func TestGrafanaClientFetchesDashboardWithRemoteChrome(t *testing.T) {
 
 		Convey("When using the Grafana httpClient", func() {
 			credential := Credential{HeaderName: backend.CookiesHeaderName, HeaderValue: "cookie"}
-			conf := &config.Config{
+			conf := config.Config{
 				Layout:        "simple",
 				DashboardMode: "default",
 			}
@@ -166,7 +166,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 		defer ts.Close()
 
 		credential := Credential{HeaderName: backend.OAuthIdentityTokenHeaderName, HeaderValue: "Bearer token"}
-		conf := &config.Config{
+		conf := config.Config{
 			Layout:        "simple",
 			DashboardMode: "default",
 		}
@@ -273,7 +273,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 			worker.Browser:  worker.New(ctx, 6),
 			worker.Renderer: worker.New(ctx, 2),
 		}
-		grf := New(log.NewNullLogger(), &config.Config{}, http.DefaultClient, nil, workerPools, ts.URL, Credential{}, url.Values{})
+		grf := New(log.NewNullLogger(), config.Config{}, http.DefaultClient, nil, workerPools, ts.URL, Credential{}, url.Values{})
 
 		_, err := grf.PanelPNG(context.Background(), "testDash",
 			dashboard.Panel{ID: 44, Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
@@ -296,7 +296,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 			worker.Browser:  worker.New(ctx, 6),
 			worker.Renderer: worker.New(ctx, 2),
 		}
-		grf := New(log.NewNullLogger(), &config.Config{}, http.DefaultClient, nil, workerPools, ts.URL, Credential{}, url.Values{})
+		grf := New(log.NewNullLogger(), config.Config{}, http.DefaultClient, nil, workerPools, ts.URL, Credential{}, url.Values{})
 
 		_, err := grf.PanelPNG(context.Background(), "testDash",
 			dashboard.Panel{ID: 44, Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
