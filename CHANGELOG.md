@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0
+
+- Enhancement in plugin configuration and bug fixes [#61](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/61)
+- Reuse single browser instance in requests [#59](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/59)
+- Remove vfs dependency entirely [#58](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/58)
+- Split config into sections [#55](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/55)
+- feat: inline images in report html [#53](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/53)
+- misc: refactor plugin [#52](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/52)
+- deps: Update all backend dependencies [#50](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/50)
+
 ## 1.4.1
 
 - Correct logo json tag in config struct [#37](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/37)
