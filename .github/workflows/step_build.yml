@@ -56,7 +56,7 @@ jobs:
           --headless
           --hide-scrollbars
           --mute-audio
-          --disable-background-networking¥
+          --disable-background-networking
           --enable-features=NetworkService,NetworkServiceInProcess
           --disable-background-timer-throttling
           --disable-backgrounding-occluded-windows

@@ -8,6 +8,7 @@ apps:
 
     jsonData:
       appUrl: https://localhost:3000
+      theme: dark
       orientation: portrait
       layout: simple
       dashboardMode: full
