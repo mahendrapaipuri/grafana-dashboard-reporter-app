@@ -13,20 +13,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Grafana v10 with user cookie auth
-          - grafana-version: 10.4.3
-            service-accounts: 'null'  # Use non empty string for env var to propagate
-            remote-chrome-url: ws://localhost:9222
-            
           # Grafana v10
           - grafana-version: 10.4.5
-            service-accounts: externalServiceAccounts
             remote-chrome-url: ''
+            snapshots-folder: local-chrome
 
           # Grafana v11
           - grafana-version: 11.1.0
-            service-accounts: externalServiceAccounts
             remote-chrome-url: ws://localhost:9222
+            snapshots-folder: remote-chrome
 
     steps:
       - uses: actions/checkout@v4
@@ -54,8 +49,7 @@ jobs:
       - name: Run e2e tests
         env:
           GRAFANA_VERSION: ${{ matrix.grafana-version }}
-          GF_FEATURE_TOGGLES_ENABLE: ${{ matrix.service-accounts }}
-          GF_REPORTER_PLUGIN_REMOTE_CHROME_URL: ${{ matrix.remote-chrome-url}}
+          GF_REPORTER_PLUGIN_REMOTE_CHROME_URL: ${{ matrix.remote-chrome-url }}
         run: |
           # Upload/Download artifacts wont preserve permissions
           # https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
@@ -80,15 +74,15 @@ jobs:
         uses: nowsprinting/diff-pdf-action@v1
         with:
           file1: default.pdf
-          file2: .ci/reports/default.pdf
-          options: --verbose
+          file2: .ci/reports/${{ matrix.snapshots-folder }}/default.pdf
+          options: --verbose --output-diff=default-${{ matrix.snapshots-folder }}-diff.pdf
       
       - name: Compare PDF report from TLS server
         uses: nowsprinting/diff-pdf-action@v1
         with:
           file1: alternative.pdf
-          file2: .ci/reports/alternative.pdf
-          options: --verbose
+          file2: .ci/reports/${{ matrix.snapshots-folder }}/alternative.pdf
+          options: --verbose --output-diff=alternative-${{ matrix.snapshots-folder }}-diff.pdf
 
       - name: Collect docker logs on failure
         if: failure()
@@ -104,6 +98,6 @@ jobs:
           path: |
             test-results
             docker-logs
-            default.pdf
-            alternative.pdf
+            default*.pdf
+            alternative*.pdf
           retention-days: 1
