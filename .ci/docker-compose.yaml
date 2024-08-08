@@ -45,6 +45,8 @@ services:
       - "GF_LOG_FILTERS=rendering:debug plugin.mahendrapaipuri-dashboardreporter-app:debug"
       # Set CI mode to remove header in report
       - __REPORTER_APP_CI_MODE=true
+      - GF_REPORTER_PLUGIN_REMOTE_CHROME_URL=${GF_REPORTER_PLUGIN_REMOTE_CHROME_URL:-}
+
   renderer_plain:
     image: grafana/grafana-image-renderer:latest
     environment:
@@ -95,7 +97,6 @@ services:
       - GF_SERVER_PROTOCOL=https
       - GF_SERVER_CERT_KEY=/etc/grafana/tls/localhost.key
       - GF_SERVER_CERT_FILE=/etc/grafana/tls/localhost.crt
-      - GF_REPORTER_PLUGIN_IGNORE_HTTPS_ERRORS=true
       # Grafana image renderer
       - GF_RENDERING_SERVER_URL=http://renderer_tls:8081/render
       - GF_RENDERING_CALLBACK_URL=https://grafana_tls:${GF_SERVER_HTTP_PORT:-3000}/
@@ -103,6 +104,9 @@ services:
       - GF_LOG_FILTERS=rendering:debug
       # Set CI mode to remove header in report
       - __REPORTER_APP_CI_MODE=true
+      - GF_REPORTER_PLUGIN_REMOTE_CHROME_URL=${GF_REPORTER_PLUGIN_REMOTE_CHROME_URL:-}
+      - GF_REPORTER_PLUGIN_SKIP_TLS_CHECK=true
+
   renderer_tls:
     image: grafana/grafana-image-renderer:latest
     environment:
@@ -113,3 +117,9 @@ services:
       - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
       - RENDERING_CLUSTERING_TIMEOUT=60
       - IGNORE_HTTPS_ERRORS=true
+  
+  chrome:
+    image: chromedp/headless-shell:latest
+    shm_size: 2G
+    init: true
+    network_mode: service:grafana_plain

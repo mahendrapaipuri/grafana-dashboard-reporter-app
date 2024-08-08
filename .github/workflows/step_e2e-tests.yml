@@ -13,10 +13,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Grafana v10 with user cookie auth
+          - grafana-version: 10.4.3
+            service-accounts: 'null'  # Use non empty string for env var to propagate
+            remote-chrome-url: ws://localhost:9222
+            
           # Grafana v10
           - grafana-version: 10.4.5
+            service-accounts: externalServiceAccounts
+            remote-chrome-url: ''
+
           # Grafana v11
           - grafana-version: 11.1.0
+            service-accounts: externalServiceAccounts
+            remote-chrome-url: ws://localhost:9222
 
     steps:
       - uses: actions/checkout@v4
@@ -42,13 +52,18 @@ jobs:
           install-dependencies: true
 
       - name: Run e2e tests
+        env:
+          GRAFANA_VERSION: ${{ matrix.grafana-version }}
+          GF_FEATURE_TOGGLES_ENABLE: ${{ matrix.service-accounts }}
+          GF_REPORTER_PLUGIN_REMOTE_CHROME_URL: ${{ matrix.remote-chrome-url}}
         run: |
           # Upload/Download artifacts wont preserve permissions
           # https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
           # Add +x bits on executables
           chmod -R +x dist/gpx_*
-
-          GRAFANA_VERSION=${{ matrix.grafana-version }} yarn e2e:server:up
+ 
+          # Start containers
+          yarn e2e:server:up
 
           # Sleep for a while for containers to be up and running
           sleep 20
