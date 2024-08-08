@@ -1,9 +1,10 @@
 export const testIds = {
   appConfig: {
     appUrl: "data-testid ac-url",
-    tlsSkipVerify: "data-testid ac-tls-skip-verify",
+    skipTlsCheck: "data-testid ac-skip-tls-check",
     saToken: "data-testid ac-sa-token",
     container: "data-testid ac-container",
+    theme: "data-testid ac-theme",
     layout: "data-testid ac-layout",
     orientation: "data-testid ac-orientation",
     dashboardMode: "data-testid ac-dashboard-mode",
@@ -11,7 +12,7 @@ export const testIds = {
     logo: "data-testid ac-logo",
     maxBrowserWorkers: "data-testid ac-max-browser-workers",
     maxRenderWorkers: "data-testid ac-max-render-workers",
-    remoteChromeURL: "data-testid ac-remote-chrome-addr",
+    remoteChromeUrl: "data-testid ac-remote-chrome-url",
     submit: "data-testid ac-submit-form",
   },
   Status: {

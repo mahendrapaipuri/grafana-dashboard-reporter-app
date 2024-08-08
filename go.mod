@@ -9,6 +9,7 @@ require (
 	github.com/chromedp/chromedp v0.9.5
 	github.com/grafana/grafana-plugin-sdk-go v0.242.0
 	github.com/magefile/mage v1.15.0
+	github.com/sethvargo/go-envconfig v1.1.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/net v0.27.0

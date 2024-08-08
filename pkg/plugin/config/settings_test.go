@@ -19,7 +19,7 @@ func TestSettings(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(config.Orientation, ShouldEqual, "portrait")
 			So(config.Layout, ShouldEqual, "simple")
-			So(config.MaxBrowserWorkers, ShouldEqual, 6)
+			So(config.MaxBrowserWorkers, ShouldEqual, 2)
 			So(config.MaxRenderWorkers, ShouldEqual, 2)
 		})
 	})
@@ -33,7 +33,7 @@ func TestSettings(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(config.Orientation, ShouldEqual, "portrait")
 			So(config.Layout, ShouldEqual, "grid")
-			So(config.MaxBrowserWorkers, ShouldEqual, 6)
+			So(config.MaxBrowserWorkers, ShouldEqual, 2)
 			So(config.MaxRenderWorkers, ShouldEqual, 2)
 		})
 	})
@@ -44,15 +44,117 @@ func TestSettings(t *testing.T) {
 		secretsMap := map[string]string{
 			"saToken": "supersecrettoken",
 		}
-		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData, DecryptedSecureJSONData: secretsMap})
+		config, err := Load(
+			context.Background(),
+			backend.AppInstanceSettings{JSONData: configData, DecryptedSecureJSONData: secretsMap},
+		)
 
 		Convey("Config should contain default config", func() {
 			So(err, ShouldBeNil)
 			So(config.Orientation, ShouldEqual, "portrait")
 			So(config.Layout, ShouldEqual, "grid")
-			So(config.MaxBrowserWorkers, ShouldEqual, 6)
+			So(config.MaxBrowserWorkers, ShouldEqual, 2)
 			So(config.MaxRenderWorkers, ShouldEqual, 2)
 			So(config.Token, ShouldEqual, "supersecrettoken")
+		})
+	})
+}
+
+func TestSettingsUsingEnvVars(t *testing.T) {
+	// Setup env vars
+	t.Setenv("GF_REPORTER_PLUGIN_APP_URL", "https://localhost:3000")
+	t.Setenv("GF_REPORTER_PLUGIN_SKIP_TLS_CHECK", "true")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_THEME", "light")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_ORIENTATION", "landscape")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_LAYOUT", "grid")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE", "full")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_TIMEZONE", "America/New_York")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_LOGO", "encodedlogo")
+	t.Setenv("GF_REPORTER_PLUGIN_REMOTE_CHROME_URL", "ws://localhost:5333")
+
+	Convey("When creating a new config from only env vars", t, func() {
+		const configJSON = `{}`
+		configData := json.RawMessage(configJSON)
+		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+
+		Convey("Config should contain config from env vars", func() {
+			So(err, ShouldBeNil)
+			So(config.AppURL, ShouldEqual, "https://localhost:3000")
+			So(config.SkipTLSCheck, ShouldEqual, true)
+			So(config.Theme, ShouldEqual, "light")
+			So(config.Orientation, ShouldEqual, "landscape")
+			So(config.Layout, ShouldEqual, "grid")
+			So(config.DashboardMode, ShouldEqual, "full")
+			So(config.TimeZone, ShouldEqual, "America/New_York")
+			So(config.EncodedLogo, ShouldEqual, "encodedlogo")
+			So(config.MaxBrowserWorkers, ShouldEqual, 2)
+			So(config.MaxRenderWorkers, ShouldEqual, 2)
+			So(config.RemoteChromeURL, ShouldEqual, "ws://localhost:5333")
+		})
+	})
+}
+
+func TestSettingsUsingConfigAndEnvVars(t *testing.T) {
+	// Setup env vars
+	t.Setenv("GF_REPORTER_PLUGIN_SKIP_TLS_CHECK", "true")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_THEME", "light")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_ORIENTATION", "landscape")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_LAYOUT", "grid")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_TIMEZONE", "America/New_York")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_LOGO", "encodedlogo")
+	t.Setenv("GF_REPORTER_PLUGIN_REMOTE_CHROME_URL", "ws://localhost:5333")
+
+	Convey("When creating a new config from file and env vars", t, func() {
+		const configJSON = `{"appUrl": "https://localhost:3000","dashboardMode": "full"}`
+		configData := json.RawMessage(configJSON)
+		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+
+		Convey("Config should contain config from file and env vars", func() {
+			So(err, ShouldBeNil)
+			So(config.AppURL, ShouldEqual, "https://localhost:3000")
+			So(config.SkipTLSCheck, ShouldEqual, true)
+			So(config.Theme, ShouldEqual, "light")
+			So(config.Orientation, ShouldEqual, "landscape")
+			So(config.Layout, ShouldEqual, "grid")
+			So(config.DashboardMode, ShouldEqual, "full")
+			So(config.TimeZone, ShouldEqual, "America/New_York")
+			So(config.EncodedLogo, ShouldEqual, "encodedlogo")
+			So(config.MaxBrowserWorkers, ShouldEqual, 2)
+			So(config.MaxRenderWorkers, ShouldEqual, 2)
+			So(config.RemoteChromeURL, ShouldEqual, "ws://localhost:5333")
+		})
+	})
+}
+
+func TestSettingsUsingConfigAndOverridingEnvVars(t *testing.T) {
+	// Setup env vars
+	t.Setenv("GF_REPORTER_PLUGIN_APP_URL", "https://example.grafana.com")
+	t.Setenv("GF_REPORTER_PLUGIN_SKIP_TLS_CHECK", "true")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_THEME", "light")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_ORIENTATION", "landscape")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_LAYOUT", "grid")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_TIMEZONE", "America/New_York")
+	t.Setenv("GF_REPORTER_PLUGIN_REPORT_LOGO", "encodedlogo")
+	t.Setenv("GF_REPORTER_PLUGIN_REMOTE_CHROME_URL", "ws://localhost:5333")
+
+	Convey("When creating a new config from file and overriding them from env vars", t, func() {
+		const configJSON = `{"appUrl": "https://localhost:3000","theme": "dark", "dashboardMode": "full"}`
+		configData := json.RawMessage(configJSON)
+		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+
+		Convey("Config should contain config overridden from env vars", func() {
+			So(err, ShouldBeNil)
+			So(config.AppURL, ShouldEqual, "https://example.grafana.com")
+			So(config.SkipTLSCheck, ShouldEqual, true)
+			So(config.Theme, ShouldEqual, "light")
+			So(config.Orientation, ShouldEqual, "landscape")
+			So(config.Layout, ShouldEqual, "grid")
+			So(config.DashboardMode, ShouldEqual, "full")
+			So(config.TimeZone, ShouldEqual, "America/New_York")
+			So(config.EncodedLogo, ShouldEqual, "encodedlogo")
+			So(config.MaxBrowserWorkers, ShouldEqual, 2)
+			So(config.MaxRenderWorkers, ShouldEqual, 2)
+			So(config.RemoteChromeURL, ShouldEqual, "ws://localhost:5333")
 		})
 	})
 }

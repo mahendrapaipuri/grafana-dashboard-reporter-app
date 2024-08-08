@@ -23,7 +23,8 @@ import { testIds } from "../testIds";
 
 export type JsonData = {
   appUrl?: string;
-  tlsSkipVerify?: boolean;
+  skipTlsCheck?: boolean;
+  theme?: string;
   orientation?: string;
   layout?: string;
   dashboardMode?: string;
@@ -31,7 +32,7 @@ export type JsonData = {
   logo?: string;
   maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
-  remoteChromeURL?: string;
+  remoteChromeUrl?: string;
 };
 
 type State = {
@@ -40,9 +41,13 @@ type State = {
   // If appUrl has changed
   appUrlChanged: boolean;
   // Skip TLS verification to grafana
-  tlsSkipVerify: boolean;
-  // If tlsSkipVerify has changed
-  tlsSkipVerifyChanged: boolean;
+  skipTlsCheck: boolean;
+  // If skipTlsCheck has changed
+  skipTlsCheckChanged: boolean;
+  // Theme of panels (light or dark)
+  theme: string;
+  // If theme has changed
+  themeChanged: boolean;
   // PDF report orientation (portrait or landscape)
   orientation: string;
   // If orientation has changed
@@ -72,9 +77,9 @@ type State = {
   // If maxRenderWorkers has changed
   maxRenderWorkersChanged: boolean;
   // Address of an chrome remote instance
-  remoteChromeURL: string;
-  // If remoteChromeURLChanged has changed
-  remoteChromeURLChanged: boolean;
+  remoteChromeUrl: string;
+  // If remoteChromeUrl has changed
+  remoteChromeUrlChanged: boolean;
   // Tells us if the Service Account's token is set.
   // Set to `true` ONLY if it has already been set and haven't been changed.
   // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
@@ -91,8 +96,10 @@ export const AppConfig = ({ plugin }: Props) => {
   const [state, setState] = useState<State>({
     appUrl: jsonData?.appUrl || "",
     appUrlChanged: false,
-    tlsSkipVerify: jsonData?.tlsSkipVerify || false,
-    tlsSkipVerifyChanged: false,
+    skipTlsCheck: jsonData?.skipTlsCheck || false,
+    skipTlsCheckChanged: false,
+    theme: jsonData?.theme || "light",
+    themeChanged: false,
     orientation: jsonData?.orientation || "portrait",
     orientationChanged: false,
     layout: jsonData?.layout || "simple",
@@ -107,11 +114,18 @@ export const AppConfig = ({ plugin }: Props) => {
     maxBrowserWorkersChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
-    remoteChromeURL: jsonData?.remoteChromeURL || "",
-    remoteChromeURLChanged: false,
+    remoteChromeUrl: jsonData?.remoteChromeUrl || "",
+    remoteChromeUrlChanged: false,
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
   });
+
+  console.log("QQQQ", jsonData);
+
+  const themeOptions = [
+    { label: "Light", value: "light" },
+    { label: "Dark", value: "dark" },
+  ];
 
   const orientationOptions = [
     { label: "Portrait", value: "portrait", icon: "gf-portrait" },
@@ -136,11 +150,19 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-  const onChangeTLSSkipVerify = (event: ChangeEvent<HTMLInputElement>) => {
+  const onChangeSkipTlsCheck = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
-      tlsSkipVerify: event.target.checked,
-      tlsSkipVerifyChanged: true,
+      skipTlsCheck: event.target.checked,
+      skipTlsCheckChanged: true,
+    });
+  };
+
+  const onChangeTheme = (value: string) => {
+    setState({
+      ...state,
+      theme: value,
+      themeChanged: true,
     });
   };
 
@@ -203,8 +225,8 @@ export const AppConfig = ({ plugin }: Props) => {
   const onChangeRemoteChromeURL = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
-      remoteChromeURL: event.target.value,
-      remoteChromeURLChanged: true,
+      remoteChromeUrl: event.target.value,
+      remoteChromeUrlChanged: true,
     });
   };
 
@@ -240,15 +262,16 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: true,
                   jsonData: {
                     appUrl: state.appUrl,
-                    tlsSkipVerify: state.tlsSkipVerify,
-                    maxBrowserWorkers: state.maxBrowserWorkers,
-                    maxRenderWorkers: state.maxRenderWorkers,
+                    skipTlsCheck: state.skipTlsCheck,
+                    theme: state.theme,
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
-                    remoteChromeURL: state.remoteChromeURL,
+                    maxBrowserWorkers: state.maxBrowserWorkers,
+                    maxRenderWorkers: state.maxRenderWorkers,
+                    remoteChromeUrl: state.remoteChromeUrl,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -278,15 +301,16 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: false,
                   jsonData: {
                     appUrl: state.appUrl,
-                    tlsSkipVerify: state.tlsSkipVerify,
-                    maxBrowserWorkers: state.maxBrowserWorkers,
-                    maxRenderWorkers: state.maxRenderWorkers,
+                    skipTlsCheck: state.skipTlsCheck,
+                    theme: state.theme,
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
-                    remoteChromeURL: state.remoteChromeURL,
+                    maxBrowserWorkers: state.maxBrowserWorkers,
+                    maxRenderWorkers: state.maxRenderWorkers,
+                    remoteChromeUrl: state.remoteChromeUrl,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -337,7 +361,21 @@ export const AppConfig = ({ plugin }: Props) => {
         title="Report Settings"
         description="Use this section to customise the generated report"
       >
-        {/* Use Grid Layout */}
+        {/* Report Panels Theme  */}
+        <Field
+          label="Theme"
+          description="Panels theme to be used in the report."
+          data-testid={testIds.appConfig.theme}
+          className={s.marginTop}
+        >
+          <RadioButtonGroup
+            options={themeOptions}
+            value={state.theme}
+            onChange={onChangeTheme}
+          />
+        </Field>
+
+        {/* Report Layout */}
         <Field
           label="Layout"
           description="Display the panels in their positions on the dashboard."
@@ -443,29 +481,29 @@ export const AppConfig = ({ plugin }: Props) => {
         <Field
           label="Skip TLS Verification"
           description="Do not validate TLS certificates when connecting to Grafana. NOTE: If using an remote chrome instance, set --ignore-certificate-errors flag in chrome."
-          data-testid={testIds.appConfig.tlsSkipVerify}
+          data-testid={testIds.appConfig.skipTlsCheck}
           className={s.marginTop}
         >
           <Switch
-            id="tlsSkipVerify"
-            value={state.tlsSkipVerify}
-            onChange={onChangeTLSSkipVerify}
+            id="skipTlsCheck"
+            value={state.skipTlsCheck}
+            onChange={onChangeSkipTlsCheck}
           />
         </Field>
 
         {/* Remote Chrome URL */}
         <Field
-          label="Remote Chrome Addr"
+          label="Remote Chrome URL"
           description="Address to a running chrome instance with an listening chrome remote debug socket"
-          data-testid={testIds.appConfig.remoteChromeURL}
+          data-testid={testIds.appConfig.remoteChromeUrl}
           className={s.marginTop}
         >
           <Input
             type="url"
             width={60}
-            id="remoteChromeURL"
-            label={`Remote Chrome Addr`}
-            value={state.remoteChromeURL}
+            id="remoteChromeUrl"
+            label={`Remote Chrome URL`}
+            value={state.remoteChromeUrl}
             onChange={onChangeRemoteChromeURL}
           />
         </Field>
@@ -473,7 +511,7 @@ export const AppConfig = ({ plugin }: Props) => {
         {/* Max browser workers */}
         <Field
           label="Maximum Browser Workers"
-          description="Maximum number of workers for interacting with chrome browser. Default is 6."
+          description="Maximum number of workers for interacting with chrome browser. Default is 2."
           className={s.marginTop}
         >
           <Input
@@ -517,15 +555,16 @@ export const AppConfig = ({ plugin }: Props) => {
               pinned,
               jsonData: {
                 appUrl: state.appUrl,
-                tlsSkipVerify: state.tlsSkipVerify,
-                maxBrowserWorkers: state.maxBrowserWorkers,
-                maxRenderWorkers: state.maxRenderWorkers,
+                skipTlsCheck: state.skipTlsCheck,
+                theme: state.theme,
                 orientation: state.orientation,
                 layout: state.layout,
                 dashboardMode: state.dashboardMode,
                 timeZone: state.timeZone,
                 logo: state.logo,
-                remoteChromeURL: state.remoteChromeURL,
+                maxBrowserWorkers: state.maxBrowserWorkers,
+                maxRenderWorkers: state.maxRenderWorkers,
+                remoteChromeUrl: state.remoteChromeUrl,
               },
               // This cannot be queried later by the frontend.
               // We don't want to override it in case it was set previously and left untouched now.
@@ -538,7 +577,8 @@ export const AppConfig = ({ plugin }: Props) => {
           }
           disabled={Boolean(
             !state.appUrl &&
-              !state.tlsSkipVerify &&
+              !state.skipTlsCheck &&
+              !state.themeChanged &&
               !state.layoutChanged &&
               !state.orientationChanged &&
               !state.dashboardModeChanged &&
@@ -546,7 +586,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.logoChanged &&
               !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
-              !state.remoteChromeURL &&
+              !state.remoteChromeUrl &&
               !state.saToken
           )}
         >
