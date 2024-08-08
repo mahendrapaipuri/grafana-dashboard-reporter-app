@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -27,6 +28,31 @@ func (s *mockCallResourceResponseSender) Send(response *backend.CallResourceResp
 
 // Test report resource
 func TestReportResource(t *testing.T) {
+	var execPath string
+	locations := []string{
+		// Mac
+		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+		// Windows
+		"chrome.exe",
+		// Linux
+		"google-chrome",
+		"chrome",
+	}
+
+	for _, path := range locations {
+		found, err := exec.LookPath(path)
+		if err == nil {
+			execPath = found
+
+			break
+		}
+	}
+
+	// Skip test if chrome is not available
+	if execPath == "" {
+		t.Skip("Chrome not found. Skipping test")
+	}
+	
 	// Initialize app
 	inst, err := NewDashboardReporterApp(context.Background(), backend.AppInstanceSettings{
 		DecryptedSecureJSONData: map[string]string{
