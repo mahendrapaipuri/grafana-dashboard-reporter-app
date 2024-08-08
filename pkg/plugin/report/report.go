@@ -83,6 +83,11 @@ func (t templateData) To() string {
 
 // Logo returns encoded logo
 func (t templateData) Logo() string {
+	// If dataURI is passed in format data:image/png;base64,<content> strip header
+	parts := strings.Split(t.Conf.EncodedLogo, ",")
+	if len(parts) == 2 {
+		return parts[1]
+	}
 	return t.Conf.EncodedLogo
 }
 
@@ -144,7 +149,7 @@ func (r *PDF) fetchDashboard(ctx context.Context) error {
 	if reflect.DeepEqual(dashboard.Dashboard{}, r.grafanaDashboard) {
 		r.logger.Warn("error(s) fetching dashboard model and data", "err", err, "dash_uid", r.options.DashUID)
 
-		return fmt.Errorf("empty fetching dashboard %s", r.options.DashUID)
+		return ErrEmptyDashboard
 	}
 
 	return nil
@@ -313,7 +318,7 @@ func (r *PDF) generateHTMLFile() error {
 }
 
 // renderPDF renders HTML page into PDF using Chromium
-func (r *PDF) renderPDF(ctx context.Context, writer io.Writer) error {
+func (r *PDF) renderPDF(_ context.Context, writer io.Writer) error {
 	// Create a new tab
 	tab := r.chromeInstance.NewTab(r.logger, r.conf)
 	defer tab.Close(r.logger)

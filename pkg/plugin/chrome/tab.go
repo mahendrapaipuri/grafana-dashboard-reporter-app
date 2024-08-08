@@ -13,10 +13,12 @@ import (
 	"golang.org/x/net/context"
 )
 
+// Tab is container for a browser tab
 type Tab struct {
 	ctx context.Context
 }
 
+// Close releases the resources of the current browser tab
 func (t *Tab) Close(logger log.Logger) {
 	if t.ctx != nil {
 		var err error
@@ -63,10 +65,12 @@ func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName 
 	return nil
 }
 
+// Run executes the actions in the current tab
 func (t *Tab) Run(actions chromedp.Action) error {
 	return chromedp.Run(t.ctx, actions)
 }
 
+// Context returns the current tab's context
 func (t *Tab) Context() context.Context {
 	return t.ctx
 }

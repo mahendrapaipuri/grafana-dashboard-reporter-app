@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/context"
 )
 
+// LocalInstance is a locally running browser instance
 type LocalInstance struct {
 	allocCtx   context.Context
 	browserCtx context.Context
@@ -16,11 +17,12 @@ type LocalInstance struct {
 
 // NewLocalBrowserInstance creates a new local browser instance
 func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSkipVerify bool) (*LocalInstance, error) {
+	// go-staticcheck was keep complaining about unused var
 	// preallocate options
-	chromeOptions := make([]chromedp.ExecAllocatorOption, 0, len(chromedp.DefaultExecAllocatorOptions)+3)
+	// chromeOptions := make([]func(*chromedp.ExecAllocator), 0, len(chromedp.DefaultExecAllocatorOptions)+3)
 
 	// Set chrome options
-	chromeOptions = append(chromedp.DefaultExecAllocatorOptions[:],
+	chromeOptions := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.NoSandbox,
 		chromedp.DisableGPU,
 	)
@@ -69,10 +71,12 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	}, nil
 }
 
+// Name returns the kind of browser instance
 func (i *LocalInstance) Name() string {
 	return "local"
 }
 
+// NewTab starts and returns a new tab on current browser instance
 func (i *LocalInstance) NewTab(_ log.Logger, _ config.Config) *Tab {
 	ctx, _ := chromedp.NewContext(i.browserCtx)
 
