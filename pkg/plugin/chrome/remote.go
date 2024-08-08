@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 )
 
+// RemoteInstance is a remotely running browser instance
 type RemoteInstance struct {
 	allocCtx       context.Context
 	allocCtxCancel context.CancelFunc
@@ -19,10 +20,12 @@ func NewRemoteBrowserInstance(ctx context.Context, _ log.Logger, remoteChromeURL
 	return &RemoteInstance{allocCtx, allocCtxCancel}, nil
 }
 
+// Name returns the kind of browser instance
 func (i *RemoteInstance) Name() string {
 	return "remote"
 }
 
+// NewTab starts and returns a new tab on current browser instance
 func (i *RemoteInstance) NewTab(logger log.Logger, _ config.Config) *Tab {
 	chromeLogger := logger.With("subsystem", "chromium")
 	browserCtx, _ := chromedp.NewContext(i.allocCtx,
@@ -35,6 +38,7 @@ func (i *RemoteInstance) NewTab(logger log.Logger, _ config.Config) *Tab {
 	}
 }
 
+// Close releases the resources of browser instance
 func (i *RemoteInstance) Close(_ log.Logger) {
 	if i.allocCtxCancel != nil {
 		i.allocCtxCancel()

@@ -14,6 +14,7 @@ type PDFOptions struct {
 	Orientation string
 }
 
+// Instance is the interface remote and local chrome must implement
 type Instance interface {
 	NewTab(logger log.Logger, conf config.Config) *Tab
 	Name() string

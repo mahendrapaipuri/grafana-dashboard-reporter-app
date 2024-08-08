@@ -61,7 +61,7 @@ type Panel struct {
 
 type PanelImage struct {
 	Image    string
-	MineType string
+	MimeType string
 }
 
 // IsSingleStat returns true if panel is of type SingleStat
@@ -313,5 +313,5 @@ func filterPanels(panels []Panel, config config.Config) []Panel {
 }
 
 func (p PanelImage) String() string {
-	return fmt.Sprintf("data:%s;base64,%s", p.MineType, p.Image)
+	return fmt.Sprintf("data:%s;base64,%s", p.MimeType, p.Image)
 }
