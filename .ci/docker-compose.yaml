@@ -58,6 +58,12 @@ services:
       - RENDERING_CLUSTERING_TIMEOUT=60
       - IGNORE_HTTPS_ERRORS=true
 
+  chrome_plain:
+    image: chromedp/headless-shell:latest
+    shm_size: 2G
+    init: true
+    network_mode: service:grafana_plain
+
   grafana_tls:
     # image: grafana/grafana:latest
     container_name: 'mahendrapaipuri-dashboardreporter-app-tls'
@@ -118,8 +124,11 @@ services:
       - RENDERING_CLUSTERING_TIMEOUT=60
       - IGNORE_HTTPS_ERRORS=true
   
-  chrome:
+  chrome_tls:
     image: chromedp/headless-shell:latest
     shm_size: 2G
     init: true
-    network_mode: service:grafana_plain
+    network_mode: service:grafana_tls
+    # We need to manually setup chrome instance as default entrypoint does not have --ignore-certificate-errors flag
+    entrypoint: /headless-shell/headless-shell
+    command: --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 --disable-gpu --headless --no-sandbox --ignore-certificate-errors=1
