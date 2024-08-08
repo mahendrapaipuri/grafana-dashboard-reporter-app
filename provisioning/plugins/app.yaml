@@ -23,11 +23,10 @@ apps:
       saToken: ''
 
     jsonData:
-      # url is at which Grafana can be accessible from the plugin.
+      # URL is at which Grafana can be accessible from the plugin.
       # The plugin will make API requests to Grafana to get individual panel in each dashboard to generate reports.
       # These API requests will be made to this URL.
       # For most of the deployments the default value http://localhost:3000 will work.
-      # If remoteChromeURL is set, validate that the URL is reachable from the chrome instance
       # 
       # If unset, the plugin will use the configured app URL from Grafana settings.
       #
@@ -38,7 +37,17 @@ apps:
       #
       # This is not recommended for production environments.
       #
-      tlsSkipVerify: false
+      skipTlsCheck: false
+
+      # Theme of the panels in the report. Possible values are light and dark
+      #
+      # This can be changed from Grafana UI as well and this configuration parameter
+      # applies globally to all generated reports
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?theme=light or ?theme=dark during report generation process
+      #
+      theme: light
 
       # Orientation of the report. Possible values are portrait and landscape
       #
@@ -92,6 +101,10 @@ apps:
       # A base64 encoded of the logo can be set which will be included in the footer
       # of the report in each page.
       #
+      # Do not add the base64 mime type header. Only provided the encoded content. Based
+      # on content's signature, mime type will be detected and appropriate header will be
+      # added.
+      #
       logo: ''
 
       # Maximum number of workers for interacting with chrome browser.
@@ -108,5 +121,11 @@ apps:
       #
       maxRenderWorkers: 2
 
-      # A remote address for a running chrome instance. If empty, a local chrome browser will be executed
-      remoteChromeURL: 'ws://localhost:9222/'
+      # A URL of a running remote chrome instance. 
+      #
+      # For example, URL can be of form ws://localhost:9222. If empty, a local chrome 
+      # browser will be executed.
+      # If this option is set, ensure that the `appUrl` is reachable is from remote 
+      # chrome instance
+      #
+      remoteChromeUrl: ''
