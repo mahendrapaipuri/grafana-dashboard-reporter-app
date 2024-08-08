@@ -76,9 +76,17 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 
 	switch app.conf.RemoteChromeURL {
 	case "":
-		chromeInstance, err = chrome.NewLocalBrowserInstance(context.Background(), app.ctxLogger, app.conf.HTTPClientOptions.TLS.InsecureSkipVerify)
+		chromeInstance, err = chrome.NewLocalBrowserInstance(
+			context.Background(),
+			app.ctxLogger,
+			app.conf.HTTPClientOptions.TLS.InsecureSkipVerify,
+		)
 	default:
-		chromeInstance, err = chrome.NewRemoteBrowserInstance(context.Background(), app.ctxLogger, app.conf.RemoteChromeURL)
+		chromeInstance, err = chrome.NewRemoteBrowserInstance(
+			context.Background(),
+			app.ctxLogger,
+			app.conf.RemoteChromeURL,
+		)
 	}
 
 	if err != nil {
@@ -89,9 +97,14 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	app.chromeInstance = chromeInstance
 
 	// Span Worker Pool across multiple instances
+	// Seems like context passed by App instance is closing channel at the end of
+	// request which I dont understand.
+	// So, discard context from the App. Always use background context and as we are
+	// safely disposing both workers and chrome instances in dispose() method, we are
+	// sure that there wont be any leaks.
 	app.workerPools = worker.Pools{
-		worker.Browser:  worker.New(ctx, app.conf.MaxBrowserWorkers),
-		worker.Renderer: worker.New(ctx, app.conf.MaxRenderWorkers),
+		worker.Browser:  worker.New(context.Background(), app.conf.MaxBrowserWorkers),
+		worker.Renderer: worker.New(context.Background(), app.conf.MaxRenderWorkers),
 	}
 
 	return &app, nil
@@ -100,6 +113,9 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 // Dispose here tells plugin SDK that plugin wants to clean up resources when a new instance
 // created.
 func (app *App) Dispose() {
+	// Clean up idle connections
+	app.httpClient.CloseIdleConnections()
+
 	if app.workerPools != nil {
 		for _, pool := range app.workerPools {
 			pool.Done()
