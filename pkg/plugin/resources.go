@@ -47,9 +47,10 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	conf := app.conf
-
 	var err error
+
+	// Always start with an instance of current app's config
+	conf := app.conf
 
 	// Get context logger which we will use everywhere
 	ctxLogger := log.DefaultLogger.FromContext(req.Context())
@@ -68,6 +69,16 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	}
 
 	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
+
+	if req.URL.Query().Has("theme") {
+		conf.Theme = req.URL.Query().Get("theme")
+		if conf.Theme != "light" && conf.Theme != "dark" {
+			ctxLogger.Debug("invalid theme parameter: " + conf.Theme)
+			http.Error(w, "invalid theme parameter: "+conf.Theme, http.StatusBadRequest)
+
+			return
+		}
+	}
 
 	if req.URL.Query().Has("layout") {
 		conf.Layout = req.URL.Query().Get("layout")
@@ -151,6 +162,14 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	var credential client.Credential
 
 	switch {
+	// This case is irrevelant starting from Grafana 10.4.4.
+	// This commit https://github.com/grafana/grafana/commit/56a4af87d706087ea42780a79f8043df1b5bc3ea
+	// made changes to not forward the cookies to app plugins.
+	// So we will not be able to use cookies to make requests to Grafana to fetch
+	// dashboards.
+	//
+	// So we need to rely on either service accounts or user provided API tokens to
+	// make requests to Grafana
 	case req.Header.Get(backend.CookiesHeaderName) != "":
 		credential = client.Credential{
 			HeaderName:  backend.CookiesHeaderName,

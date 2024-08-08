@@ -284,13 +284,13 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 
 	return dashboard.PanelImage{
 		Image:    sb.String(),
-		MineType: "image/png",
+		MimeType: "image/png",
 	}, nil
 }
 
 func (g GrafanaClient) getPanelURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {
 	values := url.Values{}
-	values.Add("theme", "light")
+	values.Add("theme", g.conf.Theme)
 	values.Add("panelId", strconv.Itoa(p.ID))
 	values.Add("from", t.From)
 	values.Add("to", t.To)
