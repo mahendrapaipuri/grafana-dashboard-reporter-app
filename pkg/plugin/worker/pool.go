@@ -33,7 +33,7 @@ func New(ctx context.Context, maxWorker int) *Pool {
 				case f := <-queue:
 					f()
 				case <-ctx.Done():
-					continue
+					return
 				}
 			}
 		}()
