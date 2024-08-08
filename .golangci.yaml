@@ -1,0 +1,41 @@
+linters:
+  enable-all: true
+  disable:
+    - depguard
+    - exhaustruct
+    - gomnd
+    - funlen
+    - ireturn
+    - err113
+    - execinquery
+    - mnd
+    - copyloopvar
+    - testpackage
+    - paralleltest
+    - musttag
+    - gochecknoglobals
+    - gosmopolitan
+    - varnamelen
+    - lll
+
+issues:
+  exclude:
+    - "dot-imports: should not use dot imports"
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocognit
+        - cyclop
+        - wrapcheck
+        - maintidx
+        - dogsled
+        - contextcheck
+        - dupword
+        - dupl
+        - funlen
+        - gocyclo
+
+linters-settings:
+  lll:
+    line-length: 160
+
