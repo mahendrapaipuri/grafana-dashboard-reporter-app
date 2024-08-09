@@ -81,10 +81,19 @@ Following prerequisites must be installed for developing the plugin
    mage -v
    ```
 
-3. List all available Mage targets for additional commands:
+3. List all available Mage targets for more commands:
 
    ```bash
    mage -l
    ```
 
 4. Navigate to the [Locally Running Grafana](http://localhost:3000).
+
+### Debugging
+
+in `docker-compose.yaml` file, search for `development: false` and replace it with `development: true`.
+
+This starts an enhanced framework that automatically rebuilds and reloads the plugin inside the grafana container.
+The go debugger is attached to the plugin and listen on localhost:2345. 
+
+You can start a debug session from your local IDE and set breaking points as you would do on local development.

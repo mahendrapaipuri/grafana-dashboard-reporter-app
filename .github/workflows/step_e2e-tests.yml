@@ -42,9 +42,8 @@ jobs:
         run: yarn install --immutable --prefer-offline
 
       # Install chrome as we will use it in e2e tests
-      - uses: browser-actions/setup-chrome@v1
-        with:
-          install-dependencies: true
+      - name: Install browsers
+        run: yarn playwright install
 
       - name: Run e2e tests
         env:
