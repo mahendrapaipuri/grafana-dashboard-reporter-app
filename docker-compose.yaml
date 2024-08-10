@@ -7,7 +7,7 @@ services:
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
         grafana_version: ${GRAFANA_VERSION:-11.1.0}
-        development: false
+        development: ${DEVELOPMENT:-false}
     cap_add:
       - SYS_PTRACE
     security_opt:
