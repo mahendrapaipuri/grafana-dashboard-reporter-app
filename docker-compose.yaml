@@ -10,12 +10,13 @@ services:
         development: ${DEVELOPMENT:-false}
     cap_add:
       - SYS_PTRACE
-    security_opt:
-      - seccomp:unconfined
     privileged: true
     ports:
       - 3000:${GF_SERVER_HTTP_PORT:-3000}/tcp
-      - "2345:2345/tcp"
+      - 2345:2345/tcp # delve
+    security_opt:
+      - "apparmor:unconfined"
+      - "seccomp:unconfined"
     volumes:
       - ./dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
       - ./provisioning:/etc/grafana/provisioning
