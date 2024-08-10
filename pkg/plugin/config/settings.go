@@ -27,6 +27,9 @@ type Config struct {
 	MaxBrowserWorkers int    `json:"maxBrowserWorkers" env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"`
 	MaxRenderWorkers  int    `json:"maxRenderWorkers"  env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"`
 	RemoteChromeURL   string `json:"remoteChromeUrl"   env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"`
+	HeaderTemplate    string `json:"headerTemplate"     env:"GF_REPORTER_PLUGIN_HEADER_TEMPLATE, overwrite"`
+	ReportTemplate    string `json:"reportTemplate"     env:"GF_REPORTER_PLUGIN_REPORT_TEMPLATE, overwrite"`
+	FooterTemplate    string `json:"footerTemplate"     env:"GF_REPORTER_PLUGIN_FOOTER_TEMPLATE, overwrite"`
 	IncludePanelIDs   []int
 	ExcludePanelIDs   []int
 

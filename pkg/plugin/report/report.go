@@ -271,7 +271,13 @@ func (r *PDF) generateHTMLFile() error {
 	}
 
 	// Make a new template for Body of the PDF
-	if tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml"); err != nil {
+	if r.conf.FooterTemplate != "" {
+		tmpl, err = template.New("report").Funcs(funcMap).Parse(fmt.Sprintf(`{{define "report.gohtml"}}%s{{end}}`, r.conf.ReportTemplate))
+	} else {
+		tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml")
+	}
+
+	if err != nil {
 		return fmt.Errorf("error parsing PDF template: %w", err)
 	}
 
@@ -291,7 +297,13 @@ func (r *PDF) generateHTMLFile() error {
 	r.pdfOptions.Body = bufBody.String()
 
 	// Make a new template for Header of the PDF
-	if tmpl, err = template.New("header").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml"); err != nil {
+	if r.conf.HeaderTemplate != "" {
+		tmpl, err = template.New("header").Funcs(funcMap).Parse(fmt.Sprintf(`{{define "header.gohtml"}}%s{{end}}`, r.conf.HeaderTemplate))
+	} else {
+		tmpl, err = template.New("header").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml")
+	}
+
+	if err != nil {
 		return fmt.Errorf("error parsing Header template: %w", err)
 	}
 
@@ -303,7 +315,13 @@ func (r *PDF) generateHTMLFile() error {
 	r.pdfOptions.Header = bufHeader.String()
 
 	// Make a new template for Footer of the PDF
-	if tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml"); err != nil {
+	if r.conf.FooterTemplate != "" {
+		tmpl, err = template.New("footer").Funcs(funcMap).Parse(fmt.Sprintf(`{{define "footer.gohtml"}}%s{{end}}`, r.conf.FooterTemplate))
+	} else {
+		tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml")
+	}
+
+	if err != nil {
 		return fmt.Errorf("error parsing Footer template: %w", err)
 	}
 
