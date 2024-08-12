@@ -31,7 +31,7 @@ services:
       # - GF_AUTH_DISABLE_LOGIN_FORM=true
       # We need to toggle external service accounts so that Grafana will get
       # the token from a service account to read dashboards
-      - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-externalServiceAccounts}
+      - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-idForwarding,externalServiceAccounts}
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false

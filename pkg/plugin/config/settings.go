@@ -69,14 +69,19 @@ func (c *Config) String() string {
 		appURL = c.AppURL
 	}
 
+	token := "unset"
+	if c.Token != "" {
+		token = "set"
+	}
+
 	return fmt.Sprintf(
 		"Theme: %s; Orientation: %s; Layout: %s; Dashboard Mode: %s; Time Zone: %s; Encoded Logo: %s; "+
 			"Max Renderer Workers: %d; Max Browser Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
-			"TLS Skip verifiy: %v; Included Panel IDs: %s; Excluded Panel IDs: %s",
+			"TLS Skip verifiy: %v; Included Panel IDs: %s; Excluded Panel IDs: %s; Token: %s",
 		c.Theme, c.Orientation, c.Layout,
 		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers,
 		c.RemoteChromeURL, appURL,
-		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs,
+		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs, token,
 	)
 }
 

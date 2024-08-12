@@ -14,6 +14,11 @@ import (
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/report"
 )
 
+// GrafanaUserSignInTokenHeaderName the header name used for forwarding
+// the SignIn token of a Grafana User.
+// Requires idForwarded feature toggle enabled.
+const GrafanaUserSignInTokenHeaderName = "X-Grafana-Id"
+
 // Add filename to Header
 func addFilenameHeader(w http.ResponseWriter, title string) {
 	// Sanitize title to escape non ASCII characters
@@ -52,12 +57,13 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Always start with an instance of current app's config
 	conf := app.conf
 
-	// Get context logger which we will use everywhere
-	ctxLogger := log.DefaultLogger.FromContext(req.Context())
-
 	// Get config from context
 	pluginConfig := backend.PluginConfigFromContext(req.Context())
 	currentUser := pluginConfig.User.Login
+
+	// Get context logger which we will use everywhere
+	ctxLogger := log.DefaultLogger.FromContext(req.Context()).
+		With("user", currentUser)
 
 	// Get Dashboard ID
 	dashboardUID := req.URL.Query().Get("dashUid")
@@ -67,6 +73,8 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 		return
 	}
+
+	ctxLogger = ctxLogger.With("dash_uid", dashboardUID)
 
 	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
 
@@ -162,6 +170,21 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	var credential client.Credential
 
 	switch {
+	// Requires Grafana v10.3.0+ and feature flag "idForwarding" enabled
+	case req.Header.Get(GrafanaUserSignInTokenHeaderName) != "":
+		ctxLogger.Debug("using Grafana user sign-in token")
+
+		credential = client.Credential{
+			HeaderName:  GrafanaUserSignInTokenHeaderName,
+			HeaderValue: req.Header.Get(GrafanaUserSignInTokenHeaderName),
+		}
+	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
+		ctxLogger.Debug("using OAuth identity token")
+
+		credential = client.Credential{
+			HeaderName:  backend.OAuthIdentityTokenHeaderName,
+			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
+		}
 	// This case is irrevelant starting from Grafana 10.4.4.
 	// This commit https://github.com/grafana/grafana/commit/56a4af87d706087ea42780a79f8043df1b5bc3ea
 	// made changes to not forward the cookies to app plugins.
@@ -171,26 +194,42 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// So we need to rely on either service accounts or user provided API tokens to
 	// make requests to Grafana
 	case req.Header.Get(backend.CookiesHeaderName) != "":
+		ctxLogger.Debug("using cookies")
+
 		credential = client.Credential{
 			HeaderName:  backend.CookiesHeaderName,
 			HeaderValue: req.Header.Get(backend.CookiesHeaderName),
 		}
-	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
+	case conf.Token != "":
+		ctxLogger.Debug("using configured token")
+
+		token := conf.Token
+
+		// support all token types, including non-bearer tokens
+		if !strings.Contains(token, " ") {
+			token = "Bearer " + token
+		}
+
 		credential = client.Credential{
 			HeaderName:  backend.OAuthIdentityTokenHeaderName,
-			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
+			HeaderValue: token,
 		}
 	default:
+		ctxLogger.Debug("using service account token")
+
 		saToken, err := grafanaConfig.PluginAppClientSecret()
 		if err != nil {
-			if conf.Token == "" {
-				ctxLogger.Error("failed to get plugin app client secret", "err", err)
-				http.Error(w, "failed to get plugin app client secret", http.StatusInternalServerError)
+			ctxLogger.Error("failed to get plugin app client secret", "err", err)
+			http.Error(w, "failed to get plugin app client secret", http.StatusInternalServerError)
 
-				return
-			}
+			return
+		}
 
-			saToken = conf.Token
+		if saToken == "" {
+			ctxLogger.Error("failed to get plugin app client secret", "err", "empty client secret")
+			http.Error(w, "failed to get plugin app client secret", http.StatusInternalServerError)
+
+			return
 		}
 
 		credential = client.Credential{
@@ -202,12 +241,12 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Get Dashboard variables
 	variables := getDashboardVariables(req)
 	if len(variables) == 0 {
-		ctxLogger.Debug("no variables found", "user", currentUser, "dash_uid", dashboardUID)
+		ctxLogger.Debug("no variables found")
 	}
 
 	// Get time range
 	timeRange := dashboard.NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
-	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
+	ctxLogger.Debug("time range", "range", timeRange)
 
 	// Make app new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := client.New(
@@ -254,7 +293,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
+	ctxLogger.Info("report generated")
 }
 
 // handleHealth is an example HTTP GET resource that returns an OK response.
