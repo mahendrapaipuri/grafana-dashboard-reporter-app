@@ -178,13 +178,6 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			HeaderName:  GrafanaUserSignInTokenHeaderName,
 			HeaderValue: req.Header.Get(GrafanaUserSignInTokenHeaderName),
 		}
-	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
-		ctxLogger.Debug("using OAuth identity token")
-
-		credential = client.Credential{
-			HeaderName:  backend.OAuthIdentityTokenHeaderName,
-			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
-		}
 	// This case is irrevelant starting from Grafana 10.4.4.
 	// This commit https://github.com/grafana/grafana/commit/56a4af87d706087ea42780a79f8043df1b5bc3ea
 	// made changes to not forward the cookies to app plugins.
