@@ -33,6 +33,7 @@ export type JsonData = {
   maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
   remoteChromeUrl?: string;
+  requiredPermission?: string;
 };
 
 type State = {
@@ -80,6 +81,10 @@ type State = {
   remoteChromeUrl: string;
   // If remoteChromeUrl has changed
   remoteChromeUrlChanged: boolean;
+  // Minimum required permission to generate a report
+  requiredPermission: string;
+  // If orientation has changed
+  requiredPermissionChanged: boolean;
   // Tells us if the Service Account's token is set.
   // Set to `true` ONLY if it has already been set and haven't been changed.
   // (We unfortunately need an auxiliray variable for this, as `secureJsonData` is never exposed to the browser after it is set)
@@ -102,6 +107,8 @@ export const AppConfig = ({ plugin }: Props) => {
     themeChanged: false,
     orientation: jsonData?.orientation || "portrait",
     orientationChanged: false,
+    requiredPermission: jsonData?.requiredPermission || "Viewer",
+    requiredPermissionChanged: false,
     layout: jsonData?.layout || "simple",
     layoutChanged: false,
     dashboardMode: jsonData?.dashboardMode || "default",
@@ -140,6 +147,12 @@ export const AppConfig = ({ plugin }: Props) => {
   const dashboardModeOptions = [
     { label: "Default", value: "default" },
     { label: "Full", value: "full" },
+  ];
+
+  const requiredPermissionOptions = [
+    { label: "Viewer", value: "Viewer" },
+    { label: "Editor", value: "Editor" },
+    { label: "Admin", value: "Admin" },
   ];
 
   const onChangeURL = (event: ChangeEvent<HTMLInputElement>) => {
@@ -230,6 +243,14 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangeRequiredPermission = (value: string) => {
+    setState({
+      ...state,
+      requiredPermission: value,
+      requiredPermissionChanged: true,
+    });
+  };
+
   const onResetSaToken = () =>
     setState({
       ...state,
@@ -272,6 +293,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
+                    requiredPermission: state.requiredPermission,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -311,6 +333,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
+                    requiredPermission: state.requiredPermission,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -450,6 +473,20 @@ export const AppConfig = ({ plugin }: Props) => {
             onChange={onChangeLogo}
           />
         </Field>
+
+        {/* Report Orientation */}
+        <Field
+          label="Required Permission"
+          description="Minimum Permission to generate a report. Viewer role includes Editor, Admin can always do a report."
+          data-testid={testIds.appConfig.requiredPermission}
+          className={s.marginTop}
+        >
+          <RadioButtonGroup
+            options={requiredPermissionOptions}
+            value={state.requiredPermission}
+            onChange={onChangeRequiredPermission}
+          />
+        </Field>
       </ConfigSection>
 
       {/* Additional Settings */}
@@ -565,6 +602,7 @@ export const AppConfig = ({ plugin }: Props) => {
                 maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
                 remoteChromeUrl: state.remoteChromeUrl,
+                requiredPermission: state.requiredPermission,
               },
               // This cannot be queried later by the frontend.
               // We don't want to override it in case it was set previously and left untouched now.
@@ -587,6 +625,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
               !state.remoteChromeUrl &&
+              !state.requiredPermission &&
               !state.saToken
           )}
         >

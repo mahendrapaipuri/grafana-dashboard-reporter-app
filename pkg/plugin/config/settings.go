@@ -16,19 +16,20 @@ const SaToken = "saToken"
 
 // Config contains plugin settings
 type Config struct {
-	AppURL            string `json:"appUrl"            env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"`
-	SkipTLSCheck      bool   `json:"skipTlsCheck"      env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"`
-	Theme             string `json:"theme"             env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"`
-	Orientation       string `json:"orientation"       env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"`
-	Layout            string `json:"layout"            env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"`
-	DashboardMode     string `json:"dashboardMode"     env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"`
-	TimeZone          string `json:"timeZone"          env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"`
-	EncodedLogo       string `json:"logo"              env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"`
-	MaxBrowserWorkers int    `json:"maxBrowserWorkers" env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"`
-	MaxRenderWorkers  int    `json:"maxRenderWorkers"  env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"`
-	RemoteChromeURL   string `json:"remoteChromeUrl"   env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"`
-	IncludePanelIDs   []int
-	ExcludePanelIDs   []int
+	AppURL             string `json:"appUrl"             env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"`
+	SkipTLSCheck       bool   `json:"skipTlsCheck"       env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"`
+	Theme              string `json:"theme"              env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"`
+	Orientation        string `json:"orientation"        env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"`
+	Layout             string `json:"layout"             env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"`
+	DashboardMode      string `json:"dashboardMode"      env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"`
+	TimeZone           string `json:"timeZone"           env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"`
+	EncodedLogo        string `json:"logo"               env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"`
+	MaxBrowserWorkers  int    `json:"maxBrowserWorkers"  env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"`
+	MaxRenderWorkers   int    `json:"maxRenderWorkers"   env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"`
+	RemoteChromeURL    string `json:"remoteChromeUrl"    env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"`
+	RequiredPermission string `json:"requiredPermission" env:"GF_REPORTER_PLUGIN_REQUIRED_PERMISSION, overwrite"`
+	IncludePanelIDs    []int
+	ExcludePanelIDs    []int
 
 	// HTTP Client
 	HTTPClientOptions httpclient.Options
@@ -72,11 +73,11 @@ func (c *Config) String() string {
 	return fmt.Sprintf(
 		"Theme: %s; Orientation: %s; Layout: %s; Dashboard Mode: %s; Time Zone: %s; Encoded Logo: %s; "+
 			"Max Renderer Workers: %d; Max Browser Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
-			"TLS Skip verifiy: %v; Included Panel IDs: %s; Excluded Panel IDs: %s",
+			"TLS Skip verifiy: %v; Included Panel IDs: %s; Excluded Panel IDs: %s; Required Permission: %s",
 		c.Theme, c.Orientation, c.Layout,
 		c.DashboardMode, c.TimeZone, encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers,
 		c.RemoteChromeURL, appURL,
-		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs,
+		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs, c.RequiredPermission,
 	)
 }
 
@@ -85,14 +86,15 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 	// Always start with a default config so that when the plugin is not provisioned
 	// with a config, we will still have "non-null" config to work with
 	var config = Config{
-		Theme:             "light",
-		Orientation:       "portrait",
-		Layout:            "simple",
-		DashboardMode:     "default",
-		TimeZone:          "",
-		EncodedLogo:       "",
-		MaxBrowserWorkers: 2,
-		MaxRenderWorkers:  2,
+		Theme:              "light",
+		Orientation:        "portrait",
+		Layout:             "simple",
+		DashboardMode:      "default",
+		TimeZone:           "",
+		EncodedLogo:        "",
+		MaxBrowserWorkers:  2,
+		MaxRenderWorkers:   2,
+		RequiredPermission: "Viewer",
 		HTTPClientOptions: httpclient.Options{
 			TLS: &httpclient.TLSOptions{
 				InsecureSkipVerify: false,

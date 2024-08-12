@@ -129,3 +129,8 @@ apps:
       # chrome instance
       #
       remoteChromeUrl: ''
+
+      # Minimum permission set to generate reports.
+      # Possible values are Viewer Editor and Admin.
+      #
+      requiredPermission: Viewer

@@ -13,6 +13,7 @@ export const testIds = {
     maxBrowserWorkers: "data-testid ac-max-browser-workers",
     maxRenderWorkers: "data-testid ac-max-render-workers",
     remoteChromeUrl: "data-testid ac-remote-chrome-url",
+    requiredPermission: "data-testid ac-required-permission",
     submit: "data-testid ac-submit-form",
   },
   Status: {

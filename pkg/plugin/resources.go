@@ -59,6 +59,15 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	pluginConfig := backend.PluginConfigFromContext(req.Context())
 	currentUser := pluginConfig.User.Login
 
+	ctxLogger = ctxLogger.With("user", currentUser)
+
+	if !(pluginConfig.User.Role == "Admin" || pluginConfig.User.Role == conf.RequiredPermission || conf.RequiredPermission == "Viewer") {
+		ctxLogger.Debug("user does not have required permission", "user_role", pluginConfig.User.Role)
+		http.Error(w, "Query parameter dashUid not found", http.StatusForbidden)
+
+		return
+	}
+
 	// Get Dashboard ID
 	dashboardUID := req.URL.Query().Get("dashUid")
 	if dashboardUID == "" {
@@ -175,11 +184,6 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			HeaderName:  backend.CookiesHeaderName,
 			HeaderValue: req.Header.Get(backend.CookiesHeaderName),
 		}
-	case req.Header.Get(backend.OAuthIdentityTokenHeaderName) != "":
-		credential = client.Credential{
-			HeaderName:  backend.OAuthIdentityTokenHeaderName,
-			HeaderValue: req.Header.Get(backend.OAuthIdentityTokenHeaderName),
-		}
 	default:
 		saToken, err := grafanaConfig.PluginAppClientSecret()
 		if err != nil {
@@ -202,12 +206,12 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Get Dashboard variables
 	variables := getDashboardVariables(req)
 	if len(variables) == 0 {
-		ctxLogger.Debug("no variables found", "user", currentUser, "dash_uid", dashboardUID)
+		ctxLogger.Debug("no variables found", "dash_uid", dashboardUID)
 	}
 
 	// Get time range
 	timeRange := dashboard.NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
-	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
+	ctxLogger.Debug("time range", "range", timeRange, "dash_uid", dashboardUID)
 
 	// Make app new Grafana client to get dashboard JSON model and Panel PNGs
 	grafanaClient := client.New(
@@ -254,7 +258,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
+	ctxLogger.Info("report generated", "dash_uid", dashboardUID)
 }
 
 // handleHealth is an example HTTP GET resource that returns an OK response.
