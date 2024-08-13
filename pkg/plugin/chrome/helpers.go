@@ -21,7 +21,12 @@ import (
 // enableLifeCycleEvents enables the chromedp life cycle events
 func enableLifeCycleEvents() chromedp.ActionFunc {
 	return func(ctx context.Context) error {
-		err := page.Enable().Do(ctx)
+		err := network.Enable().Do(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to enable network: %w", err)
+		}
+
+		err = page.Enable().Do(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to enable page: %w", err)
 		}

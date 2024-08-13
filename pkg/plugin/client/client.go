@@ -14,7 +14,6 @@ import (
 
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -35,6 +34,12 @@ var (
 		"v11": `[...document.querySelectorAll("[data-testid='dashboard-row-container']")].map((e) => [...e.querySelectorAll("[aria-expanded=false]")].map((e) => e.click()))`,
 	}
 	dashboardDataJS = `[...document.getElementsByClassName('react-grid-item')].map((e) => ({"width": e.style.width, "height": e.style.height, "transform": e.style.transform, "id": e.getAttribute("data-panelid")}))`
+)
+
+const (
+	downloadCSVButtonSelector                             = `div[aria-label="Panel inspector Data content"] button[type="button"][aria-disabled="false"]`
+	inspectPanelDataTabExpandDataOptionsSelector          = `div[role='dialog'] button[aria-expanded=false]`
+	inspectPanelDataTabApplyTransformationsToggleSelector = `div[data-testid="dataOptions"] input:not(#excel-toggle):not(#formatted-data-toggle) + label`
 )
 
 var getPanelRetrySleepTime = time.Duration(10) * time.Second
@@ -333,7 +338,9 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 	panelURL := g.getPanelCSVURL(p, dashUID, t)
 	// Create a new tab
 	tab := g.chromeInstance.NewTab(g.logger, g.conf)
-	tab.WithTimeout(300 * time.Second)
+	// Set a timeout for the tab
+	// Fail-safe for newer Grafana versions, if css has been changed.
+	tab.WithTimeout(60 * time.Second)
 	defer tab.Close(g.logger)
 
 	var headers map[string]any
@@ -350,83 +357,90 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 		return "", fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
 
-	// this will be used to capture the request id for matching network events
-	var requestID network.RequestID
+	// this will be used to capture the blob URL of the CSV download
+	blobURLCh := make(chan string, 1)
 
-	// set up a channel, so we can block later while we monitor the download
-	// progress
+	// If an error occurs on the way to fetching the CSV data, it will be sent to this channel
 	errCh := make(chan error, 1)
 
-	go func() {
-		// set up a listener to watch the network events and close the channel when
-		// complete the request id matching is important both to filter out
-		// unwanted network events and to reference the downloaded file later
-		chromedp.ListenTarget(tab.Context(), func(v interface{}) {
-			switch ev := v.(type) {
-			case *network.EventRequestWillBeSent:
-				g.logger.Debug(fmt.Sprintf("EventRequestWillBeSent: %v: %v", ev.RequestID, ev.Request.URL))
-				if ev.Request.URL == "" {
-					requestID = ev.RequestID
-				}
-			case *network.EventLoadingFinished:
-				g.logger.Debug(fmt.Sprintf("EventLoadingFinished: %v", ev.RequestID))
-				if ev.RequestID == requestID {
-					close(errCh)
-				}
-			case *browser.EventDownloadProgress:
-				completed := "(unknown)"
-				if ev.TotalBytes != 0 {
-					completed = fmt.Sprintf("%0.2f%%", ev.ReceivedBytes/ev.TotalBytes*100.0)
-				}
-				g.logger.Debug(fmt.Sprintf("state: %s, completed: %s", ev.State.String(), completed))
-				if ev.State == browser.DownloadProgressStateCompleted {
-					// Done
-				}
-			}
-		})
-
-		tasks := chromedp.Tasks{
-			browser.
-				SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).
-				WithDownloadPath("/root/mahendrapaipuri-dashboardreporter-app/").
-				WithEventsEnabled(true),
-			chromedp.WaitVisible(`div[aria-label="Panel inspector Data content"] button[type="button"][aria-disabled="false"]`, chromedp.ByQuery),
-			chromedp.Click(`div[role='dialog'] button[aria-expanded=false]`, chromedp.ByQuery),
-			chromedp.QueryAfter(`div[data-testid="dataOptions"] input:not(#excel-toggle):not(#formatted-data-toggle) + label`, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
-				if len(nodes) == 0 {
-					return nil
-				}
-
-				return chromedp.MouseClickNode(nodes[0]).Do(ctx)
-			}, chromedp.NodeVisible, chromedp.ByQuery),
-			chromedp.Click(`div[aria-label="Panel inspector Data content"] button[type="button"][aria-disabled="false"]`, chromedp.ByQuery),
-			chromedp.Sleep(10 * time.Second),
+	// Listen for download events. Downloading from JavaScript won't emit any network events.
+	chromedp.ListenTarget(tab.Context(), func(v interface{}) {
+		switch ev := v.(type) {
+		case *browser.EventDownloadWillBegin:
+			// once we have the download URL, we can fetch the CSV data via JavaScript.
+			blobURLCh <- ev.URL
 		}
+	})
 
+	tasks := chromedp.Tasks{
+		// Downloads needs to be allowed, otherwise the CSV request will be denied.
+		// Allow download events to emit so we can get the download URL.
+		browser.
+			SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).
+			WithDownloadPath("/dev/null").
+			WithEventsEnabled(true),
+		// Wait until the Download CSV button is visible
+		chromedp.WaitVisible(downloadCSVButtonSelector, chromedp.ByQuery),
+		// Expand the data options on the data tab inside the inspection panel
+		chromedp.Click(inspectPanelDataTabExpandDataOptionsSelector, chromedp.ByQuery),
+		// Enable "Apply transformations" toggle.
+		chromedp.QueryAfter(inspectPanelDataTabApplyTransformationsToggleSelector, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+			if len(nodes) == 0 {
+				return nil // The toggle appears only, if transformations are configured.
+			}
+
+			return chromedp.MouseClickNode(nodes[0]).Do(ctx)
+		}, chromedp.NodeVisible, chromedp.ByQuery),
+		// Click on the Download CSV button.
+		chromedp.Click(downloadCSVButtonSelector, chromedp.ByQuery),
+	}
+
+	// Run all tasks in a goroutine.
+	// If an error occurs, it will be sent to the errCh channel.
+	// If a element can't be found, a timeout will occur and the context will be canceled.
+	go func() {
 		if err := tab.Run(tasks); err != nil {
 			errCh <- fmt.Errorf("error fetching dashboard URL from browser %s: %w", panelURL, err)
 		}
 	}()
 
+	var blobURL string
+
 	select {
+	case blobURL = <-blobURLCh:
+		if blobURL == "" {
+			return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyBlobURL)
+		}
 	case err := <-errCh:
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
 		}
 	case <-tab.Context().Done():
 		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, tab.Context().Err())
 	}
 
-	// get the downloaded bytes for the request id
+	close(blobURLCh)
+	close(errCh)
+
 	var buf []byte
-	if err := tab.Run(chromedp.ActionFunc(func(ctx context.Context) error {
-		var err error
 
-		buf, err = network.GetResponseBody(requestID).Do(ctx)
+	tasks = chromedp.Tasks{
+		chromedp.Evaluate(
+			// fetch the CSV data from the blob URL, using Javascript.
+			fmt.Sprintf("fetch('%s').then(r => r.blob()).then(b => new Response(b).text()).then(t => t)", blobURL),
+			&buf,
+			func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+				return p.WithAwaitPromise(true)
+			},
+		),
+	}
 
-		return err
-	})); err != nil {
+	if err := tab.Run(tasks); err != nil {
 		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
+	}
+
+	if len(buf) == 0 {
+		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyCSVData)
 	}
 
 	return dashboard.CSVData(buf), nil
