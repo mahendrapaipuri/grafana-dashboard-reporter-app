@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -354,7 +356,7 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 
 	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle")
 	if err != nil {
-		return "", fmt.Errorf("NavigateAndWaitFor: %w", err)
+		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
 
 	// this will be used to capture the blob URL of the CSV download
@@ -409,14 +411,12 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 	select {
 	case blobURL = <-blobURLCh:
 		if blobURL == "" {
-			return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyBlobURL)
+			return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyBlobURL)
 		}
 	case err := <-errCh:
-		if err != nil {
-			return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
-		}
+		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
 	case <-tab.Context().Done():
-		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, tab.Context().Err())
+		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, tab.Context().Err())
 	}
 
 	close(blobURLCh)
@@ -436,14 +436,26 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 	}
 
 	if err := tab.Run(tasks); err != nil {
-		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
+		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
 	}
 
 	if len(buf) == 0 {
-		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyCSVData)
+		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyCSVData)
 	}
 
-	return dashboard.CSVData(buf), nil
+	csvStringData, err := strconv.Unquote(string(buf))
+	if err != nil {
+		return nil, fmt.Errorf("error unquoting CSV data: %w", err)
+	}
+
+	reader := csv.NewReader(strings.NewReader(csvStringData))
+
+	csvData, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("error reading CSV data: %w", err)
+	}
+
+	return csvData, nil
 }
 
 func (g GrafanaClient) getPanelCSVURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {

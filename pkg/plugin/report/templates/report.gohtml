@@ -30,6 +30,16 @@
         margin: auto;
     }
 
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table td,  table th {
+       border: 1px solid #CCC;
+       text-align: center;
+    }
+
     .grid {
         display: grid;
         grid-template-columns: repeat(24, 1fr);
@@ -52,7 +62,7 @@
         grid-row: {{inc $v.GridPos.Y}} / span {{$v.GridPos.H}};
     }
 
-        {{end}}
+        {{end }}
 
     {{else}}
         {{- range $i, $v := .Panels}} 
@@ -61,9 +71,9 @@
         grid-row: {{mult $i}} / span 30;
     }
 
-        {{end}}
+        {{end }}
 
-    {{end}}
+    {{end }}
 </style>
 
 <head>
@@ -81,6 +91,33 @@
             {{- end }}
         </div>
     </div>
+    {{- range $i, $v := .Dashboard.Panels }}
+        {{- if $v.CSVData }}
+        <div style="break-after:page"></div>
+
+        <div class="container">
+            <h2>{{$v.Title}}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        {{- range $j, $w := index $v.CSVData 0}}
+                        <th>{{$w}}</th>
+                        {{- end }}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{- range $j, $w := slice $v.CSVData 1}}
+                    <tr>
+                        {{- range $k, $x := $w}}
+                        <td>{{$x}}</td>
+                        {{- end }}
+                    </tr>
+                    {{- end }}
+                </tbody>
+            </table>
+        </div>
+        {{- end }}
+    {{- end }}
 </body>
 
 </html> 

@@ -22,10 +22,6 @@ type Tab struct {
 
 // Close releases the resources of the current browser tab
 func (t *Tab) Close(logger log.Logger) {
-	if t.cancel != nil {
-		t.cancel()
-	}
-
 	if t.ctx != nil {
 		var err error
 
@@ -37,13 +33,20 @@ func (t *Tab) Close(logger log.Logger) {
 		if err = chromedp.Cancel(t.ctx); err != nil {
 			logger.Error("got error from cancel tab context", "error", err)
 		}
+
+		if t.cancel != nil {
+			t.cancel()
+		}
 	}
 }
 
 // NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page
 func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string) error {
-	// network.SetBlockedURLS([]string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}),
-	err := t.Run(enableLifeCycleEvents())
+	err := t.Run(
+		// block some URLs to avoid unnecessary requests
+		network.SetBlockedURLS([]string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}),
+		enableLifeCycleEvents(),
+	)
 	if err != nil {
 		return fmt.Errorf("error enable lifecycle events: %w", err)
 	}

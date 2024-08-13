@@ -65,7 +65,7 @@ type PanelImage struct {
 	MimeType string
 }
 
-type CSVData string
+type CSVData [][]string
 
 // IsSingleStat returns true if panel is of type SingleStat
 func (p Panel) IsSingleStat() bool {
@@ -335,17 +335,22 @@ func filterPanels(panels []Panel, config config.Config) []Panel {
 
 	// Iterate over all panels and check if they should be included or not
 	var filteredPanels []Panel
+	var filteredPanelIDs []int
+
 	for _, panel := range panels {
 		if len(config.IncludePanelIDs) > 0 && slices.Contains(config.IncludePanelIDs, panel.ID) &&
-			!slices.Contains(filteredPanels, panel) {
+			!slices.Contains(filteredPanelIDs, panel.ID) {
+			filteredPanelIDs = append(filteredPanelIDs, panel.ID)
 			filteredPanels = append(filteredPanels, panel)
 		}
 
 		if len(config.ExcludePanelIDs) > 0 && !slices.Contains(config.ExcludePanelIDs, panel.ID) &&
-			!slices.Contains(filteredPanels, panel) {
+			!slices.Contains(filteredPanelIDs, panel.ID) {
+			filteredPanelIDs = append(filteredPanelIDs, panel.ID)
 			filteredPanels = append(filteredPanels, panel)
 		}
 	}
+
 	return filteredPanels
 }
 

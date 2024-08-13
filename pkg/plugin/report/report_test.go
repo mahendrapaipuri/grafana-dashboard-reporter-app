@@ -55,6 +55,15 @@ func (m *mockGrafanaClient) PanelPNG(
 	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MimeType: "image/png"}, nil
 }
 
+func (m *mockGrafanaClient) PanelCSV(
+	_ context.Context,
+	_ string,
+	_ dashboard.Panel,
+	_ dashboard.TimeRange,
+) (dashboard.CSVData, error) {
+	return [][]string{}, nil
+}
+
 func TestReport(t *testing.T) {
 	Convey("When generating a PDF", t, func() {
 		ctx, cancel := context.WithCancel(context.Background())
@@ -156,6 +165,15 @@ func (e *errClient) PanelPNG(
 	}
 
 	return dashboard.PanelImage{Image: "iVBORw0KGgofsdfsdfsdf", MimeType: "image/png"}, nil
+}
+
+func (m *errClient) PanelCSV(
+	_ context.Context,
+	_ string,
+	_ dashboard.Panel,
+	_ dashboard.TimeRange,
+) (dashboard.CSVData, error) {
+	return [][]string{}, nil
 }
 
 func TestReportErrorHandling(t *testing.T) {
