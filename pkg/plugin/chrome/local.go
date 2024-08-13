@@ -57,8 +57,12 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	// start a browser (and an empty tab) so we can add more tabs to the browser
 	chromeLogger := logger.With("subsystem", "chromium")
 	browserCtx, _ := chromedp.NewContext(allocCtx,
-		chromedp.WithErrorf(chromeLogger.Error),
-		chromedp.WithLogf(chromeLogger.Debug),
+		chromedp.WithErrorf(func(s string, i ...interface{}) {
+			chromeLogger.Error(fmt.Sprintf(s, i...))
+		}),
+		chromedp.WithLogf(func(s string, i ...interface{}) {
+			chromeLogger.Debug(fmt.Sprintf(s, i...))
+		}),
 	)
 
 	if err := chromedp.Run(browserCtx); err != nil {

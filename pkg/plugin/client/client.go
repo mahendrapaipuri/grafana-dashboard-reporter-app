@@ -12,6 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto/browser"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
@@ -39,6 +43,7 @@ var getPanelRetrySleepTime = time.Duration(10) * time.Second
 type Grafana interface {
 	Dashboard(ctx context.Context, dashUID string) (dashboard.Dashboard, error)
 	PanelPNG(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (dashboard.PanelImage, error)
+	PanelCSV(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (dashboard.CSVData, error)
 }
 
 type Credential struct {
@@ -185,6 +190,8 @@ func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 	// Get dashboard URL
 	dashURL := fmt.Sprintf("%s/d/%s/_?%s", g.appURL, dashUID, g.queryParams.Encode())
 
+	g.logger.Debug("Navigating to dashboard via browser", "url", dashURL)
+
 	// Create a new tab
 	tab := g.chromeInstance.NewTab(g.logger, g.conf)
 	defer tab.Close(g.logger)
@@ -227,7 +234,7 @@ func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 }
 
 func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (dashboard.PanelImage, error) {
-	panelURL := g.getPanelURL(p, dashUID, t)
+	panelURL := g.getPanelPNGURL(p, dashUID, t)
 
 	// Create a new request for panel
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, panelURL, nil)
@@ -288,7 +295,7 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 	}, nil
 }
 
-func (g GrafanaClient) getPanelURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {
+func (g GrafanaClient) getPanelPNGURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {
 	values := url.Values{}
 	values.Add("theme", g.conf.Theme)
 	values.Add("panelId", strconv.Itoa(p.ID))
@@ -320,4 +327,127 @@ func (g GrafanaClient) getPanelURL(p dashboard.Panel, dashUID string, t dashboar
 
 	// Get Panel API endpoint
 	return fmt.Sprintf("%s/render/d-solo/%s/_?%s", g.appURL, dashUID, values.Encode())
+}
+
+func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (dashboard.CSVData, error) {
+	panelURL := g.getPanelCSVURL(p, dashUID, t)
+	// Create a new tab
+	tab := g.chromeInstance.NewTab(g.logger, g.conf)
+	tab.WithTimeout(300 * time.Second)
+	defer tab.Close(g.logger)
+
+	var headers map[string]any
+	if g.credential.HeaderName != "" {
+		headers = map[string]any{
+			g.credential.HeaderName: g.credential.HeaderValue,
+		}
+	}
+
+	g.logger.Debug("Navigating to dashboard via browser", "url", panelURL)
+
+	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle")
+	if err != nil {
+		return "", fmt.Errorf("NavigateAndWaitFor: %w", err)
+	}
+
+	// this will be used to capture the request id for matching network events
+	var requestID network.RequestID
+
+	// set up a channel, so we can block later while we monitor the download
+	// progress
+	errCh := make(chan error, 1)
+
+	go func() {
+		// set up a listener to watch the network events and close the channel when
+		// complete the request id matching is important both to filter out
+		// unwanted network events and to reference the downloaded file later
+		chromedp.ListenTarget(tab.Context(), func(v interface{}) {
+			switch ev := v.(type) {
+			case *network.EventRequestWillBeSent:
+				g.logger.Debug(fmt.Sprintf("EventRequestWillBeSent: %v: %v", ev.RequestID, ev.Request.URL))
+				if ev.Request.URL == "" {
+					requestID = ev.RequestID
+				}
+			case *network.EventLoadingFinished:
+				g.logger.Debug(fmt.Sprintf("EventLoadingFinished: %v", ev.RequestID))
+				if ev.RequestID == requestID {
+					close(errCh)
+				}
+			case *browser.EventDownloadProgress:
+				completed := "(unknown)"
+				if ev.TotalBytes != 0 {
+					completed = fmt.Sprintf("%0.2f%%", ev.ReceivedBytes/ev.TotalBytes*100.0)
+				}
+				g.logger.Debug(fmt.Sprintf("state: %s, completed: %s", ev.State.String(), completed))
+				if ev.State == browser.DownloadProgressStateCompleted {
+					// Done
+				}
+			}
+		})
+
+		tasks := chromedp.Tasks{
+			browser.
+				SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).
+				WithDownloadPath("/root/mahendrapaipuri-dashboardreporter-app/").
+				WithEventsEnabled(true),
+			chromedp.WaitVisible(`div[aria-label="Panel inspector Data content"] button[type="button"][aria-disabled="false"]`, chromedp.ByQuery),
+			chromedp.Click(`div[role='dialog'] button[aria-expanded=false]`, chromedp.ByQuery),
+			chromedp.QueryAfter(`div[data-testid="dataOptions"] input:not(#excel-toggle):not(#formatted-data-toggle) + label`, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+				if len(nodes) == 0 {
+					return nil
+				}
+
+				return chromedp.MouseClickNode(nodes[0]).Do(ctx)
+			}, chromedp.NodeVisible, chromedp.ByQuery),
+			chromedp.Click(`div[aria-label="Panel inspector Data content"] button[type="button"][aria-disabled="false"]`, chromedp.ByQuery),
+			chromedp.Sleep(10 * time.Second),
+		}
+
+		if err := tab.Run(tasks); err != nil {
+			errCh <- fmt.Errorf("error fetching dashboard URL from browser %s: %w", panelURL, err)
+		}
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return "", err
+		}
+	case <-tab.Context().Done():
+		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, tab.Context().Err())
+	}
+
+	// get the downloaded bytes for the request id
+	var buf []byte
+	if err := tab.Run(chromedp.ActionFunc(func(ctx context.Context) error {
+		var err error
+
+		buf, err = network.GetResponseBody(requestID).Do(ctx)
+
+		return err
+	})); err != nil {
+		return "", fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
+	}
+
+	return dashboard.CSVData(buf), nil
+}
+
+func (g GrafanaClient) getPanelCSVURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {
+	values := url.Values{}
+	values.Add("theme", g.conf.Theme)
+	values.Add("viewPanel", strconv.Itoa(p.ID))
+	values.Add("from", t.From)
+	values.Add("to", t.To)
+	values.Add("inspect", strconv.Itoa(p.ID))
+	values.Add("inspectTab", "data")
+
+	// Add templated queryParams to URL
+	for k, v := range g.queryParams {
+		for _, singleValue := range v {
+			values.Add(k, singleValue)
+		}
+	}
+
+	// Get Panel API endpoint
+	return fmt.Sprintf("%s/d/%s/_?%s", g.appURL, dashUID, values.Encode())
 }

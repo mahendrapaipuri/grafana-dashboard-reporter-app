@@ -57,12 +57,15 @@ type Panel struct {
 	Title        string  `json:"title"`
 	GridPos      GridPos `json:"gridPos"`
 	EncodedImage PanelImage
+	CSVData      CSVData
 }
 
 type PanelImage struct {
 	Image    string
 	MimeType string
 }
+
+type CSVData string
 
 // IsSingleStat returns true if panel is of type SingleStat
 func (p Panel) IsSingleStat() bool {
@@ -138,7 +141,7 @@ func New(log log.Logger, config config.Config, dashJSON []byte, dashData []inter
 	// return
 	var panels []Panel
 	var err error
-	if panels, err = panelsFromBrowser(dashData); err != nil {
+	if panels, err = panelsFromBrowser(dashboard.RowOrPanels, dashData); err != nil {
 		log.Warn("failed to get panels from browser data", "error", err)
 		// If we fail to get panels from browser data, get them from dashboard JSON model
 		// and correct grid positions
@@ -154,7 +157,7 @@ func New(log log.Logger, config config.Config, dashJSON []byte, dashData []inter
 }
 
 // panelsFromBrowser creates slice of panels from the data fetched from browser's DOM model
-func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
+func panelsFromBrowser(rowOrPanels []RowOrPanel, dashData []interface{}) ([]Panel, error) {
 	// If dashData is nil return
 	if dashData == nil || len(dashData) == 0 {
 		return nil, fmt.Errorf("browser: %w", ErrNoDashboardData)
@@ -163,6 +166,7 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	var (
 		allErrs error
 		err     error
+		panel   Panel
 		panels  []Panel
 	)
 
@@ -170,19 +174,25 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	for _, p := range dashData {
 		var id, x, y, w, h, vInt, xInt, yInt int
 		for k, v := range p.(map[string]interface{}) {
+			value, ok := v.(string)
+			if !ok {
+				allErrs = errors.Join(errors.New("failed to assert value as string"), allErrs)
+				continue
+			}
+
 			switch k {
 			case "width":
-				if vInt, err = strconv.Atoi(strings.TrimSuffix(v.(string), "px")); err != nil {
+				if vInt, err = strconv.Atoi(strings.TrimSuffix(value, "px")); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
 				w = vInt / scales[k]
 			case "height":
-				if vInt, err = strconv.Atoi(strings.TrimSuffix(v.(string), "px")); err != nil {
+				if vInt, err = strconv.Atoi(strings.TrimSuffix(value, "px")); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
 				h = vInt / scales[k]
 			case "transform":
-				matches := translateRegex.FindStringSubmatch(v.(string))
+				matches := translateRegex.FindStringSubmatch(value)
 				if len(matches) == 3 {
 					xCoord := matches[translateRegex.SubexpIndex("X")]
 					if xInt, err = strconv.Atoi(xCoord); err != nil {
@@ -200,7 +210,7 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 					allErrs = errors.Join(errors.New("failed to capture X and Y coordinate regex groups"), allErrs)
 				}
 			case "id":
-				if id, err = strconv.Atoi(v.(string)); err != nil {
+				if id, err = strconv.Atoi(value); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
 			}
@@ -211,23 +221,30 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 			continue
 		}
 
+		panel, err = getPanelByID(id, rowOrPanels)
+		if err != nil {
+			allErrs = errors.Join(err, allErrs)
+			continue
+		}
+
+		panel.GridPos = GridPos{
+			X: float64(x),
+			Y: float64(y),
+			H: float64(h),
+			W: float64(w),
+		}
+
 		// Create panel model and append to panels
-		panels = append(panels, Panel{
-			ID: id,
-			GridPos: GridPos{
-				X: float64(x),
-				Y: float64(y),
-				H: float64(h),
-				W: float64(w),
-			},
-		})
+		panels = append(panels, panel)
 	}
 
 	// Check if we fetched any panels
 	if len(panels) == 0 {
 		allErrs = errors.Join(err, ErrNoPanels)
+
 		return nil, allErrs
 	}
+
 	return panels, allErrs
 }
 
@@ -286,6 +303,26 @@ func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 		panels = append(panels, p.Panel)
 	}
 	return panels
+}
+
+// panelsFromJSON makes panels from dashboard JSON model by uncollapsing and correcting
+// grid positions for all row panels when dashboardMode is full
+func getPanelByID(panelID int, rowOrPanels []RowOrPanel) (Panel, error) {
+	for _, p := range rowOrPanels {
+		if p.Type == "row" {
+			for _, rp := range p.Panels {
+				if rp.ID == panelID {
+					return rp, nil
+				}
+			}
+		} else {
+			if p.ID == panelID {
+				return p.Panel, nil
+			}
+		}
+	}
+
+	return Panel{}, fmt.Errorf("panel with ID %d not found", panelID)
 }
 
 // filterPanels filters the panels based on IncludePanelIDs and ExcludePanelIDs

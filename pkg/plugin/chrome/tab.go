@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
@@ -15,11 +16,16 @@ import (
 
 // Tab is container for a browser tab
 type Tab struct {
-	ctx context.Context
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // Close releases the resources of the current browser tab
 func (t *Tab) Close(logger log.Logger) {
+	if t.cancel != nil {
+		t.cancel()
+	}
+
 	if t.ctx != nil {
 		var err error
 
@@ -36,6 +42,7 @@ func (t *Tab) Close(logger log.Logger) {
 
 // NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page
 func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string) error {
+	// network.SetBlockedURLS([]string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}),
 	err := t.Run(enableLifeCycleEvents())
 	if err != nil {
 		return fmt.Errorf("error enable lifecycle events: %w", err)
@@ -65,9 +72,14 @@ func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName 
 	return nil
 }
 
+// WithTimeout set the timeout for the actions in the current tab
+func (t *Tab) WithTimeout(timeout time.Duration) {
+	t.ctx, t.cancel = context.WithTimeout(t.ctx, timeout)
+}
+
 // Run executes the actions in the current tab
-func (t *Tab) Run(actions chromedp.Action) error {
-	return chromedp.Run(t.ctx, actions)
+func (t *Tab) Run(actions ...chromedp.Action) error {
+	return chromedp.Run(t.ctx, actions...)
 }
 
 // Context returns the current tab's context

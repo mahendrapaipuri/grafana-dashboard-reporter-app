@@ -1,6 +1,8 @@
 package chrome
 
 import (
+	"fmt"
+
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
@@ -29,8 +31,12 @@ func (i *RemoteInstance) Name() string {
 func (i *RemoteInstance) NewTab(logger log.Logger, _ config.Config) *Tab {
 	chromeLogger := logger.With("subsystem", "chromium")
 	browserCtx, _ := chromedp.NewContext(i.allocCtx,
-		chromedp.WithErrorf(chromeLogger.Error),
-		chromedp.WithLogf(chromeLogger.Debug),
+		chromedp.WithErrorf(func(s string, i ...interface{}) {
+			chromeLogger.Error(fmt.Sprintf(s, i...))
+		}),
+		chromedp.WithLogf(func(s string, i ...interface{}) {
+			chromeLogger.Debug(fmt.Sprintf(s, i...))
+		}),
 	)
 
 	return &Tab{
