@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
+	"github.com/grafana/authlib/authz"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -30,7 +32,11 @@ var (
 // App is the backend plugin which can respond to api queries.
 type App struct {
 	backend.CallResourceHandler
-	httpClient *http.Client
+	httpClient  *http.Client
+	authzClient authz.EnforcementClient
+	mx          sync.Mutex
+
+	saToken string
 
 	conf config.Config
 
