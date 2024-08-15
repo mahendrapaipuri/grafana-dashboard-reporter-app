@@ -13,15 +13,31 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Grafana v10
+          # Grafana v10 with user cookie and with feature flags although they are not
+          # available in Grafana. Plugin should skip checks based on feature flags
+          - grafana-version: 10.3.0
+            remote-chrome-url: ''
+            snapshots-folder: local-chrome-10.3.0
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+
+          # Grafana v10 without user cookie and feature flags
           - grafana-version: 10.4.5
             remote-chrome-url: ''
-            snapshots-folder: local-chrome
+            snapshots-folder: local-chrome-10.4.5
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
 
-          # Grafana v11
+          # Grafana v10 without user cookie and feature flags for only service accounts.
+          # In this case Grafana should skip access control checks
+          - grafana-version: 10.4.5
+            remote-chrome-url: ws://localhost:9222
+            snapshots-folder: remote-chrome-10.4.5
+            feature-flags: 'externalServiceAccounts'
+
+          # Latest Grafana with remote chrome
           - grafana-version: 11.1.0
             remote-chrome-url: ws://localhost:9222
-            snapshots-folder: remote-chrome
+            snapshots-folder: remote-chrome-11.1.0
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
 
     steps:
       - uses: actions/checkout@v4

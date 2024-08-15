@@ -32,4 +32,9 @@ test("should be possible to save app configuration", async ({
 
   await saveButton.click();
   await expect(saveResponse).toBeOK();
+
+  // Reset the configured token and save settings
+  await resetButton.click();
+  await saveButton.click();
+  await expect(saveResponse).toBeOK();
 });

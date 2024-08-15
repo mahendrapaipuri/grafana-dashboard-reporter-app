@@ -10,10 +10,6 @@ const pluginE2eAuth = `${dirname(require.resolve("@grafana/plugin-e2e"))}/auth`;
  */
 // require('dotenv').config();
 
-// Auth header
-const btoa = (str: string) => Buffer.from(str).toString("base64");
-const credentialsBase64 = btoa(`admin:admin`);
-
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -41,8 +37,13 @@ export default defineConfig<PluginOptions>({
     ignoreHTTPSErrors: true,
 
     /* Auth */
-    extraHTTPHeaders: {
-      Authorization: `Basic ${credentialsBase64}`,
+    grafanaAPICredentials: {
+      user: "admin",
+      password: "admin",
+    },
+    httpCredentials: {
+      username: "admin",
+      password: "admin",
     },
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
@@ -52,21 +53,53 @@ export default defineConfig<PluginOptions>({
 
   /* Configure projects for major browsers */
   projects: [
-    // Plain without TLS
+    // Login to Grafana with admin user and store the cookie on disk for use in other tests
+    {
+      name: "authenticate",
+      testDir: "./tests/setup",
+      testMatch: [/.*auth\.setup\.ts/],
+      use: {
+        baseURL: `http://localhost:3080`,
+        user: {
+          user: "admin",
+          password: "admin",
+        },
+      },
+    },
+    // Login to Grafana with new user with viewer role and store the cookie on disk for use in other tests
+    {
+      name: "createUserAndAuthenticate",
+      testDir: "./tests/setup",
+      testMatch: [/.*auth\.setup\.ts/],
+      use: {
+        baseURL: `https://localhost:3443`,
+        user: {
+          user: "viewer",
+          password: "password",
+          role: "Viewer",
+        },
+      },
+    },
+    // Plain without TLS and using admin user
     {
       name: "plain",
       use: {
         ...devices["Desktop Chrome"],
         baseURL: `http://localhost:3080`,
+        storageState: "playwright/.auth/admin.json",
       },
+      dependencies: ["authenticate"],
     },
-    // With TLS
+    // With TLS and using user with Viewer role
     {
       name: "tls",
+      testIgnore: /appConfig\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: `https://localhost:3443`,
+        storageState: "playwright/.auth/viewer.json",
       },
+      dependencies: ["createUserAndAuthenticate"],
     },
   ],
 });

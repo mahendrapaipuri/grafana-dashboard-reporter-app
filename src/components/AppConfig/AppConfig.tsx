@@ -18,7 +18,7 @@ import {
   PluginMeta,
   GrafanaTheme2,
 } from "@grafana/data";
-import { FetchResponse, getBackendSrv } from "@grafana/runtime";
+import { getBackendSrv } from "@grafana/runtime";
 import { testIds } from "../testIds";
 
 export type JsonData = {
@@ -86,6 +86,8 @@ type State = {
   isSaTokenSet: boolean;
   // A Service account's token used to make requests to Grafana API.
   saToken: string;
+  // If the service has been reset
+  isSaTokenReset: boolean;
 };
 
 interface Props extends PluginConfigPageProps<AppPluginMeta<JsonData>> {}
@@ -118,9 +120,8 @@ export const AppConfig = ({ plugin }: Props) => {
     remoteChromeUrlChanged: false,
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
+    isSaTokenReset: false,
   });
-
-  console.log("QQQQ", jsonData);
 
   const themeOptions = [
     { label: "Light", value: "light" },
@@ -235,6 +236,7 @@ export const AppConfig = ({ plugin }: Props) => {
       ...state,
       saToken: "",
       isSaTokenSet: false,
+      isSaTokenReset: true,
     });
 
   const onChangeSaToken = (event: ChangeEvent<HTMLInputElement>) => {
@@ -576,8 +578,8 @@ export const AppConfig = ({ plugin }: Props) => {
             })
           }
           disabled={Boolean(
-            !state.appUrl &&
-              !state.skipTlsCheck &&
+            !state.appUrlChanged &&
+              !state.skipTlsCheckChanged &&
               !state.themeChanged &&
               !state.layoutChanged &&
               !state.orientationChanged &&
@@ -586,7 +588,8 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.logoChanged &&
               !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
-              !state.remoteChromeUrl &&
+              !state.remoteChromeUrlChanged &&
+              !state.isSaTokenReset &&
               !state.saToken
           )}
         >
@@ -618,12 +621,19 @@ const getStyles = (theme: GrafanaTheme2) => ({
   }),
 });
 
-const updatePluginAndReload = async (pluginId: string, data: Partial<PluginMeta<JsonData>>) => {
-  await updatePlugin(pluginId, data).then((response: FetchResponse) => {
-    if (!response.ok) {
-      throw response.data;
-    }
-  });
+const updatePluginAndReload = async (
+  pluginId: string,
+  data: Partial<PluginMeta<JsonData>>
+) => {
+  try {
+    await updatePlugin(pluginId, data);
+
+    // Reloading the page as the changes made here wouldn't be propagated to the actual plugin otherwise.
+    // This is not ideal, however unfortunately currently there is no supported way for updating the plugin state.
+    window.location.reload();
+  } catch (e) {
+    console.error("Error while updating the plugin", e);
+  }
 };
 
 export const updatePlugin = async (pluginId: string, data: Partial<PluginMeta>) => {
