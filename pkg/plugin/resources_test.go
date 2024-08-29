@@ -20,13 +20,14 @@ type mockCallResourceResponseSender struct {
 	response *backend.CallResourceResponse
 }
 
-// Send sets the received *backend.CallResourceResponse to s.response
+// Send sets the received *backend.CallResourceResponse to s.response.
 func (s *mockCallResourceResponseSender) Send(response *backend.CallResourceResponse) error {
 	s.response = response
+
 	return nil
 }
 
-// Test report resource
+// Test report resource.
 func TestReportResource(t *testing.T) {
 	var execPath string
 

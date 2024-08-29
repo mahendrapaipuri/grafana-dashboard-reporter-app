@@ -34,13 +34,13 @@ type App struct {
 	backend.CallResourceHandler
 
 	grafanaSemVer string
-	httpClient  *http.Client
+	httpClient    *http.Client
 
 	authzClient authz.EnforcementClient
 	mx          sync.Mutex
 
 	saToken string
-	conf config.Config
+	conf    config.Config
 
 	workerPools    worker.Pools
 	chromeInstance chrome.Instance
@@ -72,7 +72,7 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 		return nil, fmt.Errorf("error loading config: %w", err)
 	}
 
-	app.ctxLogger.Info(fmt.Sprintf("starting plugin with initial config: %s", app.conf.String()))
+	app.ctxLogger.Info("starting plugin with initial config: " + app.conf.String())
 
 	// Make a new HTTP client
 	if app.httpClient, err = httpclient.New(app.conf.HTTPClientOptions); err != nil {

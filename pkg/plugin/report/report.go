@@ -25,7 +25,7 @@ import (
 //go:embed templates
 var templateFS embed.FS
 
-// Base64 content signatures
+// Base64 content signatures.
 var popularSignatures = map[string]string{
 	"JVBERi0":     "application/pdf",
 	"R0lGODdh":    "image/gif",
@@ -40,7 +40,7 @@ type Report interface {
 	Generate(ctx context.Context) ([]byte, error)
 }
 
-// Options contains Report options
+// Options contains Report options.
 type Options struct {
 	DashUID     string
 	Layout      string
@@ -48,7 +48,7 @@ type Options struct {
 	TimeRange   dashboard.TimeRange
 }
 
-// Location of time zone
+// Location of time zone.
 func (o Options) location(timeZone string) *time.Location {
 	if location, err := time.LoadLocation(timeZone); err != nil {
 		return time.Now().Local().Location()
@@ -57,7 +57,7 @@ func (o Options) location(timeZone string) *time.Location {
 	}
 }
 
-// Data structures used inside HTML template
+// Data structures used inside HTML template.
 type templateData struct {
 	Options
 	Date string
@@ -66,42 +66,43 @@ type templateData struct {
 	Conf      config.Config
 }
 
-// IsGridLayout returns true if layout config is grid
+// IsGridLayout returns true if layout config is grid.
 func (t templateData) IsGridLayout() bool {
 	return t.Conf.Layout == "grid"
 }
 
-// From returns from time string
+// From returns from time string.
 func (t templateData) From() string {
 	return t.TimeRange.FromFormatted(t.location(t.Conf.TimeZone))
 }
 
-// To returns to time string
+// To returns to time string.
 func (t templateData) To() string {
 	return t.TimeRange.ToFormatted(t.location(t.Conf.TimeZone))
 }
 
-// Logo returns encoded logo
+// Logo returns encoded logo.
 func (t templateData) Logo() string {
 	// If dataURI is passed in format data:image/png;base64,<content> strip header
 	parts := strings.Split(t.Conf.EncodedLogo, ",")
 	if len(parts) == 2 {
 		return parts[1]
 	}
+
 	return t.Conf.EncodedLogo
 }
 
-// Panels returns dashboard's panels
+// Panels returns dashboard's panels.
 func (t templateData) Panels() []dashboard.Panel {
 	return t.Dashboard.Panels
 }
 
-// Title returns dashboard's title
+// Title returns dashboard's title.
 func (t templateData) Title() string {
 	return t.Dashboard.Title
 }
 
-// VariableValues returns dashboards query variables
+// VariableValues returns dashboards query variables.
 func (t templateData) VariableValues() string {
 	return t.Dashboard.VariableValues
 }
@@ -157,7 +158,7 @@ func (r *PDF) fetchDashboard(ctx context.Context) error {
 
 // Generate returns the PDF.pdf file.
 // After reading this file, it should be Closed()
-// After closing the file, call PDF.Clean() to delete the file as well the temporary build files
+// After closing the file, call PDF.Clean() to delete the file as well the temporary build files.
 func (r *PDF) Generate(ctx context.Context, writer io.Writer) error {
 	var err error
 
@@ -189,12 +190,12 @@ func (r *PDF) Generate(ctx context.Context, writer io.Writer) error {
 	return nil
 }
 
-// Title returns the dashboard title parsed from the dashboard definition
+// Title returns the dashboard title parsed from the dashboard definition.
 func (r *PDF) Title() string {
 	return r.grafanaDashboard.Title
 }
 
-// renderPNGsParallel renders panel PNGs in parallel using configured number of workers
+// renderPNGsParallel renders panel PNGs in parallel using configured number of workers.
 func (r *PDF) renderPNGsParallel(ctx context.Context) error {
 	numPanels := len(r.grafanaDashboard.Panels)
 	errs := make(chan error, numPanels)
@@ -224,15 +225,15 @@ func (r *PDF) renderPNGsParallel(ctx context.Context) error {
 	return nil
 }
 
-// renderPNG renders a single panel into PNG
+// renderPNG renders a single panel into PNG.
 func (r *PDF) renderPNG(ctx context.Context, iPanel int) error {
 	var err error
+
 	r.grafanaDashboard.Panels[iPanel].EncodedImage, err = r.client.PanelPNG(ctx,
 		r.options.DashUID,
 		r.grafanaDashboard.Panels[iPanel],
 		r.options.TimeRange,
 	)
-
 	if err != nil {
 		return fmt.Errorf("error getting panel %s: %w", r.grafanaDashboard.Panels[iPanel].Title, err)
 	}
@@ -240,9 +241,10 @@ func (r *PDF) renderPNG(ctx context.Context, iPanel int) error {
 	return nil
 }
 
-// generateHTMLFile generates HTML files for PDF
+// generateHTMLFile generates HTML files for PDF.
 func (r *PDF) generateHTMLFile() error {
 	var tmpl *template.Template
+
 	var err error
 
 	// Template functions
@@ -259,14 +261,15 @@ func (r *PDF) generateHTMLFile() error {
 		"embed": func(base64Content string) template.URL {
 			for signature, mimeType := range popularSignatures {
 				if strings.HasPrefix(base64Content, signature) {
-					return template.URL(fmt.Sprintf("data:%s;base64,%s", mimeType, base64Content))
+					return template.URL(template.HTMLEscapeString(fmt.Sprintf("data:%s;base64,%s", mimeType, base64Content))) //nolint:gosec
 				}
 			}
-			return template.URL(base64Content)
+
+			return template.URL(template.HTMLEscapeString(base64Content)) //nolint:gosec
 		},
 
 		"url": func(url string) template.URL {
-			return template.URL(url)
+			return template.URL(template.HTMLEscapeString(url)) //nolint:gosec
 		},
 	}
 
@@ -286,8 +289,9 @@ func (r *PDF) generateHTMLFile() error {
 	// Render the template for Body of the PDF
 	bufBody := &bytes.Buffer{}
 	if err = tmpl.ExecuteTemplate(bufBody, "report.gohtml", data); err != nil {
-		return fmt.Errorf("error executing PDF template: %v", err)
+		return fmt.Errorf("error executing PDF template: %w", err)
 	}
+
 	r.pdfOptions.Body = bufBody.String()
 
 	// Make a new template for Header of the PDF
@@ -300,6 +304,7 @@ func (r *PDF) generateHTMLFile() error {
 	if err = tmpl.ExecuteTemplate(bufHeader, "header.gohtml", data); err != nil {
 		return fmt.Errorf("error executing Header template: %w", err)
 	}
+
 	r.pdfOptions.Header = bufHeader.String()
 
 	// Make a new template for Footer of the PDF
@@ -312,19 +317,19 @@ func (r *PDF) generateHTMLFile() error {
 	if err = tmpl.ExecuteTemplate(bufFooter, "footer.gohtml", data); err != nil {
 		return fmt.Errorf("error executing Footer template: %w", err)
 	}
+
 	r.pdfOptions.Footer = bufFooter.String()
 
 	return nil
 }
 
-// renderPDF renders HTML page into PDF using Chromium
+// renderPDF renders HTML page into PDF using Chromium.
 func (r *PDF) renderPDF(_ context.Context, writer io.Writer) error {
 	// Create a new tab
 	tab := r.chromeInstance.NewTab(r.logger, r.conf)
 	defer tab.Close(r.logger)
 
 	err := tab.PrintToPDF(r.pdfOptions, writer)
-
 	if err != nil {
 		return fmt.Errorf("error rendering PDF: %w", err)
 	}

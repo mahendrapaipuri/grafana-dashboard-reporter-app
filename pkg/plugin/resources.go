@@ -24,25 +24,25 @@ import (
 // GrafanaUserSignInTokenHeaderName the header name used for forwarding
 // the SignIn token of a Grafana User.
 // Requires idForwarded feature toggle enabled.
-const GrafanaUserSignInTokenHeaderName = "X-Grafana-Id"
+const GrafanaUserSignInTokenHeaderName = "X-Grafana-Id" //nolint:gosec
 
-// Required feature flags
+// Required feature flags.
 const (
 	accessControlFeatureFlag = "accessControlOnCall" // added in Grafana 10.4.0
 	idForwardingFlag         = "idForwarding"        // added in Grafana 10.3.0
 )
 
-// Add filename to Header
+// Add filename to Header.
 func addFilenameHeader(w http.ResponseWriter, title string) {
 	// Sanitize title to escape non ASCII characters
 	// Ref: https://stackoverflow.com/questions/62705546/unicode-characters-in-attachment-name
 	// Ref: https://medium.com/@JeremyLaine/non-ascii-content-disposition-header-in-django-3a20acc05f0d
 	filename := url.PathEscape(title)
-	header := `inline; filename*=UTF-8''` + fmt.Sprintf("%s.pdf", filename)
+	header := `inline; filename*=UTF-8''` + filename + ".pdf"
 	w.Header().Add("Content-Disposition", header)
 }
 
-// Get dashboard variables via query parameters
+// Get dashboard variables via query parameters.
 func getDashboardVariables(r *http.Request) url.Values {
 	variables := url.Values{}
 
@@ -57,7 +57,7 @@ func getDashboardVariables(r *http.Request) url.Values {
 	return variables
 }
 
-// featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server
+// featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server.
 func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 	// If Grafana <= 10.4.3, we use cookies to make request. Moreover feature toggles are
 	// not available for these Grafana versions.
@@ -77,7 +77,7 @@ func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 }
 
 // grafanaAppURL returns the Grafana's App URL. User configured URL has higher
-// precedence than the App URL in the request's context
+// precedence than the App URL in the request's context.
 func (app *App) grafanaAppURL(grafanaConfig *backend.GrafanaCfg) (string, error) {
 	var grafanaAppURL string
 
@@ -95,7 +95,7 @@ func (app *App) grafanaAppURL(grafanaConfig *backend.GrafanaCfg) (string, error)
 	return strings.TrimSuffix(grafanaAppURL, "/"), nil
 }
 
-// HasAccess verifies if the current request context has access to certain action
+// HasAccess verifies if the current request context has access to certain action.
 func (app *App) HasAccess(req *http.Request, action string, resource authz.Resource) (bool, error) {
 	// Retrieve the id token
 	idToken := req.Header.Get(GrafanaUserSignInTokenHeaderName)
@@ -159,7 +159,7 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 	// Header "typ" has been added only in Grafana 11.1.0 (https://github.com/grafana/grafana/pull/87430)
 	// So this check will fail for Grafana < 11.1.0
 	// Set VerifierConfig{DisableTypHeaderCheck: true} for those cases
-	var disableTypHeaderCheck = false
+	disableTypHeaderCheck := false
 	if semver.Compare(app.grafanaSemVer, "v11.1.0") == -1 {
 		disableTypHeaderCheck = true
 	}
@@ -204,7 +204,7 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 }
 
 // handleReport handles creating a PDF report from a given dashboard UID
-// GET /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report
+// GET /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report.
 func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -339,13 +339,13 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	ctxLogger.Info(fmt.Sprintf("generate report using config: %s", conf.String()))
+	ctxLogger.Info("generate report using config: " + conf.String())
 
 	// credential is header name value pair that will be used in API requests
 	var credential client.Credential
 
 	switch {
-	// This case is irrevelant starting from Grafana 10.4.4.
+	// This case is irrelevant starting from Grafana 10.4.4.
 	// This commit https://github.com/grafana/grafana/commit/56a4af87d706087ea42780a79f8043df1b5bc3ea
 	// made changes to not forward the cookies to app plugins.
 	// So we will not be able to use cookies to make requests to Grafana to fetch

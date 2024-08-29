@@ -13,12 +13,12 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Tab is container for a browser tab
+// Tab is container for a browser tab.
 type Tab struct {
 	ctx context.Context
 }
 
-// Close releases the resources of the current browser tab
+// Close releases the resources of the current browser tab.
 func (t *Tab) Close(logger log.Logger) {
 	if t.ctx != nil {
 		var err error
@@ -34,7 +34,7 @@ func (t *Tab) Close(logger log.Logger) {
 	}
 }
 
-// NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page
+// NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page.
 func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string) error {
 	err := t.Run(enableLifeCycleEvents())
 	if err != nil {
@@ -65,17 +65,17 @@ func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName 
 	return nil
 }
 
-// Run executes the actions in the current tab
+// Run executes the actions in the current tab.
 func (t *Tab) Run(actions chromedp.Action) error {
 	return chromedp.Run(t.ctx, actions)
 }
 
-// Context returns the current tab's context
+// Context returns the current tab's context.
 func (t *Tab) Context() context.Context {
 	return t.ctx
 }
 
-// PrintToPDF returns chroms tasks that print the requested HTML into a PDF and returns the PDF stream handle
+// PrintToPDF returns chroms tasks that print the requested HTML into a PDF and returns the PDF stream handle.
 func (t *Tab) PrintToPDF(options PDFOptions, writer io.Writer) error {
 	err := chromedp.Run(t.ctx, chromedp.Tasks{
 		chromedp.Navigate("about:blank"),
@@ -128,7 +128,6 @@ func (t *Tab) PrintToPDF(options PDFOptions, writer io.Writer) error {
 			return nil
 		}),
 	})
-
 	if err != nil {
 		return fmt.Errorf("error rendering PDF: %w", err)
 	}

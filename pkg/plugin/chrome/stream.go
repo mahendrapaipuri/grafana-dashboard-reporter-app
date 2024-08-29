@@ -30,7 +30,7 @@ func NewStreamReader(ctx context.Context, handle cdprotoio.StreamHandle) io.Read
 }
 
 // Read a chunk of the stream.
-func (reader *streamReader) Read(p []byte) (n int, err error) {
+func (reader *streamReader) Read(p []byte) (int, error) {
 	if reader.r != nil {
 		// Continue reading from buffer.
 		return reader.read(p)
@@ -67,7 +67,7 @@ func (reader *streamReader) Read(p []byte) (n int, err error) {
 
 		// Safety-check for fast-path to avoid panics.
 		if len(p) >= size {
-			n, err = base64.StdEncoding.Decode(p, b)
+			n, err := base64.StdEncoding.Decode(p, b)
 			reader.pos += n
 
 			return n, err
@@ -107,8 +107,8 @@ func (reader *streamReader) next(pos, size int) (cdprotoio.ReadReturns, error) {
 	return res, fmt.Errorf("execute IO.read command: %w", err)
 }
 
-func (reader *streamReader) read(p []byte) (n int, err error) {
-	n, err = reader.r.Read(p)
+func (reader *streamReader) read(p []byte) (int, error) {
+	n, err := reader.r.Read(p)
 	reader.pos += n
 
 	if !reader.eof && err == io.EOF {
