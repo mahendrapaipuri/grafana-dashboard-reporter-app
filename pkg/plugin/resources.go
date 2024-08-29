@@ -24,9 +24,9 @@ import (
 // GrafanaUserSignInTokenHeaderName the header name used for forwarding
 // the SignIn token of a Grafana User.
 // Requires idForwarded feature toggle enabled.
-const GrafanaUserSignInTokenHeaderName = "X-Grafana-Id"
+const GrafanaUserSignInTokenHeaderName = "X-Grafana-Id" //nolint:gosec
 
-// Required feature flags
+// Required feature flags.
 const (
 	accessControlFeatureFlag = "accessControlOnCall" // added in Grafana 10.4.0
 	idForwardingFlag         = "idForwarding"        // added in Grafana 10.3.0
@@ -57,7 +57,7 @@ func getDashboardVariables(r *http.Request) url.Values {
 	return variables
 }
 
-// featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server
+// featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server.
 func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 	// If Grafana <= 10.4.3, we use cookies to make request. Moreover feature toggles are
 	// not available for these Grafana versions.
@@ -77,7 +77,7 @@ func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 }
 
 // grafanaAppURL returns the Grafana's App URL. User configured URL has higher
-// precedence than the App URL in the request's context
+// precedence than the App URL in the request's context.
 func (app *App) grafanaAppURL(grafanaConfig *backend.GrafanaCfg) (string, error) {
 	var grafanaAppURL string
 
@@ -95,7 +95,7 @@ func (app *App) grafanaAppURL(grafanaConfig *backend.GrafanaCfg) (string, error)
 	return strings.TrimSuffix(grafanaAppURL, "/"), nil
 }
 
-// HasAccess verifies if the current request context has access to certain action
+// HasAccess verifies if the current request context has access to certain action.
 func (app *App) HasAccess(req *http.Request, action string, resource authz.Resource) (bool, error) {
 	// Retrieve the id token
 	idToken := req.Header.Get(GrafanaUserSignInTokenHeaderName)
@@ -159,7 +159,7 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 	// Header "typ" has been added only in Grafana 11.1.0 (https://github.com/grafana/grafana/pull/87430)
 	// So this check will fail for Grafana < 11.1.0
 	// Set VerifierConfig{DisableTypHeaderCheck: true} for those cases
-	var disableTypHeaderCheck = false
+	disableTypHeaderCheck := false
 	if semver.Compare(app.grafanaSemVer, "v11.1.0") == -1 {
 		disableTypHeaderCheck = true
 	}

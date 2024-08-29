@@ -34,13 +34,13 @@ type App struct {
 	backend.CallResourceHandler
 
 	grafanaSemVer string
-	httpClient  *http.Client
+	httpClient    *http.Client
 
 	authzClient authz.EnforcementClient
 	mx          sync.Mutex
 
 	saToken string
-	conf config.Config
+	conf    config.Config
 
 	workerPools    worker.Pools
 	chromeInstance chrome.Instance
