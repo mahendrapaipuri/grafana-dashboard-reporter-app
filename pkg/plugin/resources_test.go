@@ -29,6 +29,7 @@ func (s *mockCallResourceResponseSender) Send(response *backend.CallResourceResp
 // Test report resource
 func TestReportResource(t *testing.T) {
 	var execPath string
+
 	locations := []string{
 		// Mac
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -52,7 +53,7 @@ func TestReportResource(t *testing.T) {
 	if execPath == "" {
 		t.Skip("Chrome not found. Skipping test")
 	}
-	
+
 	// Initialize app
 	inst, err := NewDashboardReporterApp(context.Background(), backend.AppInstanceSettings{
 		DecryptedSecureJSONData: map[string]string{
@@ -62,9 +63,11 @@ func TestReportResource(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new app: %s", err)
 	}
+
 	if inst == nil {
 		t.Fatal("inst must not be nil")
 	}
+
 	app, ok := inst.(*App)
 	if !ok {
 		t.Fatal("inst must be of type *App")
@@ -102,6 +105,7 @@ func TestReportResource(t *testing.T) {
 				Method: http.MethodGet,
 				Path:   "report?dashUid=testDash",
 			}, &r)
+
 			So(repDashName, ShouldEqual, "testDash")
 		})
 

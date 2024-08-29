@@ -10,13 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/grafana/authlib/authz"
-	"github.com/grafana/authlib/cache"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/mahendrapaipuri/authlib/authn"
+	"github.com/mahendrapaipuri/authlib/authz"
+	"github.com/mahendrapaipuri/authlib/cache"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/client"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/report"
+	"golang.org/x/mod/semver"
 )
 
 // GrafanaUserSignInTokenHeaderName the header name used for forwarding
@@ -29,36 +31,6 @@ const (
 	accessControlFeatureFlag = "accessControlOnCall" // added in Grafana 10.4.0
 	idForwardingFlag         = "idForwarding"        // added in Grafana 10.3.0
 )
-
-// featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server
-func featureTogglesEnabled(ctx context.Context) bool {
-	var grafanaSemVer = make([]int64, 3)
-
-	var err error
-
-	// First get the Grafana version
-	for i, v := range strings.Split(backend.UserAgentFromContext(ctx).GrafanaVersion(), ".") {
-		if grafanaSemVer[i], err = strconv.ParseInt(v, 10, 64); err != nil {
-			return false
-		}
-	}
-
-	// If Grafana <= 10.4.3, we use cookies to make request. Moreover feature toggles are
-	// not available for these Grafana versions.
-	if grafanaSemVer[0] <= 10 && grafanaSemVer[1] <= 4 && grafanaSemVer[2] <= 3 {
-		return false
-	}
-
-	// Get Grafana config from context
-	cfg := backend.GrafanaConfigFromContext(ctx)
-
-	// For grafana >= 10.4.4 check for feature toggles
-	if cfg.FeatureToggles().IsEnabled(accessControlFeatureFlag) && cfg.FeatureToggles().IsEnabled(idForwardingFlag) {
-		return true
-	}
-
-	return false
-}
 
 // Add filename to Header
 func addFilenameHeader(w http.ResponseWriter, title string) {
@@ -83,6 +55,25 @@ func getDashboardVariables(r *http.Request) url.Values {
 	}
 
 	return variables
+}
+
+// featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server
+func (app *App) featureTogglesEnabled(ctx context.Context) bool {
+	// If Grafana <= 10.4.3, we use cookies to make request. Moreover feature toggles are
+	// not available for these Grafana versions.
+	if semver.Compare(app.grafanaSemVer, "v10.4.3") <= -1 {
+		return false
+	}
+
+	// Get Grafana config from context
+	cfg := backend.GrafanaConfigFromContext(ctx)
+
+	// For grafana >= 10.4.4 check for feature toggles
+	if cfg.FeatureToggles().IsEnabled(accessControlFeatureFlag) && cfg.FeatureToggles().IsEnabled(idForwardingFlag) {
+		return true
+	}
+
+	return false
 }
 
 // grafanaAppURL returns the Grafana's App URL. User configured URL has higher
@@ -165,6 +156,14 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 		return app.authzClient, nil
 	}
 
+	// Header "typ" has been added only in Grafana 11.1.0 (https://github.com/grafana/grafana/pull/87430)
+	// So this check will fail for Grafana < 11.1.0
+	// Set VerifierConfig{DisableTypHeaderCheck: true} for those cases
+	var disableTypHeaderCheck = false
+	if semver.Compare(app.grafanaSemVer, "v11.1.0") == -1 {
+		disableTypHeaderCheck = true
+	}
+
 	// Initialize the authorization client
 	client, err := authz.NewEnforcementClient(authz.Config{
 		APIURL: grafanaAppURL,
@@ -174,6 +173,16 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 	},
 		// Use the configured HTTP client
 		authz.WithHTTPClient(app.httpClient),
+		// Configure verifier
+		authz.WithVerifier(authn.NewVerifier[authz.CustomClaims](authn.VerifierConfig{
+			DisableTypHeaderCheck: disableTypHeaderCheck,
+		},
+			authn.TokenTypeID,
+			authn.NewKeyRetriever(authn.KeyRetrieverConfig{
+				SigningKeysURL: grafanaAppURL + "/api/signing-keys/keys",
+			},
+				authn.WithHTTPClientKeyRetrieverOpt(app.httpClient)),
+		)),
 		// Fetch all the user permission prefixed with dashboards
 		authz.WithSearchByPrefix("dashboards"),
 		// Use a cache with a lower expiry time
@@ -239,7 +248,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// using authz client.
 	// Here we check if user has permissions to do an action "dashboards:read" on
 	// dashboards resource of a given dashboard UID
-	if featureTogglesEnabled(req.Context()) {
+	if app.featureTogglesEnabled(req.Context()) {
 		if hasAccess, err := app.HasAccess(
 			req, "dashboards:read",
 			authz.Resource{
@@ -444,7 +453,7 @@ func (app *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 
 	if _, err := w.Write([]byte("OK")); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		
+
 		return
 	}
 
