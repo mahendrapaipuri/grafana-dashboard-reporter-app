@@ -13,15 +13,35 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Grafana v10
+          # Grafana v10 with user cookie and without feature flags
+          # Plugin should skip checks based on feature flags and use cookie
+          - grafana-version: 10.3.0
+            remote-chrome-url: ''
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            # snapshots-folder: local-chrome
+            name: local-chrome-10.3.0-with-features
+
+          # Grafana v10 without user cookie and with feature flags
           - grafana-version: 10.4.5
             remote-chrome-url: ''
-            snapshots-folder: local-chrome
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            # snapshots-folder: local-chrome
+            name: local-chrome-10.4.5-with-features
 
-          # Grafana v11
+          # Grafana v10 without user cookie and feature flags for only service accounts.
+          # In this case Grafana should skip access control checks
+          - grafana-version: 10.4.7
+            remote-chrome-url: ws://localhost:9222
+            feature-flags: 'externalServiceAccounts'
+            # snapshots-folder: remote-chrome
+            name: remote-chrome-10.4.7-without-features
+
+          # Latest Grafana with remote chrome
           - grafana-version: 11.1.0
             remote-chrome-url: ws://localhost:9222
-            snapshots-folder: remote-chrome
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            # snapshots-folder: remote-chrome
+            name: remote-chrome-11.1.0-with-features
 
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +69,7 @@ jobs:
         env:
           GRAFANA_VERSION: ${{ matrix.grafana-version }}
           GF_REPORTER_PLUGIN_REMOTE_CHROME_URL: ${{ matrix.remote-chrome-url }}
+          GF_FEATURE_TOGGLES_ENABLE: ${{ matrix.feature-flags }}
         run: |
           # Upload/Download artifacts wont preserve permissions
           # https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
@@ -73,15 +94,15 @@ jobs:
         uses: nowsprinting/diff-pdf-action@v1
         with:
           file1: default.pdf
-          file2: .ci/reports/${{ matrix.snapshots-folder }}/default.pdf
-          options: --verbose --output-diff=default-${{ matrix.snapshots-folder }}-diff.pdf
+          file2: .ci/reports/${{ matrix.name }}/default.pdf
+          options: --verbose --output-diff=default-${{ matrix.name }}-diff.pdf
       
       - name: Compare PDF report from TLS server
         uses: nowsprinting/diff-pdf-action@v1
         with:
           file1: alternative.pdf
-          file2: .ci/reports/${{ matrix.snapshots-folder }}/alternative.pdf
-          options: --verbose --output-diff=alternative-${{ matrix.snapshots-folder }}-diff.pdf
+          file2: .ci/reports/${{ matrix.name }}/alternative.pdf
+          options: --verbose --output-diff=alternative-${{ matrix.name }}-diff.pdf
 
       - name: Collect docker logs on failure
         if: failure()
@@ -93,7 +114,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ui-test-output-${{ matrix.grafana-version }}
+          name: ui-test-output-${{ matrix.name }}
           path: |
             test-results
             docker-logs

@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/mahendrapaipuri/authlib/authz"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
@@ -30,8 +32,14 @@ var (
 // App is the backend plugin which can respond to api queries.
 type App struct {
 	backend.CallResourceHandler
-	httpClient *http.Client
 
+	grafanaSemVer string
+	httpClient  *http.Client
+
+	authzClient authz.EnforcementClient
+	mx          sync.Mutex
+
+	saToken string
 	conf config.Config
 
 	workerPools    worker.Pools
@@ -106,6 +114,9 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 		worker.Browser:  worker.New(context.Background(), app.conf.MaxBrowserWorkers),
 		worker.Renderer: worker.New(context.Background(), app.conf.MaxRenderWorkers),
 	}
+
+	// Get current Grafana version
+	app.grafanaSemVer = "v" + backend.UserAgentFromContext(ctx).GrafanaVersion()
 
 	return &app, nil
 }

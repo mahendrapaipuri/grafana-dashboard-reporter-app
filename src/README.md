@@ -93,6 +93,24 @@ logger=plugin.loader t=2024-03-21T11:16:54.738166325Z level=info msg="Plugin reg
 
 ```
 
+The plugin depends on following features flags and it is **strongly** recommended to enable
+them on Grafana server.
+
+- `accessControlOnCall`: Available in `Grafana >= 10.4.0`
+- `idForwarding`: Available in `Grafana >= 10.4.0`
+- `externalServiceAccounts`: Available in `Grafana >= 10.3.0`
+
+This can be done using `feature_toggles` section of Grafana as follows:
+
+```ini
+[feature_toggles]
+enable = accessControlOnCall,idForwarding,externalServiceAccounts
+```
+
+The plugin can work without enabling any of the above feature flags for `Grafana <= 10.4.3`.
+However, for `Grafana > 10.4.4`, feature `externalServiceAccounts` must be enabled for
+the plugin to work.
+
 ### Install with Docker-compose
 
 There is a docker compose file provided in the repo. Create a directory `dist` in the
@@ -275,9 +293,9 @@ extra configuration to get an API token from Grafana.
 - `Grafana > 10.4.3`: For these Grafana deployments, the plugin needs an API token from
   Grafana to make API requests to Grafana. This can be done automatically by enabling
   feature flag `externalServiceAccounts`, which will create a service account and
-  provision a service account token automatically for the plugin. To enable this feature,
-  it is necessary to set `enable = externalServiceAccounts` in `feature_toggles` section
-  of Grafana configuration.
+  provision a service account token automatically for the plugin. Please consult
+  [Local Installation](#local-installation) on how to configure the feature flags on
+  Grafana server.
 
 > [!NOTE]
 > If the operators do not wish or cannot use `externalServiceAccounts` feature flag on
@@ -341,24 +359,19 @@ any HTTP client of your favorite programming language.
 
 ## Security
 
-### `Grafana <= 10.4.3`
+All the feature flags listed in the [Local Installation](#local-installation) section
+must be enabled on Grafana server for secure operation of your Grafana instance.
+These feature flags enables the plugin to verify
+the if the user who is making the request to generate the report has
+enough permissions to view the dashboard before generating the report.
+The plugin _always_ prioritizes the cookie for authentication when found.
 
-When reports are generated from browser, there is minimal to no security risks as the
-plugin forward the current Grafana cookie in the request to make API requests to other
-Grafana resources. This ensures that user will not be able to generate reports for
-the dashboards that contains data sources that they do not have permissions to query. The
-plugin _always_ prioritizes the cookie for authentication when found. Disabling basic auth
-for Grafana will force the users to generate reports from browser, thus forcing them to
-use cookie for authentication.
+<!-- ### `Grafana >= 10.4.4 and mahendrapaipuri-dashboardreporter-app <= 1.5.0`
 
-### `Grafana > 10.4.3`
-
-Starting from `Grafana 10.4.4`, user cookies are not forwarded to the plugin apps anymore.
-When the user cookie is not found and the plugin needs a manually configured service account
-token or `externalServiceAccounts` feature must be enabled (for Grafana >= 10.3.0). If the
-configured service account token has broader permissions than the user making the request,
-the user _may_ generate reports of dashboards on the data sources that they do not
-have permissions to.
+If you are using `Grafana >= 10.4.4` along with plugin `<= 1.5.0`, depending on your
+deployment, it is possible for a user who do not have `View` permissions on a dashboard
+to generate a report on that dashboard. So, we **strongly** advise to update your plugin
+to a version `> 1.5.0` ASAP. -->
 
 ## Examples
 
@@ -387,6 +400,10 @@ error messages will be as follows:
 - If `chromium` fails to run, it suggests that there are missing dependent libraries on
 the host. In that case, we advise to install `chromium` on the machine which will
 install all the dependent libraries.
+
+- If you get `permission denied` response when generating a report, it is due to the
+  user not having `View` permissions on the dashboard that they are attempting to generate
+  the report.
 
 ## Development
 
