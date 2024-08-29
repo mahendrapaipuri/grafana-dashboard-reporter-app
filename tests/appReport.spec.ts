@@ -16,36 +16,15 @@ test("should be possible to generate report", async ({ request }, testInfo) => {
   );
 
   // TLS case will attempt to create a report by a user without View permission
-  // on dashboard
-  if (testInfo.project.name === "tls") {
+  // on dashboard except for the case where Grafana 10.4.7 and not using appropriate
+  // feature toogles. In the exceptional case, the test should pass
+  if (
+    testInfo.project.name === "tls" &&
+    process.env.GRAFANA_VERSION !== "10.4.7" &&
+    process.env.GF_FEATURE_TOGGLES_ENABLE !== "externalServiceAccounts"
+  ) {
     expect(report.ok()).toBeFalsy();
   } else {
     expect(report.ok()).toBeTruthy();
   }
-
-  // const browser = await chromium.launch({
-  //   headless: true,
-  //   acceptDownloads: true,
-  //   AlwaysOpenPdfExternally: true,
-  // });
-  // const context = await browser.newContext();
-  // const page = await context.newPage();
-
-  // // let promise = page.waitForEvent("download");
-  // // try {
-  // //   await page.goto(
-  // //     `/api/plugins/${pluginJson.id}/resources/report?dashUid=${dashboardUid}&${queryParams}`,
-  // //     { waitUntil: "networkidle" }
-  // //   );
-  // // } catch (e) {}
-  // // let download = await promise;
-  // await page.goto(
-  //   `/api/plugins/${pluginJson.id}/resources/report?dashUid=${dashboardUid}&${queryParams}`,
-  //   { waitUntil: "networkidle" }
-  // );
-
-  // const imageName = "launcher-category.png";
-  // expect(await page.screenshot()).toMatchSnapshot(imageName.toLowerCase());
-
-  // await browser.close();
 });

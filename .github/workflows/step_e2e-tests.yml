@@ -13,19 +13,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Grafana v10 with user cookie and with feature flags although they are not
-          # available in Grafana. Plugin should skip checks based on feature flags
+          # Grafana v10 with user cookie and without feature flags
+          # Plugin should skip checks based on feature flags and use cookie
           - grafana-version: 10.3.0
             remote-chrome-url: ''
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
-            snapshots-folder: local-chrome
+            # snapshots-folder: local-chrome
             name: local-chrome-10.3.0-with-features
 
           # Grafana v10 without user cookie and with feature flags
           - grafana-version: 10.4.5
             remote-chrome-url: ''
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
-            snapshots-folder: local-chrome
+            # snapshots-folder: local-chrome
             name: local-chrome-10.4.5-with-features
 
           # Grafana v10 without user cookie and feature flags for only service accounts.
@@ -33,14 +33,14 @@ jobs:
           - grafana-version: 10.4.7
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'externalServiceAccounts'
-            snapshots-folder: remote-chrome
+            # snapshots-folder: remote-chrome
             name: remote-chrome-10.4.7-without-features
 
           # Latest Grafana with remote chrome
           - grafana-version: 11.1.0
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
-            snapshots-folder: remote-chrome
+            # snapshots-folder: remote-chrome
             name: remote-chrome-11.1.0-with-features
 
     steps:
@@ -94,14 +94,14 @@ jobs:
         uses: nowsprinting/diff-pdf-action@v1
         with:
           file1: default.pdf
-          file2: .ci/reports/${{ matrix.snapshots-folder }}/default.pdf
+          file2: .ci/reports/${{ matrix.name }}/default.pdf
           options: --verbose --output-diff=default-${{ matrix.name }}-diff.pdf
       
       - name: Compare PDF report from TLS server
         uses: nowsprinting/diff-pdf-action@v1
         with:
           file1: alternative.pdf
-          file2: .ci/reports/${{ matrix.snapshots-folder }}/alternative.pdf
+          file2: .ci/reports/${{ matrix.name }}/alternative.pdf
           options: --verbose --output-diff=alternative-${{ matrix.name }}-diff.pdf
 
       - name: Collect docker logs on failure
