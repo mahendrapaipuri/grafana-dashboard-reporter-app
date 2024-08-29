@@ -12,8 +12,16 @@ func sameTimeAs(actual interface{}, expected ...interface{}) string {
 	if actual == expected[0] {
 		return ""
 	} else {
-		a := actual.(time.Time)
-		e := expected[0].(time.Time)
+		a, ok := actual.(time.Time)
+		if !ok {
+			a = time.Now()
+		}
+
+		e, ok := expected[0].(time.Time)
+		if !ok {
+			e = time.Now()
+		}
+
 		return fmt.Sprintf("Times differ:\n\t Actual: %q\n\tExpected: %q\n", a, e)
 	}
 }
@@ -70,7 +78,6 @@ func TestTimeParsing(tst *testing.T) {
 			So(t.parseTo("now-1y"), sameTimeAs, testNow.AddDate(-1, 0, 0))
 			So(t.parseTo("now-33y"), sameTimeAs, testNow.AddDate(-33, 0, 0))
 		})
-
 	})
 
 	// ?from=1463464226537&to=1463472462258
@@ -137,7 +144,6 @@ func TestTimeParsing(tst *testing.T) {
 			startOfLastYear, _ := time.Parse(time.RFC1123, "Thu, 01 Jan 2015 00:00:00 UTC")
 			So(t.parseFrom("now-1y/y"), sameTimeAs, startOfLastYear)
 		})
-
 	})
 
 	Convey("When parsing human frienly end time boundaries, parseTo()", tst, func() {
@@ -184,6 +190,5 @@ func TestTimeParsing(tst *testing.T) {
 			endOfLastYear, _ := time.Parse(time.RFC1123, "Fri, 01 Jan 2016 00:00:00 UTC")
 			So(t.parseTo("now-1y/y"), sameTimeAs, endOfLastYear)
 		})
-
 	})
 }

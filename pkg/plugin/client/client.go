@@ -20,12 +20,12 @@ import (
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 )
 
-// Javascripts vars
+// Javascripts vars.
 var (
 	// JS to uncollapse rows for different Grafana versions.
 	// Seems like executing JS corresponding to v10 on v11 or v11 on v10
 	// does not have any side-effect, so we will always execute both of them. This
-	// avoids more logic to detect Grafana version
+	// avoids more logic to detect Grafana version.
 	unCollapseRowsJS = map[string]string{
 		"v10": `[...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0].click())`,
 		"v11": `[...document.querySelectorAll("[data-testid='dashboard-row-container']")].map((e) => [...e.querySelectorAll("[aria-expanded=false]")].map((e) => e.click()))`,
@@ -35,7 +35,7 @@ var (
 
 var getPanelRetrySleepTime = time.Duration(10) * time.Second
 
-// Grafana is a Grafana API httpClient
+// Grafana is a Grafana API httpClient.
 type Grafana interface {
 	Dashboard(ctx context.Context, dashUID string) (dashboard.Dashboard, error)
 	PanelPNG(ctx context.Context, dashUID string, p dashboard.Panel, t dashboard.TimeRange) (dashboard.PanelImage, error)
@@ -46,7 +46,7 @@ type Credential struct {
 	HeaderValue string
 }
 
-// GrafanaClient is the struct that will implement required interfaces
+// GrafanaClient is the struct that will implement required interfaces.
 type GrafanaClient struct {
 	logger         log.Logger
 	conf           config.Config
@@ -60,7 +60,7 @@ type GrafanaClient struct {
 
 // New creates a new Grafana Client. Cookies and Authorization headers, if found,
 // will be forwarded in the requests
-// queryParams are Grafana template variable url values of the form var-{name}={value}, e.g. var-host=dev
+// queryParams are Grafana template variable url values of the form var-{name}={value}, e.g. var-host=dev.
 func New(
 	logger log.Logger,
 	conf config.Config,
@@ -83,14 +83,14 @@ func New(
 	}
 }
 
-// setCredentials sets  credentials in the HTTP request, if present
+// setCredentials sets  credentials in the HTTP request, if present.
 func (g GrafanaClient) setCredentials(r *http.Request) {
 	if g.credential.HeaderName != "" {
 		r.Header.Set(g.credential.HeaderName, g.credential.HeaderValue)
 	}
 }
 
-// Dashboard fetches dashboard from Grafana
+// Dashboard fetches dashboard from Grafana.
 func (g GrafanaClient) Dashboard(ctx context.Context, dashUID string) (dashboard.Dashboard, error) {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -180,7 +180,7 @@ func (g GrafanaClient) dashboardFromAPI(ctx context.Context, dashUID string) ([]
 	return body, nil
 }
 
-// dashboardFromBrowser fetches dashboard model from Grafana chromium browser instance
+// dashboardFromBrowser fetches dashboard model from Grafana chromium browser instance.
 func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, error) {
 	// Get dashboard URL
 	dashURL := fmt.Sprintf("%s/d/%s/_?%s", g.appURL, dashUID, g.queryParams.Encode())
@@ -243,20 +243,21 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 	if err != nil {
 		return dashboard.PanelImage{}, fmt.Errorf("error executing request for %s: %w", panelURL, err)
 	}
+	defer resp.Body.Close()
 
 	// Do multiple tries to get panel before giving up
-	for retries := 1; retries < 3 && resp.StatusCode != 200; retries++ {
+	for retries := 1; retries < 3 && resp.StatusCode != http.StatusOK; retries++ {
 		resp.Body.Close()
 
 		delay := getPanelRetrySleepTime * time.Duration(retries)
 		time.Sleep(delay)
+
 		resp, err = g.httpClient.Do(req)
 		if err != nil {
 			return dashboard.PanelImage{}, fmt.Errorf("error executing retry request for %s: %w", panelURL, err)
 		}
+		defer resp.Body.Close()
 	}
-
-	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -304,6 +305,7 @@ func (g GrafanaClient) getPanelURL(p dashboard.Panel, dashUID string, t dashboar
 	if g.conf.Layout == "grid" {
 		width := int(p.GridPos.W * 100)
 		height := int(p.GridPos.H * 36)
+
 		values.Add("width", strconv.Itoa(width))
 		values.Add("height", strconv.Itoa(height))
 	} else {

@@ -5,7 +5,7 @@ import (
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 )
 
-// PDFOptions contains the templated HTML Body, Header and Footer strings
+// PDFOptions contains the templated HTML Body, Header and Footer strings.
 type PDFOptions struct {
 	Header string
 	Body   string
@@ -14,7 +14,7 @@ type PDFOptions struct {
 	Orientation string
 }
 
-// Instance is the interface remote and local chrome must implement
+// Instance is the interface remote and local chrome must implement.
 type Instance interface {
 	NewTab(logger log.Logger, conf config.Config) *Tab
 	Name() string

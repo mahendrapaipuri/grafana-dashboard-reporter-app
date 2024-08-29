@@ -20,13 +20,14 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// We want our tests to run fast
+// We want our tests to run fast.
 func init() {
 	getPanelRetrySleepTime = time.Duration(1) * time.Millisecond
 }
 
 func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 	var execPath string
+
 	locations := []string{
 		// Mac
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -53,18 +54,22 @@ func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 
 	Convey("When fetching a Dashboard", t, func() {
 		chromeInstance, err := chrome.NewLocalBrowserInstance(context.Background(), log.NewNullLogger(), true)
+
 		Convey("setup a chrome browser should not error", func() {
 			So(err, ShouldBeNil)
 		})
 
 		var requestURI []string
+
 		requestCookie := ""
+
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
 
 			if _, err := w.Write([]byte(`{"dashboard": {"title": "foo","panels":[{"type":"singlestat", "id":0}]}}`)); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+
 				return
 			}
 		}))
@@ -121,18 +126,22 @@ func TestGrafanaClientFetchesDashboardWithRemoteChrome(t *testing.T) {
 			log.NewNullLogger(),
 			chromeRemoteAddr,
 		)
+
 		Convey("setup a chrome browser should not error", func() {
 			So(err, ShouldBeNil)
 		})
 
 		var requestURI []string
+
 		requestCookie := ""
+
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
 
 			if _, err := w.Write([]byte(`{"dashboard": {"title": "foo","panels":[{"type":"singlestat", "id":0}]}}`)); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+
 				return
 			}
 		}))
@@ -201,6 +210,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			worker.Browser:  worker.New(ctx, 6),
 			worker.Renderer: worker.New(ctx, 2),
 		}
+
 		cases := map[string]struct {
 			client      Grafana
 			pngEndpoint string
@@ -249,7 +259,9 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 				So(requestURI, ShouldContainSubstring, "height=500")
 			})
 		}
+
 		conf.Layout = "grid"
+
 		casesGridLayout := map[string]struct {
 			client      Grafana
 			pngEndpoint string
@@ -273,7 +285,6 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 				So(requestURI, ShouldContainSubstring, "height=216")
 			})
 		}
-
 	})
 }
 
@@ -285,6 +296,7 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if try < 1 {
 				w.WriteHeader(http.StatusInternalServerError)
+
 				try++
 			}
 		}))

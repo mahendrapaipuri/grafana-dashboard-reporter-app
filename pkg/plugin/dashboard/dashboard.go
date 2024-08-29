@@ -15,7 +15,7 @@ import (
 )
 
 // Regex for parsing X and Y co-ordinates from CSS
-// Scales for converting width and height to Grafana units
+// Scales for converting width and height to Grafana units.
 var (
 	translateRegex = regexp.MustCompile(`translate\((?P<X>\d+)px, (?P<Y>\d+)px\)`)
 	scales         = map[string]int{
@@ -42,7 +42,7 @@ const (
 	Table
 )
 
-// GridPos represents a Grafana dashboard panel position
+// GridPos represents a Grafana dashboard panel position.
 type GridPos struct {
 	H float64 `json:"h"`
 	W float64 `json:"w"`
@@ -50,7 +50,7 @@ type GridPos struct {
 	Y float64 `json:"y"`
 }
 
-// Panel represents a Grafana dashboard panel
+// Panel represents a Grafana dashboard panel.
 type Panel struct {
 	ID           int     `json:"id"`
 	Type         string  `json:"type"`
@@ -64,32 +64,32 @@ type PanelImage struct {
 	MimeType string
 }
 
-// IsSingleStat returns true if panel is of type SingleStat
+// IsSingleStat returns true if panel is of type SingleStat.
 func (p Panel) IsSingleStat() bool {
 	return p.Is(SingleStat)
 }
 
-// IsPartialWidth If panel has width less than total allowable width
+// IsPartialWidth If panel has width less than total allowable width.
 func (p Panel) IsPartialWidth() bool {
 	return (p.GridPos.W < 24)
 }
 
-// Width returns the width of the panel
+// Width returns the width of the panel.
 func (p Panel) Width() float64 {
 	return float64(p.GridPos.W) * 0.04
 }
 
-// Height returns the height of the panel
+// Height returns the height of the panel.
 func (p Panel) Height() float64 {
 	return float64(p.GridPos.H) * 0.04
 }
 
-// Is returns true if panel is of type t
+// Is returns true if panel is of type t.
 func (p Panel) Is(t PanelType) bool {
 	return p.Type == t.string()
 }
 
-// RowOrPanel represents a container for Panels
+// RowOrPanel represents a container for Panels.
 type RowOrPanel struct {
 	Panel
 	Collapsed bool    `json:"collapsed"`
@@ -98,7 +98,7 @@ type RowOrPanel struct {
 
 // Dashboard represents a Grafana dashboard
 // This is both used to unmarshal the dashboard JSON into
-// and then enriched (sanitize fields for TeX consumption and add VarialbeValues)
+// and then enriched (sanitize fields for TeX consumption and add VarialbeValues).
 type Dashboard struct {
 	Title          string       `json:"title"`
 	Description    string       `json:"description"`
@@ -107,23 +107,25 @@ type Dashboard struct {
 	Panels         []Panel
 }
 
-// Get dashboard variables
+// Get dashboard variables.
 func variablesValues(queryParams url.Values) string {
 	values := []string{}
+
 	for k, v := range queryParams {
 		if strings.HasPrefix(k, "var-") {
 			n := strings.Split(k, "var-")[1]
 			values = append(values, fmt.Sprintf("%s=%s", n, strings.Join(v, ",")))
 		}
 	}
+
 	return strings.Join(values, "; ")
 }
 
 // New creates Dashboard from Grafana's internal JSON dashboard model
-// fetched from Grafana API and browser
+// fetched from Grafana API and browser.
 func New(log log.Logger, config config.Config, dashJSON []byte, dashData []interface{}, queryParams url.Values) (Dashboard, error) {
 	var dash map[string]Dashboard
-	if err := json.Unmarshal(dashJSON, &dash); err != nil {
+	if err := json.Unmarshal(dashJSON, &dash); err != nil { //nolint:musttag
 		return Dashboard{}, fmt.Errorf("failed to unmarshal dashboard JSON: %w", err)
 	}
 
@@ -137,6 +139,7 @@ func New(log log.Logger, config config.Config, dashJSON []byte, dashData []inter
 	// If there are no errors, update the panels from browser dashboard model and
 	// return
 	var panels []Panel
+
 	var err error
 	if panels, err = panelsFromBrowser(dashData); err != nil {
 		log.Warn("failed to get panels from browser data", "error", err)
@@ -153,10 +156,10 @@ func New(log log.Logger, config config.Config, dashJSON []byte, dashData []inter
 	return dashboard, err
 }
 
-// panelsFromBrowser creates slice of panels from the data fetched from browser's DOM model
+// panelsFromBrowser creates slice of panels from the data fetched from browser's DOM model.
 func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	// If dashData is nil return
-	if dashData == nil || len(dashData) == 0 {
+	if len(dashData) == 0 {
 		return nil, fmt.Errorf("browser: %w", ErrNoDashboardData)
 	}
 
@@ -169,20 +172,33 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	// Iterate over the slice of interfaces and build each panel
 	for _, p := range dashData {
 		var id, x, y, w, h, vInt, xInt, yInt int
-		for k, v := range p.(map[string]interface{}) {
+
+		pMap, ok := p.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		for k, v := range pMap {
+			vString, ok := v.(string)
+			if !ok {
+				continue
+			}
+
 			switch k {
 			case "width":
-				if vInt, err = strconv.Atoi(strings.TrimSuffix(v.(string), "px")); err != nil {
+				if vInt, err = strconv.Atoi(strings.TrimSuffix(vString, "px")); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
+
 				w = vInt / scales[k]
 			case "height":
-				if vInt, err = strconv.Atoi(strings.TrimSuffix(v.(string), "px")); err != nil {
+				if vInt, err = strconv.Atoi(strings.TrimSuffix(vString, "px")); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
+
 				h = vInt / scales[k]
 			case "transform":
-				matches := translateRegex.FindStringSubmatch(v.(string))
+				matches := translateRegex.FindStringSubmatch(vString)
 				if len(matches) == 3 {
 					xCoord := matches[translateRegex.SubexpIndex("X")]
 					if xInt, err = strconv.Atoi(xCoord); err != nil {
@@ -190,6 +206,7 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 					} else {
 						x = xInt / scales["width"]
 					}
+
 					yCoord := matches[translateRegex.SubexpIndex("Y")]
 					if yInt, err = strconv.Atoi(yCoord); err != nil {
 						allErrs = errors.Join(err, allErrs)
@@ -200,7 +217,7 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 					allErrs = errors.Join(errors.New("failed to capture X and Y coordinate regex groups"), allErrs)
 				}
 			case "id":
-				if id, err = strconv.Atoi(v.(string)); err != nil {
+				if id, err = strconv.Atoi(vString); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
 			}
@@ -226,21 +243,26 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	// Check if we fetched any panels
 	if len(panels) == 0 {
 		allErrs = errors.Join(err, ErrNoPanels)
+
 		return nil, allErrs
 	}
+
 	return panels, allErrs
 }
 
 // panelsFromJSON makes panels from dashboard JSON model by uncollapsing and correcting
-// grid positions for all row panels when dashboardMode is full
+// grid positions for all row panels when dashboardMode is full.
 func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 	// In the case of collapsed rows, the gridPos within the row will not be
 	// consistent with gridPos of dashboard. As rows are collapsed the "y" ordinate
 	// within row with have higher value than "y" ordinate of global dashboard.
 	// We will need to account it when report of "full" dashboard is requested.
 	var panels []Panel
+
 	var globalYPos float64
+
 	var globalYPosHeight float64
+
 	for _, p := range rowOrPanels {
 		// If the panel is of type row and there are panels inside the row
 		if p.Type == "row" {
@@ -252,6 +274,7 @@ func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 
 			// In other cases, find all collapsed panels and add them to final panel list
 			var startYPos float64
+
 			for irp, rp := range p.Panels {
 				// State variable for the mark of start of row y position
 				if irp == 0 {
@@ -272,8 +295,10 @@ func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 					globalYPos = rp.GridPos.Y
 					globalYPosHeight = rp.GridPos.H
 				}
+
 				panels = append(panels, rp)
 			}
+
 			continue
 		}
 
@@ -285,11 +310,12 @@ func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 		globalYPosHeight = p.Panel.GridPos.H
 		panels = append(panels, p.Panel)
 	}
+
 	return panels
 }
 
 // filterPanels filters the panels based on IncludePanelIDs and ExcludePanelIDs
-// config parameters
+// config parameters.
 func filterPanels(panels []Panel, config config.Config) []Panel {
 	// If config parameters are empty, return original panels
 	if len(config.IncludePanelIDs) == 0 && len(config.ExcludePanelIDs) == 0 {
@@ -309,6 +335,7 @@ func filterPanels(panels []Panel, config config.Config) []Panel {
 			filteredPanels = append(filteredPanels, panel)
 		}
 	}
+
 	return filteredPanels
 }
 

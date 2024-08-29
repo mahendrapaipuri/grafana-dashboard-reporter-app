@@ -32,17 +32,17 @@ const (
 	idForwardingFlag         = "idForwarding"        // added in Grafana 10.3.0
 )
 
-// Add filename to Header
+// Add filename to Header.
 func addFilenameHeader(w http.ResponseWriter, title string) {
 	// Sanitize title to escape non ASCII characters
 	// Ref: https://stackoverflow.com/questions/62705546/unicode-characters-in-attachment-name
 	// Ref: https://medium.com/@JeremyLaine/non-ascii-content-disposition-header-in-django-3a20acc05f0d
 	filename := url.PathEscape(title)
-	header := `inline; filename*=UTF-8''` + fmt.Sprintf("%s.pdf", filename)
+	header := `inline; filename*=UTF-8''` + filename + ".pdf"
 	w.Header().Add("Content-Disposition", header)
 }
 
-// Get dashboard variables via query parameters
+// Get dashboard variables via query parameters.
 func getDashboardVariables(r *http.Request) url.Values {
 	variables := url.Values{}
 
@@ -204,7 +204,7 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 }
 
 // handleReport handles creating a PDF report from a given dashboard UID
-// GET /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report
+// GET /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report.
 func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -339,13 +339,13 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	ctxLogger.Info(fmt.Sprintf("generate report using config: %s", conf.String()))
+	ctxLogger.Info("generate report using config: " + conf.String())
 
 	// credential is header name value pair that will be used in API requests
 	var credential client.Credential
 
 	switch {
-	// This case is irrevelant starting from Grafana 10.4.4.
+	// This case is irrelevant starting from Grafana 10.4.4.
 	// This commit https://github.com/grafana/grafana/commit/56a4af87d706087ea42780a79f8043df1b5bc3ea
 	// made changes to not forward the cookies to app plugins.
 	// So we will not be able to use cookies to make requests to Grafana to fetch

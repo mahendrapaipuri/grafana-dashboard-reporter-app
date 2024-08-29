@@ -36,12 +36,12 @@ const (
 	boundaryTimeRegExp = "^(.*?)/([dwMy])$"
 )
 
-// Convenience function to raise panic with custom message
+// Convenience function to raise panic with custom message.
 func unrecognized(s string) string {
 	return s + " is not a recognised time format"
 }
 
-// Add time duration based on boundary
+// Add time duration based on boundary.
 func add(b boundary) int {
 	if b == To {
 		return 1
@@ -50,7 +50,7 @@ func add(b boundary) int {
 	return 0
 }
 
-// Convert days to week boundary
+// Convert days to week boundary.
 func daysToWeekBoundary(wd time.Weekday, b boundary) int {
 	if b == To {
 		return 1 + int(time.Saturday) - int(wd)
@@ -60,7 +60,7 @@ func daysToWeekBoundary(wd time.Weekday, b boundary) int {
 	}
 }
 
-// Parse grafana specific time to time.Time format
+// Parse grafana specific time to time.Time format.
 func roundTimeToBoundary(t time.Time, b boundary, boundaryUnit string) time.Time {
 	y := t.Year()
 	M := t.Month()
@@ -83,92 +83,103 @@ func roundTimeToBoundary(t time.Time, b boundary, boundaryUnit string) time.Time
 	return time.Date(y, M, d, 0, 0, 0, 0, t.Location())
 }
 
-// Parse time stamp to time.Unix() format
+// Parse time stamp to time.Unix() format.
 func parseAbsTime(s string) time.Time {
 	if timeInMs, err := strconv.ParseInt(s, 10, 64); err == nil {
-		return time.Unix(int64(timeInMs)/1000, 0)
+		return time.Unix(timeInMs/1000, 0)
 	}
+
 	panic(unrecognized(s))
 }
 
-// If time string is relative
+// If time string is relative.
 func isRelativeTime(s string) bool {
 	matched, _ := regexp.MatchString(relTimeRegExp, s)
+
 	return matched
 }
 
-// If time string is in boundary expression
+// If time string is in boundary expression.
 func isHumanFriendlyBoundray(s string) bool {
 	matched, _ := regexp.MatchString(boundaryTimeRegExp, s)
+
 	return matched
 }
 
-// NewTimeRange creates a new TimeRange struct
+// NewTimeRange creates a new TimeRange struct.
 func NewTimeRange(from, to string) TimeRange {
 	if from == "" {
 		from = "now-1h"
 	}
+
 	if to == "" {
 		to = "now"
 	}
+
 	return TimeRange{from, to}
 }
 
-// Formats Grafana 'From' time spec into absolute printable time
+// Formats Grafana 'From' time spec into absolute printable time.
 func (tr TimeRange) FromFormatted(loc *time.Location) string {
 	n := newNow()
+
 	return n.parseFrom(tr.From).In(loc).Format(time.UnixDate)
 }
 
-// Formats Grafana 'To' time spec into absolute printable time
+// Formats Grafana 'To' time spec into absolute printable time.
 func (tr TimeRange) ToFormatted(loc *time.Location) string {
 	n := newNow()
+
 	return n.parseTo(tr.To).In(loc).Format(time.UnixDate)
 }
 
-// Make current time custom struct
+// Make current time custom struct.
 func newNow() now {
 	return now(time.Now())
 }
 
-// Get current time as time.Time format
+// Get current time as time.Time format.
 func (n now) asTime() time.Time {
 	return time.Time(n)
 }
 
-// Parse from time string
+// Parse from time string.
 func (n now) parseFrom(s string) time.Time {
 	return n.parseHumanFriendlyBoundary(s, From)
 }
 
-// Parse to time string
+// Parse to time string.
 func (n now) parseTo(s string) time.Time {
 	return n.parseHumanFriendlyBoundary(s, To)
 }
 
-// Parse time and boundary unit
+// Parse time and boundary unit.
 func (n now) parseTimeAndBoundaryUnit(s string) (time.Time, string) {
 	re := regexp.MustCompile(boundaryTimeRegExp)
+
 	matches := re.FindStringSubmatch(s)
 	if len(matches) != 3 {
 		panic(unrecognized(s))
 	}
+
 	moment := n.parseTime(matches[1])
 	boundaryUnit := matches[2]
+
 	return moment, boundaryUnit
 }
 
-// Parse boundary time string
+// Parse boundary time string.
 func (n now) parseHumanFriendlyBoundary(s string, b boundary) time.Time {
 	if !isHumanFriendlyBoundray(s) {
 		return n.parseTime(s)
 	} else {
 		moment, boundaryUnit := n.parseTimeAndBoundaryUnit(s)
+
 		return roundTimeToBoundary(moment, b, boundaryUnit)
 	}
 }
 
-// Parse time string to time.Time format
+// Parse time string to time.Time format.
 func (n now) parseTime(s string) time.Time {
 	if s == "now" {
 		return n.asTime()
@@ -179,7 +190,7 @@ func (n now) parseTime(s string) time.Time {
 	}
 }
 
-// Parse relative time string to time.Time
+// Parse relative time string to time.Time.
 func (n now) parseRelativeTime(s string) time.Time {
 	re := regexp.MustCompile(relTimeRegExp)
 
@@ -187,6 +198,7 @@ func (n now) parseRelativeTime(s string) time.Time {
 	if len(matches) != 3 {
 		panic(unrecognized(s))
 	}
+
 	unit := matches[2]
 	number := matches[1]
 
@@ -201,6 +213,7 @@ func (n now) parseRelativeTime(s string) time.Time {
 		if err != nil {
 			panic(err)
 		}
+
 		return n.asTime().Add(d)
 	case "d":
 		return n.asTime().AddDate(0, 0, i)

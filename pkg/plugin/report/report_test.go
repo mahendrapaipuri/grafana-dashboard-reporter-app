@@ -102,11 +102,9 @@ func TestReport(t *testing.T) {
 
 				Convey("Including the Title", func() {
 					So(rep.pdfOptions.Header, ShouldContainSubstring, "My first dashboard")
-
 				})
 				Convey("Including the variable values", func() {
 					So(rep.pdfOptions.Header, ShouldContainSubstring, "testvarvalue")
-
 				})
 				Convey("and the images", func() {
 					So(s, ShouldContainSubstring, "data:image/png")
@@ -131,7 +129,6 @@ func TestReport(t *testing.T) {
 			})
 		})
 	})
-
 }
 
 type errClient struct {
@@ -143,7 +140,7 @@ func (e *errClient) Dashboard(_ context.Context, _ string) (dashboard.Dashboard,
 	return dashboard.New(logger, config.Config{}, []byte(dashJSON), nil, e.variables)
 }
 
-// Produce an error on the 2nd panel fetched
+// Produce an error on the 2nd panel fetched.
 func (e *errClient) PanelPNG(
 	_ context.Context,
 	_ string,

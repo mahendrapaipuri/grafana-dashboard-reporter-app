@@ -30,11 +30,14 @@ func TestDashboard(t *testing.T) {
 "Meta":
 	{"Slug":"testDash"}
 }`
-		var dashDataString = `[{"width":"940px","height":"258px","transform":"translate(0px, 0px)","id":"12"},{"width":"940px","height":"258px","transform":"translate(948px, 0px)","id":"26"},{"width":"940px","height":"258px","transform":"translate(0px, 266px)","id":"27"}]`
+
+		dashDataString := `[{"width":"940px","height":"258px","transform":"translate(0px, 0px)","id":"12"},{"width":"940px","height":"258px","transform":"translate(948px, 0px)","id":"26"},{"width":"940px","height":"258px","transform":"translate(0px, 266px)","id":"27"}]`
+
 		var dashData []interface{}
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
+
 		dash, _ := New(logger, config.Config{}, []byte(dashJSON), dashData, url.Values{})
 
 		Convey("Panels should contain all panels from dashboard browser data", func() {
@@ -62,11 +65,14 @@ func TestDashboard(t *testing.T) {
 "Meta":
 	{"Slug":"testDash"}
 }`
-		var dashDataString = `[{"width":"940px","height":"258px","transform":"translate(0px)","id":"12"},{"width":"940px","height":"258px","transform":"translate(948px, 0px)","id":"26"},{"width":"940px","height":"258px","transform":"translate(0px, 266px)","id":"27"}]`
+
+		dashDataString := `[{"width":"940px","height":"258px","transform":"translate(0px)","id":"12"},{"width":"940px","height":"258px","transform":"translate(948px, 0px)","id":"26"},{"width":"940px","height":"258px","transform":"translate(0px, 266px)","id":"27"}]`
+
 		var dashData []interface{}
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
 			t.Errorf("failed to unmarshal data: %s", err)
 		}
+
 		dash, _ := New(logger, config.Config{}, []byte(dashJSON), dashData, url.Values{})
 
 		Convey("Panels should contain all panels from dashboard JSON model", func() {
@@ -84,6 +90,7 @@ func TestVariableValues(t *testing.T) {
 {
 	"dashboard": {}
 }`
+
 		vars := url.Values{}
 		vars.Add("var-one", "oneval")
 		vars.Add("var-two", "twoval")
@@ -125,6 +132,7 @@ func TestFilterPanels(t *testing.T) {
 				[]Panel{{ID: 1}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7}},
 			},
 		}
+
 		for clName, cl := range cases {
 			filteredPanels := filterPanels(allPanels, cl.Config)
 

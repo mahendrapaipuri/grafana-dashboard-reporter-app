@@ -14,19 +14,19 @@ import (
 
 const SaToken = "saToken"
 
-// Config contains plugin settings
+// Config contains plugin settings.
 type Config struct {
-	AppURL            string `json:"appUrl"            env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"`
-	SkipTLSCheck      bool   `json:"skipTlsCheck"      env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"`
-	Theme             string `json:"theme"             env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"`
-	Orientation       string `json:"orientation"       env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"`
-	Layout            string `json:"layout"            env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"`
-	DashboardMode     string `json:"dashboardMode"     env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"`
-	TimeZone          string `json:"timeZone"          env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"`
-	EncodedLogo       string `json:"logo"              env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"`
-	MaxBrowserWorkers int    `json:"maxBrowserWorkers" env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"`
-	MaxRenderWorkers  int    `json:"maxRenderWorkers"  env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"`
-	RemoteChromeURL   string `json:"remoteChromeUrl"   env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"`
+	AppURL            string `env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"               json:"appUrl"`
+	SkipTLSCheck      bool   `env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"        json:"skipTlsCheck"`
+	Theme             string `env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"          json:"theme"`
+	Orientation       string `env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"    json:"orientation"`
+	Layout            string `env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"         json:"layout"`
+	DashboardMode     string `env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite" json:"dashboardMode"`
+	TimeZone          string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"       json:"timeZone"`
+	EncodedLogo       string `env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"           json:"logo"`
+	MaxBrowserWorkers int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"   json:"maxBrowserWorkers"`
+	MaxRenderWorkers  int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"    json:"maxRenderWorkers"`
+	RemoteChromeURL   string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"     json:"remoteChromeUrl"`
 	IncludePanelIDs   []int
 	ExcludePanelIDs   []int
 
@@ -37,7 +37,7 @@ type Config struct {
 	Token string
 }
 
-// String implements the stringer interface of Config
+// String implements the stringer interface of Config.
 func (c *Config) String() string {
 	var encodedLogo string
 	if c.EncodedLogo != "" {
@@ -45,6 +45,7 @@ func (c *Config) String() string {
 	}
 
 	includedPanelIDs := "all"
+
 	if len(c.IncludePanelIDs) > 0 {
 		panelIDs := make([]string, len(c.IncludePanelIDs))
 		for index, id := range c.IncludePanelIDs {
@@ -55,6 +56,7 @@ func (c *Config) String() string {
 	}
 
 	excludedPanelIDs := "none"
+
 	if len(c.ExcludePanelIDs) > 0 {
 		panelIDs := make([]string, len(c.ExcludePanelIDs))
 		for index, id := range c.ExcludePanelIDs {
@@ -80,11 +82,11 @@ func (c *Config) String() string {
 	)
 }
 
-// Load loads the plugin settings from data sent by provisioned config or from Grafana UI
+// Load loads the plugin settings from data sent by provisioned config or from Grafana UI.
 func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, error) {
 	// Always start with a default config so that when the plugin is not provisioned
 	// with a config, we will still have "non-null" config to work with
-	var config = Config{
+	config := Config{
 		Theme:             "light",
 		Orientation:       "portrait",
 		Layout:            "simple",
@@ -114,7 +116,7 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 
 	var err error
 
-	if err = json.Unmarshal(settings.JSONData, &config); err != nil {
+	if err = json.Unmarshal(settings.JSONData, &config); err != nil { //nolint:musttag
 		return Config{}, err
 	}
 
@@ -127,6 +129,7 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 	if config.HTTPClientOptions, err = settings.HTTPClientOptions(ctx); err != nil {
 		return Config{}, fmt.Errorf("error in http client options: %w", err)
 	}
+
 	config.HTTPClientOptions.TLS = &httpclient.TLSOptions{InsecureSkipVerify: config.SkipTLSCheck}
 
 	return config, nil

@@ -2,6 +2,4 @@ package report
 
 import "errors"
 
-var (
-	ErrEmptyDashboard = errors.New("empty dashboard model")
-)
+var ErrEmptyDashboard = errors.New("empty dashboard model")

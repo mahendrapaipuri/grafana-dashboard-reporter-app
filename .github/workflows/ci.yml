@@ -19,7 +19,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    uses: ./.github/workflows/step_lint.yml
+
   build:
+    needs: [lint]
     uses: ./.github/workflows/step_build.yml
 
   e2e-tests:

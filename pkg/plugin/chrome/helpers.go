@@ -18,7 +18,7 @@ import (
 		- https://github.com/chromedp/examples/tree/master
 */
 
-// enableLifeCycleEvents enables the chromedp life cycle events
+// enableLifeCycleEvents enables the chromedp life cycle events.
 func enableLifeCycleEvents() chromedp.ActionFunc {
 	return func(ctx context.Context) error {
 		err := page.Enable().Do(ctx)
