@@ -2,12 +2,47 @@ package chrome
 
 import (
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
 
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"golang.org/x/net/context"
 )
+
+// Path to chrome executable.
+var chromeExec string
+
+func init() {
+	// Get Grafana data path based on path of current executable
+	pluginExe, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
+	// Now we attempt to get install_dir directory which is Grafana data path
+	dataPath := filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
+
+	// Walk through grafana-image-renderer plugin dir to find chrome executable
+	_ = filepath.Walk(filepath.Join(dataPath, "plugins", "grafana-image-renderer"),
+		func(path string, info fs.FileInfo, err error) error {
+			// prevent panic by handling failure accessing a path
+			if err != nil {
+				return err
+			}
+
+			if !info.IsDir() && info.Name() == "chrome" {
+				chromeExec = path
+
+				return nil
+			}
+
+			return nil
+		})
+}
 
 // LocalInstance is a locally running browser instance.
 type LocalInstance struct {
@@ -25,6 +60,12 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 		chromedp.NoSandbox,
 		chromedp.DisableGPU,
 	)
+
+	// If chromExec is not empty we found chrome binary shipped by grafana-image-renderer
+	if chromeExec != "" {
+		logger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
+		chromeOptions = append(chromeOptions, chromedp.ExecPath(chromeExec))
+	}
 
 	if insecureSkipVerify {
 		// Seems like this is critical. When it is not turned on there are no errors
