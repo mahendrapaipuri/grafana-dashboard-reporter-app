@@ -300,6 +300,7 @@ func (r *PDF) generateHTMLFile() error {
 	} else {
 		tmpl, err = template.New("header").Funcs(funcMap).ParseFS(templateFS, "templates/header.gohtml")
 	}
+
 	if err != nil {
 		return fmt.Errorf("error parsing Header template: %w", err)
 	}
@@ -318,6 +319,7 @@ func (r *PDF) generateHTMLFile() error {
 	} else {
 		tmpl, err = template.New("footer").Funcs(funcMap).ParseFS(templateFS, "templates/footer.gohtml")
 	}
+
 	if err != nil {
 		return fmt.Errorf("error parsing Footer template: %w", err)
 	}
