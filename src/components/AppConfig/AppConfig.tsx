@@ -1,12 +1,13 @@
 import React, { useState, ChangeEvent } from 'react';
 import { lastValueFrom } from 'rxjs';
 import { css } from '@emotion/css';
-import { ConfigSection } from "@grafana/experimental";
+import { ConfigSection, ConfigSubSection } from "@grafana/experimental";
 import {
   Button,
   useStyles2,
   Field,
   Input,
+  TextArea,
   Switch,
   FieldSet,
   RadioButtonGroup,
@@ -30,6 +31,8 @@ export type JsonData = {
   dashboardMode?: string;
   timeZone?: string;
   logo?: string;
+  headerTemplate?: string;
+  footerTemplate?: string;
   maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
   remoteChromeUrl?: string;
@@ -68,6 +71,14 @@ type State = {
   logo: string;
   // If logo has changed
   logoChanged: boolean;
+  // HTML header template
+  headerTemplate: string;
+  // If header template has changed
+  headerTemplateChanged: boolean;
+  // HTML footer template
+  footerTemplate: string;
+  // If footer template has changed
+  footerTemplateChanged: boolean;
   // Maximum browser workers
   maxBrowserWorkers: number;
   // If maxRenderWorkers has changed
@@ -112,6 +123,10 @@ export const AppConfig = ({ plugin }: Props) => {
     timeZoneChanged: false,
     logo: jsonData?.logo || "",
     logoChanged: false,
+    headerTemplate: jsonData?.headerTemplate || "",
+    headerTemplateChanged: false,
+    footerTemplate: jsonData?.footerTemplate || "",
+    footerTemplateChanged: false,
     maxBrowserWorkers: jsonData?.maxBrowserWorkers || 2,
     maxBrowserWorkersChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
@@ -207,6 +222,22 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangeHeaderTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setState({
+      ...state,
+      headerTemplate: event.target.value,
+      headerTemplateChanged: true,
+    });
+  };
+
+  const onChangeFooterTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    setState({
+      ...state,
+      footerTemplate: event.target.value,
+      footerTemplateChanged: true,
+    });
+  };
+
   const onChangeMaxBrowserWorkers = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
@@ -271,6 +302,8 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
+                    headerTemplate: state.headerTemplate,
+                    footerTemplate: state.footerTemplate,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
@@ -310,6 +343,8 @@ export const AppConfig = ({ plugin }: Props) => {
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
                     logo: state.logo,
+                    headerTemplate: state.headerTemplate,
+                    footerTemplate: state.footerTemplate,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
@@ -452,6 +487,45 @@ export const AppConfig = ({ plugin }: Props) => {
             onChange={onChangeLogo}
           />
         </Field>
+
+        <ConfigSubSection
+          title="Advanced Settings"
+          description="Use this section to customize the reports"
+          isCollapsible
+          isInitiallyOpen={false}
+        >
+          {/* Header Template */}
+          <Field
+            label="Report Header Template"
+            description="HTML template used in the header of the report."
+            data-testid={testIds.appConfig.headerTemplate}
+          >
+            <TextArea
+              id="headerTemplate"
+              rows={20}
+              className={s.textarea}
+              label={`Header Template`}
+              onChange={onChangeHeaderTemplate}
+            >{state.headerTemplate}
+            </TextArea>
+          </Field>
+
+          {/* Footer Template */}
+          <Field
+            label="Report Footer Template"
+            description="HTML template used in the footer of the report."
+            data-testid={testIds.appConfig.footerTemplate}
+          >
+            <TextArea
+              id="footerTemplate"
+              rows={20}
+              className={s.textarea}
+              label={`Footer Template`}
+              onChange={onChangeFooterTemplate}
+            >{state.footerTemplate}
+            </TextArea>
+          </Field>
+        </ConfigSubSection>
       </ConfigSection>
 
       {/* Additional Settings */}
@@ -564,6 +638,8 @@ export const AppConfig = ({ plugin }: Props) => {
                 dashboardMode: state.dashboardMode,
                 timeZone: state.timeZone,
                 logo: state.logo,
+                headerTemplate: state.headerTemplate,
+                footerTemplate: state.footerTemplate,
                 maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
                 remoteChromeUrl: state.remoteChromeUrl,
@@ -586,6 +662,8 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.dashboardModeChanged &&
               !state.timeZoneChanged &&
               !state.logoChanged &&
+              !state.headerTemplateChanged &&
+              !state.footerTemplateChanged &&
               !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
               !state.remoteChromeUrlChanged &&
@@ -619,6 +697,9 @@ const getStyles = (theme: GrafanaTheme2) => ({
   reportSettings: css({
     paddingTop: "32px",
   }),
+  textarea: css({
+    width: "620px",
+  })
 });
 
 const updatePluginAndReload = async (

@@ -107,6 +107,20 @@ apps:
       #
       logo: ''
 
+      # Header HTML template in the report.
+      #
+      # Custom HTML header template to be used in the report. If empty, default template
+      # will be used
+      #
+      headerTemplate: ''
+
+      # Footer HTML template in the report.
+      #
+      # Custom HTML footer template to be used in the report. If empty, default template
+      # will be used
+      #
+      footerTemplate: ''
+
       # Maximum number of workers for interacting with chrome browser.
       #
       # This can be changed from Grafana UI as well and this configuration parameter

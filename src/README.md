@@ -205,6 +205,27 @@ This config section allows to configure report related settings.
   reports. Images of format PNG and JPG are accepted. **There is no need to add the base64 header**.
   Based on the content, Mime type will be detected and appropriate header will be added.
 
+The following settings are advanced settings that allow to customize the header and footer
+of the report using custom HTML templates. 
+
+- `file:headerTemplate; env:GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE; ui:Header Template`:
+  HTML template that will be added as header to the report.
+
+- `file:footerTemplate; env:GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE; ui:Footer Template`:
+  HTML template that will be added as footer to the report.
+
+Templates must conform to [Go's template](https://pkg.go.dev/text/template) style
+using `{{ }}` as delimiters. The following variables are available in the templates:
+
+- `.Dashboard.Title`: Dashboard title
+- `.Dashboard.VariableValues`: Comma seperated list of dashboard variable values
+- `.From`: Dashboard's `from` time
+- `.To`: Dashboard's `to` time
+- `.Date`: Current date time.
+
+Default [header](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml) and [footer](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml) templates can be used as a base to further
+customize the reports using custom templates.
+
 ### Additional settings
 
 The following configuration settings allow more control over plugin's functionality.
