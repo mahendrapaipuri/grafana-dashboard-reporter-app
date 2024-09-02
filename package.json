@@ -52,7 +52,7 @@
     "@types/node": "^20.8.7",
     "@types/testing-library__jest-dom": "5.14.8",
     "@types/react-router-dom": "^5.3.3",
-    "copy-webpack-plugin": "^11.0.0",
+    "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
     "eslint-plugin-deprecation": "^2.0.0",
     "eslint-webpack-plugin": "^4.0.1",
