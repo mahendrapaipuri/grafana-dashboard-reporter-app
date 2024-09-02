@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+- Support configurable header and footer templates [#97](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/97)
+- Use chrome from grafana-image-renderer when found [#96](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/96)
+- Lint src using golanglint-ci [#95](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/95)
+- Setup access control [#86](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/86)
+- Bump dependencies [#63](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/63), [#64](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/64), [#65](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/65), [#66](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/66), [#67](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/67), [#68](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/68), [#69](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/69), [#70](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/70), [#71](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/71), [#72](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/72), [#74](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/74), [#79](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/79), [#80](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/80), [#81](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/81), [#91](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/91), [#93](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/93), [#94](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/94)
+
 ## 1.5.0
 
 - Enhancement in plugin configuration and bug fixes [#61](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/61)
