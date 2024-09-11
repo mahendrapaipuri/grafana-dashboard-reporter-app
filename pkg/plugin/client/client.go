@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -135,7 +136,7 @@ func (g GrafanaClient) Dashboard(ctx context.Context, dashUID string) (dashboard
 
 	// Build dashboard model from JSON and data
 	grafanaDashboard, err := dashboard.New(g.logger, g.conf, dashboardBytes, dashboardData, g.queryParams)
-	if err != nil {
+	if reflect.DeepEqual(dashboard.Dashboard{}, grafanaDashboard) && err != nil {
 		return dashboard.Dashboard{}, fmt.Errorf("error building dashboard model: %w", err)
 	}
 

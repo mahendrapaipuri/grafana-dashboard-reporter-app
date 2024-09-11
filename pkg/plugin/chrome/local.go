@@ -34,7 +34,8 @@ func init() {
 				return err
 			}
 
-			if !info.IsDir() && info.Name() == "chrome" {
+			// In recent releases of grafana-image-renderer, the binary is called chrome-headless-shell
+			if !info.IsDir() && (info.Name() == "chrome" || info.Name() == "chrome-headless-shell") {
 				chromeExec = path
 
 				return nil

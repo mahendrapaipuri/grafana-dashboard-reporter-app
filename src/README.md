@@ -206,7 +206,7 @@ This config section allows to configure report related settings.
   Based on the content, Mime type will be detected and appropriate header will be added.
 
 The following settings are advanced settings that allow to customize the header and footer
-of the report using custom HTML templates. 
+of the report using custom HTML templates.
 
 - `file:headerTemplate; env:GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE; ui:Header Template`:
   HTML template that will be added as header to the report.
