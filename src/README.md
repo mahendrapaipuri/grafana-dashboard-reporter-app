@@ -28,7 +28,8 @@ different host, `chromium` must be installed on the host where Grafana is instal
 
 > [!IMPORTANT]
 > `grafana-image-renderer` advises to install `chromium` to ensure that all the
-dependent libraries of the `chromium` are available on the host.
+dependent libraries of the `chromium` are available on the host. Ensure to install
+a more recent version of `chromium` as few issues were noticed with `chromium <= 90`.
 
 ## Installation
 
@@ -121,6 +122,29 @@ as follows:
 ```bash
 docker-compose -f docker-compose.yaml up
 ```
+
+### Chromium
+
+As stated in the introduced, the plugin uses chromium to generate PDF reports of the dashboards.
+If `grafana-image-renderer` plugin is installed on the same server as Grafana, the current plugin
+will use the pre-built `chromium` shipped by `grafana-image-renderer` which _should_ work in most
+of the cases. NOTE that in edge cases it might not work out-of-the-box with pre-built `chromium`
+of `grafana-image-renderer`. In that case install `chromium` on the Grafana server from the
+package manager.
+
+> [!IMPORTANT]
+> Use recent version of `chromium` to avoid any incompatibilities. We noticed issues with
+`chromium <= 90`.
+
+If `grafana-image-renderer` is not installed on the same server as Grafana or operators do not
+want to install `chromium` on the server, it is possible to use a remote instance of `chromium`
+for the plugin. In this case, the plugin needs to be provisioned appropriately with
+configuration parameter that uses remote chromium. More details on how to configure it is in the
+[next](#configuring-the-plugin) section.
+
+> [!IMPORTANT]
+> If the remote chromium is running on a different server ensure to encrypt the traffic between
+Grafana server and remote chromium instance.
 
 ## Configuring the plugin
 
