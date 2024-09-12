@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -100,7 +99,7 @@ func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 			_, err := grf.Dashboard(context.Background(), "randomDashUID")
 
 			Convey("It should receive no errors", func() {
-				So(errors.Is(err, dashboard.ErrNoDashboardData), ShouldBeTrue)
+				So(err, ShouldBeNil)
 			})
 
 			Convey("It should use the v5 dashboards endpoint", func() {
@@ -172,7 +171,7 @@ func TestGrafanaClientFetchesDashboardWithRemoteChrome(t *testing.T) {
 			_, err := grf.Dashboard(context.Background(), "randomDashUID")
 
 			Convey("It should receive no errors", func() {
-				So(errors.Is(err, dashboard.ErrNoDashboardData), ShouldBeTrue)
+				So(err, ShouldBeNil)
 			})
 
 			Convey("It should use the v5 dashboards endpoint", func() {

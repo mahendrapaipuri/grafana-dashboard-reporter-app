@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -34,7 +35,9 @@ func init() {
 				return err
 			}
 
-			if !info.IsDir() && info.Name() == "chrome" {
+			// In recent releases of grafana-image-renderer, the binary is called chrome-headless-shell
+			validChromeBins := []string{"chrome", "chrome-headless-shell"}
+			if !info.IsDir() && slices.Contains(validChromeBins, info.Name()) {
 				chromeExec = path
 
 				return nil
