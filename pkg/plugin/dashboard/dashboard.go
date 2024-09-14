@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/url"
 	"regexp"
 	"slices"
@@ -16,10 +17,15 @@ import (
 
 // Regex for parsing X and Y co-ordinates from CSS
 // Scales for converting width and height to Grafana units.
+//
+// This is based on viewportWidth that we used in client.go which
+// is 1952px. Stripping margin 32px we get 1920px / 24 = 80px
+// height scale should be fine with 36px as width and aspect ratio
+// should choose a height appropriately.
 var (
 	translateRegex = regexp.MustCompile(`translate\((?P<X>\d+)px, (?P<Y>\d+)px\)`)
-	scales         = map[string]int{
-		"width":  30,
+	scales         = map[string]float64{
+		"width":  80,
 		"height": 36,
 	}
 )
@@ -170,10 +176,12 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 	)
 
 	// Iterate over the slice of interfaces and build each panel
-	for _, p := range dashData {
-		var id, x, y, w, h, vInt, xInt, yInt int
+	for _, panelData := range dashData {
+		var vInt, xInt, yInt float64
 
-		pMap, ok := p.(map[string]interface{})
+		var p Panel
+
+		pMap, ok := panelData.(map[string]interface{})
 		if !ok {
 			continue
 		}
@@ -186,58 +194,50 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 
 			switch k {
 			case "width":
-				if vInt, err = strconv.Atoi(strings.TrimSuffix(vString, "px")); err != nil {
+				if vInt, err = strconv.ParseFloat(strings.TrimSuffix(vString, "px"), 64); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
 
-				w = vInt / scales[k]
+				p.GridPos.W = math.Round(vInt / scales[k])
 			case "height":
-				if vInt, err = strconv.Atoi(strings.TrimSuffix(vString, "px")); err != nil {
+				if vInt, err = strconv.ParseFloat(strings.TrimSuffix(vString, "px"), 64); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
 
-				h = vInt / scales[k]
+				p.GridPos.H = math.Round(vInt / scales[k])
 			case "transform":
 				matches := translateRegex.FindStringSubmatch(vString)
 				if len(matches) == 3 {
 					xCoord := matches[translateRegex.SubexpIndex("X")]
-					if xInt, err = strconv.Atoi(xCoord); err != nil {
+					if xInt, err = strconv.ParseFloat(xCoord, 64); err != nil {
 						allErrs = errors.Join(err, allErrs)
 					} else {
-						x = xInt / scales["width"]
+						p.GridPos.X = math.Round(xInt / scales["width"])
 					}
 
 					yCoord := matches[translateRegex.SubexpIndex("Y")]
-					if yInt, err = strconv.Atoi(yCoord); err != nil {
+					if yInt, err = strconv.ParseFloat(yCoord, 64); err != nil {
 						allErrs = errors.Join(err, allErrs)
 					} else {
-						y = yInt / scales["height"]
+						p.GridPos.Y = math.Round(yInt / scales["height"])
 					}
 				} else {
 					allErrs = errors.Join(errors.New("failed to capture X and Y coordinate regex groups"), allErrs)
 				}
 			case "id":
-				if id, err = strconv.Atoi(vString); err != nil {
+				if p.ID, err = strconv.Atoi(vString); err != nil {
 					allErrs = errors.Join(err, allErrs)
 				}
 			}
 		}
 
-		// If height comes to zero, it is row panel and ignore it
-		if h == 0 {
+		// If height comes to 1 or less, it is row panel and ignore it
+		if p.GridPos.H <= 1 {
 			continue
 		}
 
 		// Create panel model and append to panels
-		panels = append(panels, Panel{
-			ID: id,
-			GridPos: GridPos{
-				X: float64(x),
-				Y: float64(y),
-				H: float64(h),
-				W: float64(w),
-			},
-		})
+		panels = append(panels, p)
 	}
 
 	// Check if we fetched any panels
