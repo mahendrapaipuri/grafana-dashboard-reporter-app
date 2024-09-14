@@ -34,6 +34,23 @@ var (
 	dashboardDataJS = `[...document.getElementsByClassName('react-grid-item')].map((e) => ({"width": e.style.width, "height": e.style.height, "transform": e.style.transform, "id": e.getAttribute("data-panelid")}))`
 )
 
+// Browser vars.
+var (
+	// We must set a view port to browser to ensure chromedp (or chromium)
+	// does not choose one randomly based on the current host.
+	//
+	// The idea here is to use a "regular" viewport of 1920x1080. However
+	// seems like Grafana uses a 16px margin on either side and hence the
+	// "effective" width of panels is only 1888px which is not a multiple of
+	// 24 (which is column measure of Grafana panels). So we add that additional
+	// 32px + 1920px = 1952px so that "effective" width becomes 1920px which is
+	// multiple of 24. This should give us nicer panels without overlaps.
+	//
+	// This can be flaky though! Need to make it better in the future?!
+	viewportWidth  int64 = 1952
+	viewportHeight int64 = 1080
+)
+
 var getPanelRetrySleepTime = time.Duration(10) * time.Second
 
 // Grafana is a Grafana API httpClient.
@@ -215,7 +232,9 @@ func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 	var dashboardData []interface{}
 
 	// JS that will fetch dashboard model
+	tasks = append(tasks, chromedp.EmulateViewport(viewportWidth, viewportHeight))
 	tasks = append(tasks, chromedp.Evaluate(dashboardDataJS, &dashboardData))
+
 	if err := tab.Run(tasks); err != nil {
 		return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %w", dashURL, err)
 	}
