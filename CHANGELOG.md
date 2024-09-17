@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.2
+
+- Set a viewport to browser when fetching dashboard model [#113](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/113)
+- Bump dependencies [#110](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/110), [#111](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/111), [#113](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/113), [#114](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/114)
+
+## 1.6.1
+
+- Ensure we fallback to API data when browser reqs fails [#109](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/109)
+- Bump dependencies [#99](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/99), [#102](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/102)
+
 ## 1.6.0
 
 - Support configurable header and footer templates [#97](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/97)
