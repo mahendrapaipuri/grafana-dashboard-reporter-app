@@ -48,6 +48,9 @@ const (
 	Table
 )
 
+// CSVData represents type of the CSV data.
+type CSVData [][]string
+
 // GridPos represents a Grafana dashboard panel position.
 type GridPos struct {
 	H float64 `json:"h"`
@@ -63,6 +66,7 @@ type Panel struct {
 	Title        string  `json:"title"`
 	GridPos      GridPos `json:"gridPos"`
 	EncodedImage PanelImage
+	CSVData      CSVData
 }
 
 type PanelImage struct {
@@ -147,7 +151,7 @@ func New(log log.Logger, config config.Config, dashJSON []byte, dashData []inter
 	var panels []Panel
 
 	var err error
-	if panels, err = panelsFromBrowser(dashData); err != nil {
+	if panels, err = panelsFromBrowser(dashboard, dashData); err != nil {
 		log.Warn("failed to get panels from browser data", "error", err)
 		// If we fail to get panels from browser data, get them from dashboard JSON model
 		// and correct grid positions
@@ -163,7 +167,7 @@ func New(log log.Logger, config config.Config, dashJSON []byte, dashData []inter
 }
 
 // panelsFromBrowser creates slice of panels from the data fetched from browser's DOM model.
-func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
+func panelsFromBrowser(dashboard Dashboard, dashData []interface{}) ([]Panel, error) {
 	// If dashData is nil return
 	if len(dashData) == 0 {
 		return nil, fmt.Errorf("browser: %w", ErrNoDashboardData)
@@ -234,6 +238,27 @@ func panelsFromBrowser(dashData []interface{}) ([]Panel, error) {
 		// If height comes to 1 or less, it is row panel and ignore it
 		if p.GridPos.H <= 1 {
 			continue
+		}
+
+		// Populate Type and Title from dashboard JSON model
+		for _, rowOrPanel := range dashboard.RowOrPanels {
+			if rowOrPanel.Type == "row" {
+				for _, rp := range rowOrPanel.Panels {
+					if rp.ID == p.ID {
+						p.Type = rp.Type
+						p.Title = rp.Title
+
+						break
+					}
+				}
+			} else {
+				if p.ID == rowOrPanel.ID {
+					p.Type = rowOrPanel.Type
+					p.Title = rowOrPanel.Title
+
+					break
+				}
+			}
 		}
 
 		// Create panel model and append to panels
@@ -324,14 +349,18 @@ func filterPanels(panels []Panel, config config.Config) []Panel {
 
 	// Iterate over all panels and check if they should be included or not
 	var filteredPanels []Panel
+
+	var filteredPanelIDs []int
 	for _, panel := range panels {
 		if len(config.IncludePanelIDs) > 0 && slices.Contains(config.IncludePanelIDs, panel.ID) &&
-			!slices.Contains(filteredPanels, panel) {
+			!slices.Contains(filteredPanelIDs, panel.ID) {
+			filteredPanelIDs = append(filteredPanelIDs, panel.ID)
 			filteredPanels = append(filteredPanels, panel)
 		}
 
 		if len(config.ExcludePanelIDs) > 0 && !slices.Contains(config.ExcludePanelIDs, panel.ID) &&
-			!slices.Contains(filteredPanels, panel) {
+			!slices.Contains(filteredPanelIDs, panel.ID) {
+			filteredPanelIDs = append(filteredPanelIDs, panel.ID)
 			filteredPanels = append(filteredPanels, panel)
 		}
 	}

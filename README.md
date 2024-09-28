@@ -29,8 +29,11 @@ improvements and modernization.
 - The plugin is capable of including all the repeated rows and/or panels in the
   generated report.
 
-- The plugin can be configured by Admins and users either from
-  [Configuration Page](./src/img/light.png) or query parameters to the report API.
+- The plugin can include selected panels data into report which can be chosen using
+  query parameters to the report API.
+
+- The plugin can be configured by Admins from [Configuration Page](./src/img/light.png)
+  and users using query parameters to the report API.
 
 ## Documentation
 
