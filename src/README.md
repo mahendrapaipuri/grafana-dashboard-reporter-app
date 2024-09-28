@@ -303,7 +303,7 @@ to set these values. Currently, the supported query parameters are:
   to use `America/New_York` query parameter should be
   `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeZone=America%2FNew_York`
 
-Besides there are two special query parameters available namely:
+Besides there are **three** special query parameters available namely:
 
 - `includePanelID`: This can be used to include only panels with IDs set in the query in
   the generated report. An example can be
@@ -318,6 +318,11 @@ Besides there are two special query parameters available namely:
   This request will only exclude panels `2`, and `7` in the report and including the rest.
   When `grid` layout is used with `excludePanelID`, the report layout will leave the gaps
   in the place of panels that are excluded in the report.
+
+- `includePanelDataID`: The tabular data of panels with IDs set in the query will be included in
+  the generated report. An example can be
+  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelDataID=1&includePanelDataID=5&includePanelDataID=8`.
+  This request will only include tabular data for the panels `1`, `5` and `8` in the report.
 
 > [!NOTE]
 > If a given panel ID is set in both `includePanelID` and `excludePanelID` query parameter,

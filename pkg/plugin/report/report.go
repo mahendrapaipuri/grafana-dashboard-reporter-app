@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -170,6 +171,10 @@ func (r *PDF) Generate(ctx context.Context, writer io.Writer) error {
 	if err = r.renderPNGsParallel(ctx); err != nil {
 		return fmt.Errorf("error rendering PNGs in parallel for dashboard %s: %w", r.grafanaDashboard.Title, err)
 	}
+	// Render panel CSVs in parallel using max workers configured in plugin
+	if err = r.renderCSVsParallel(ctx); err != nil {
+		return fmt.Errorf("error rendering CSVs in parallel for dashboard %s: %w", r.grafanaDashboard.Title, err)
+	}
 
 	// Generate HTML file with fetched panel PNGs
 	if err = r.generateHTMLFile(); err != nil {
@@ -225,6 +230,44 @@ func (r *PDF) renderPNGsParallel(ctx context.Context) error {
 	return nil
 }
 
+// renderCSVsParallel renders panel PNGs in parallel using configured number of workers.
+func (r *PDF) renderCSVsParallel(ctx context.Context) error {
+	numPanels := len(r.grafanaDashboard.Panels)
+
+	tablePanelIDs := make([]int, 0, numPanels)
+	errs := make(chan error, numPanels)
+
+	for panelIndex, panel := range r.grafanaDashboard.Panels {
+		if slices.Contains(r.conf.IncludePanelDataIDs, panel.ID) {
+			tablePanelIDs = append(tablePanelIDs, panelIndex)
+		}
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(tablePanelIDs))
+
+	for _, panelIndex := range tablePanelIDs {
+		r.workerPools[worker.Browser].Do(func() {
+			defer wg.Done()
+
+			errs <- r.renderCSV(ctx, panelIndex)
+		})
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if err == nil {
+			continue
+		}
+
+		return fmt.Errorf("error rendering CSV: %w", err)
+	}
+
+	return nil
+}
+
 // renderPNG renders a single panel into PNG.
 func (r *PDF) renderPNG(ctx context.Context, iPanel int) error {
 	var err error
@@ -236,6 +279,22 @@ func (r *PDF) renderPNG(ctx context.Context, iPanel int) error {
 	)
 	if err != nil {
 		return fmt.Errorf("error getting panel %s: %w", r.grafanaDashboard.Panels[iPanel].Title, err)
+	}
+
+	return nil
+}
+
+// renderCSV renders a single table panel into CSV.
+func (r *PDF) renderCSV(ctx context.Context, iPanel int) error {
+	var err error
+
+	r.grafanaDashboard.Panels[iPanel].CSVData, err = r.client.PanelCSV(ctx,
+		r.options.DashUID,
+		r.grafanaDashboard.Panels[iPanel],
+		r.options.TimeRange,
+	)
+	if err != nil {
+		return fmt.Errorf("error getting CSV for panel %s: %w", r.grafanaDashboard.Panels[iPanel].Title, err)
 	}
 
 	return nil

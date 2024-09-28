@@ -339,6 +339,20 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	if req.URL.Query().Has("includePanelDataID") {
+		conf.IncludePanelDataIDs = make([]int, len(req.URL.Query()["includePanelDataID"]))
+
+		for i, stringID := range req.URL.Query()["includePanelDataID"] {
+			conf.IncludePanelDataIDs[i], err = strconv.Atoi(stringID)
+			if err != nil {
+				ctxLogger.Debug("invalid includePanelDataID parameter: " + err.Error())
+				http.Error(w, "invalid includePanelDataID parameter: "+err.Error(), http.StatusBadRequest)
+
+				return
+			}
+		}
+	}
+
 	ctxLogger.Info("generate report using config: " + conf.String())
 
 	// credential is header name value pair that will be used in API requests
