@@ -551,7 +551,7 @@
   dependencies:
     tslib "^2.4.0"
 
-"@grafana/data@11.1.3", "@grafana/data@^11.1.3":
+"@grafana/data@11.1.3":
   version "11.1.3"
   resolved "https://registry.yarnpkg.com/@grafana/data/-/data-11.1.3.tgz#4e9ddb8ff93fee76ebce8f84a238d920b3a228b5"
   integrity sha512-7ldWX6mCGYemRBNmipyuUDpf7XfZvganne5wZvOSG5OuBkkk/aaD/g1rZUxaI9/6/bWTXzFj4AFEa01ixCfO1w==
@@ -574,6 +574,36 @@
     ol "7.4.0"
     papaparse "5.4.1"
     react-use "17.5.0"
+    rxjs "7.8.1"
+    string-hash "^1.1.3"
+    tinycolor2 "1.6.0"
+    tslib "2.6.3"
+    uplot "1.6.30"
+    xss "^1.0.14"
+
+"@grafana/data@^11.2.1":
+  version "11.2.1"
+  resolved "https://registry.yarnpkg.com/@grafana/data/-/data-11.2.1.tgz#6b93dfdc5ef9748eb10b3779397ffce5e3876b42"
+  integrity sha512-rbuHKvL8fED7XjiiJGpBIyCDYg0RlNjRZ0d3MzhlTOUZ+xRnOCFHXYN46+uhSe5XQ44igWMQgDqM2NdUsP5cwg==
+  dependencies:
+    "@braintree/sanitize-url" "7.0.1"
+    "@grafana/schema" "11.2.1"
+    "@types/d3-interpolate" "^3.0.0"
+    "@types/string-hash" "1.1.3"
+    d3-interpolate "3.0.1"
+    date-fns "3.6.0"
+    dompurify "^3.0.0"
+    eventemitter3 "5.0.1"
+    fast_array_intersect "1.1.0"
+    history "4.10.1"
+    lodash "4.17.21"
+    marked "12.0.2"
+    marked-mangle "1.1.9"
+    moment "2.30.1"
+    moment-timezone "0.5.45"
+    ol "7.4.0"
+    papaparse "5.4.1"
+    react-use "17.5.1"
     rxjs "7.8.1"
     string-hash "^1.1.3"
     tinycolor2 "1.6.0"
@@ -678,6 +708,13 @@
   version "11.2.0"
   resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.2.0.tgz#aa9a776e787b7594d0fa92c573bb009dc31d6e67"
   integrity sha512-ajW/O0uLgoNrtmxWefgUxJC1DFDyQOjnidzdoWDQbBAbw2fxxhXSYmY1v5Z9ZvVjxuWH7gn636cpA2PfRLNkcw==
+  dependencies:
+    tslib "2.6.3"
+
+"@grafana/schema@11.2.1":
+  version "11.2.1"
+  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.2.1.tgz#1baf6cd051d9fc3c8a5194dc592936f23c5c031f"
+  integrity sha512-TB41ykP36JR02a4nHbx5jljtnDnW/LdU8s3PdmTP6yX3mNnvzWVNLqHIa4ZxgUtPY1aIyJ/87p6CpclVZxo3SQ==
   dependencies:
     tslib "2.6.3"
 
@@ -4624,6 +4661,13 @@ inline-style-prefixer@^7.0.0:
     css-in-js-utils "^3.1.0"
     fast-loops "^1.1.3"
 
+inline-style-prefixer@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/inline-style-prefixer/-/inline-style-prefixer-7.0.1.tgz#9310f3cfa2c6f3901d1480f373981c02691781e8"
+  integrity sha512-lhYo5qNTQp3EvSSp3sRvXMbVQTLrvGV6DycRMJ5dm2BLMiJ30wpXKdDdgX+GmJZ5uQMucwRKHamXSst3Sj/Giw==
+  dependencies:
+    css-in-js-utils "^3.1.0"
+
 internal-slot@^1.0.4, internal-slot@^1.0.7:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/internal-slot/-/internal-slot-1.0.7.tgz#c06dcca3ed874249881007b0a5523b172a190802"
@@ -5667,6 +5711,11 @@ marked-mangle@1.1.7:
   resolved "https://registry.yarnpkg.com/marked-mangle/-/marked-mangle-1.1.7.tgz#07fed8f47ebdc51761aac0364723468644cea49d"
   integrity sha512-bLsXKovJEEs/Dl++TBPmjX8ALFmrH5G0doTs+BdDOloBKWYRf3acyJghce78SnwInDkNPJ6crubr4MnFG7urOA==
 
+marked-mangle@1.1.9:
+  version "1.1.9"
+  resolved "https://registry.yarnpkg.com/marked-mangle/-/marked-mangle-1.1.9.tgz#ee7a4a1e318a47c722c905e6472f346c6f7a08a6"
+  integrity sha512-eLTXr1xQzba/WZp/trPS0HkR9W02ifasH6IWPrBv++eO2m8POiwV4muQ6Tof2C5Fhdo3z8ggXs6VGw1f931Vsg==
+
 marked@12.0.2:
   version "12.0.2"
   resolved "https://registry.yarnpkg.com/marked/-/marked-12.0.2.tgz#b31578fe608b599944c69807b00f18edab84647e"
@@ -5840,6 +5889,20 @@ nano-css@^5.6.1:
     csstype "^3.1.2"
     fastest-stable-stringify "^2.0.2"
     inline-style-prefixer "^7.0.0"
+    rtl-css-js "^1.16.1"
+    stacktrace-js "^2.0.2"
+    stylis "^4.3.0"
+
+nano-css@^5.6.2:
+  version "5.6.2"
+  resolved "https://registry.yarnpkg.com/nano-css/-/nano-css-5.6.2.tgz#584884ddd7547278f6d6915b6805069742679a32"
+  integrity sha512-+6bHaC8dSDGALM1HJjOHVXpuastdu2xFoZlC77Jh4cg+33Zcgm+Gxd+1xsnpZK14eyHObSp82+ll5y3SX75liw==
+  dependencies:
+    "@jridgewell/sourcemap-codec" "^1.4.15"
+    css-tree "^1.1.2"
+    csstype "^3.1.2"
+    fastest-stable-stringify "^2.0.2"
+    inline-style-prefixer "^7.0.1"
     rtl-css-js "^1.16.1"
     stacktrace-js "^2.0.2"
     stylis "^4.3.0"
@@ -6864,7 +6927,7 @@ react-universal-interface@^0.6.2:
   resolved "https://registry.yarnpkg.com/react-universal-interface/-/react-universal-interface-0.6.2.tgz#5e8d438a01729a4dbbcbeeceb0b86be146fe2b3b"
   integrity sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==
 
-react-use@17.5.0, react-use@^17.4.2:
+react-use@17.5.0:
   version "17.5.0"
   resolved "https://registry.yarnpkg.com/react-use/-/react-use-17.5.0.tgz#1fae45638828a338291efa0f0c61862db7ee6442"
   integrity sha512-PbfwSPMwp/hoL847rLnm/qkjg3sTRCvn6YhUZiHaUa3FA6/aNoFX79ul5Xt70O1rK+9GxSVqkY0eTwMdsR/bWg==
@@ -6876,6 +6939,26 @@ react-use@17.5.0, react-use@^17.4.2:
     fast-shallow-equal "^1.0.0"
     js-cookie "^2.2.1"
     nano-css "^5.6.1"
+    react-universal-interface "^0.6.2"
+    resize-observer-polyfill "^1.5.1"
+    screenfull "^5.1.0"
+    set-harmonic-interval "^1.0.1"
+    throttle-debounce "^3.0.1"
+    ts-easing "^0.2.0"
+    tslib "^2.1.0"
+
+react-use@17.5.1, react-use@^17.4.2:
+  version "17.5.1"
+  resolved "https://registry.yarnpkg.com/react-use/-/react-use-17.5.1.tgz#19fc2ae079775d8450339e9fa8dbe25b17f2263c"
+  integrity sha512-LG/uPEVRflLWMwi3j/sZqR00nF6JGqTTDblkXK2nzXsIvij06hXl1V/MZIlwj1OKIQUtlh1l9jK8gLsRyCQxMg==
+  dependencies:
+    "@types/js-cookie" "^2.2.6"
+    "@xobotyi/scrollbar-width" "^1.9.5"
+    copy-to-clipboard "^3.3.1"
+    fast-deep-equal "^3.1.3"
+    fast-shallow-equal "^1.0.0"
+    js-cookie "^2.2.1"
+    nano-css "^5.6.2"
     react-universal-interface "^0.6.2"
     resize-observer-polyfill "^1.5.1"
     screenfull "^5.1.0"
