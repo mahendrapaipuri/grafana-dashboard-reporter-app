@@ -42,7 +42,7 @@
     "@grafana/plugin-meta-extractor": "^0.0.2",
     "@playwright/test": "^1.41.2",
     "@swc/core": "^1.7.26",
-    "@swc/helpers": "^0.5.0",
+    "@swc/helpers": "^0.5.13",
     "@swc/jest": "^0.2.26",
     "@testing-library/jest-dom": "6.1.4",
     "@testing-library/react": "14.0.0",
