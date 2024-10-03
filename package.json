@@ -95,6 +95,6 @@
   "resolutions": {
     "string-width": "^4.2.0",
     "wrap-ansi": "^7.0.0",
-    "uplot": "^16.3.1"
+    "uplot": "16.3.1"
   }
 }
