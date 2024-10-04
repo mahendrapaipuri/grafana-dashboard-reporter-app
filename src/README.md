@@ -303,7 +303,7 @@ to set these values. Currently, the supported query parameters are:
   to use `America/New_York` query parameter should be
   `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeZone=America%2FNew_York`
 
-Besides there are **three** special query parameters available namely:
+Besides there are **two** special query parameters available namely:
 
 - `includePanelID`: This can be used to include only panels with IDs set in the query in
   the generated report. An example can be
@@ -319,15 +319,17 @@ Besides there are **three** special query parameters available namely:
   When `grid` layout is used with `excludePanelID`, the report layout will leave the gaps
   in the place of panels that are excluded in the report.
 
-- `includePanelDataID`: The tabular data of panels with IDs set in the query will be included in
-  the generated report. An example can be
-  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelDataID=1&includePanelDataID=5&includePanelDataID=8`.
-  This request will only include tabular data for the panels `1`, `5` and `8` in the report.
-
 > [!NOTE]
 > If a given panel ID is set in both `includePanelID` and `excludePanelID` query parameter,
   it will be **included** in the report. Query parameter `includePanelID` has more
   precedence over `excludePanelID`.
+
+#### Rendering tabular data in the report
+
+The plugin can fetch panel data and render it as tables at the end of the dashboard report. However,
+by default no data is rendered and user can request the tabular data by using `includePanelDataID`
+query parameter. For instance, an API request like `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelDataID=1&includePanelDataID=5&includePanelDataID=8` will  include tabular data for
+the panels `1`, `5` and `8` at the end of the report.
 
 ### Grafana API Token
 
