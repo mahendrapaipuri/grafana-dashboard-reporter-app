@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.3
+
+- Bump `package.json` deps [#125](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/125)
+- Support rendering tables [#120](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/120)
+- Bump dependencies [#115](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/115), [#116](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/116), [#117](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/117), [#118](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/118), [#119](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/119), [#121](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/121), [#124](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/124)
+
 ## 1.6.2
 
 - Set a viewport to browser when fetching dashboard model [#113](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/113)
