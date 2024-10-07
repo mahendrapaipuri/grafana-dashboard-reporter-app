@@ -90,7 +90,7 @@
     "react-dom": "18.2.0",
     "react-router-dom": "^5.2.0",
     "rxjs": "7.8.1",
-    "tslib": "2.5.3"
+    "tslib": "2.7.0"
   },
   "resolutions": {
     "string-width": "^4.2.0",
