@@ -618,10 +618,10 @@
     eslint-plugin-react-hooks "4.6.0"
     typescript "5.2.2"
 
-"@grafana/experimental@2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@grafana/experimental/-/experimental-2.1.0.tgz#dd7bd338cfd2b7c204bf3a2f03af7b78778df4e8"
-  integrity sha512-zC1nG5N/dQZkR/GqCg4P5iwO2hgi6ETUh8FvfFG7Q++gtrtDNnGHcGgkrtipKKed2HHM0J/3FvvFjPADUdSoYA==
+"@grafana/experimental@2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@grafana/experimental/-/experimental-2.1.1.tgz#58bc55c63cfc07138962f1459ce4c436570e0bd7"
+  integrity sha512-gj9Hb3JZEEewxQxTa3kxl4se3kbU9VM2XnXvxEqvL4gaF5xJYZqiSKaismaCq0aMLPqi9ydHAvy3MVn7dcsMXA==
   dependencies:
     "@hello-pangea/dnd" "^16.6.0"
     "@types/uuid" "^8.3.3"
