@@ -681,13 +681,6 @@
     rxjs "7.8.1"
     tslib "2.6.3"
 
-"@grafana/schema@11.2.1":
-  version "11.2.1"
-  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.2.1.tgz#1baf6cd051d9fc3c8a5194dc592936f23c5c031f"
-  integrity sha512-TB41ykP36JR02a4nHbx5jljtnDnW/LdU8s3PdmTP6yX3mNnvzWVNLqHIa4ZxgUtPY1aIyJ/87p6CpclVZxo3SQ==
-  dependencies:
-    tslib "2.6.3"
-
 "@grafana/schema@11.2.2":
   version "11.2.2"
   resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.2.2.tgz#5f5244c8e96466cdea13a59e01d00ac38c078de3"
