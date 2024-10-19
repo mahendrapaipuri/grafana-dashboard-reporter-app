@@ -39,41 +39,33 @@ Grafana Enterprise offers a very similar plugin [reports](https://grafana.com/do
 and hence, their plugin policies do not allow to publish the current plugin in their
 official catalog.
 
-It is important to note that the current plugin does not offer all the functionalities
+> [!NOTE]
+> It is important to note that the current plugin does not offer all the functionalities
 offered by Enterprise plugin and it is only relevant if users would like to create a
 PDF report of a given dashboard. If users needs more advanced functionalities like
 generating and sending reports automatically, they should look into official plugin.
 
-However, it is still possible to install this plugin on on-premise Grafana installations
-as an unsigned plugin. The installation procedure is briefed in
-[Local installation](#local-installation) section below.
-
-### Local installation
-
-Download the [latest Grafana Dashboard Reporter](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/latest).
-
-Create a directory for grafana to access your custom-plugins
-_e.g._ `/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app`.
-
-The following shell script downloads and extracts the latest plugin source
-code into the the current working directory. Run the following inside your grafana
-plugin directory:
+However, it is still possible to install this plugin using `grafana-cli` by overriding
+`pluginUrl` by using URL from [releases](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases).
+For example following command will install plugin version `v1.6.3`
 
 ```bash
-cd /var/lib/grafana/plugins
-curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/main/scripts/bootstrap-dashboard-reporter-app.sh | bash
+grafana-cli --pluginUrl https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v1.6.3/mahendrapaipuri-dashboardreporter-app-1.6.3.zip plugins install mahendrapaipuri-dashboardreporter-app
 ```
 
-This will install the latest release of plugin in the `/var/lib/grafana/plugins` folder
-and upon Grafana restart, the plugin will be loaded.
-
-If user wants to install the latest nightly release, it is enough to add a environment
-variable `NIGHTLY` to `bash`
+Similarly, `nightly` version can be installed suing
 
 ```bash
-cd /var/lib/grafana/plugins
-curl https://raw.githubusercontent.com/mahendrapaipuri/grafana-dashboard-reporter-app/main/scripts/bootstrap-dashboard-reporter-app.sh | NIGHTLY=1 bash
+grafana-cli --pluginUrl  https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/nightly/mahendrapaipuri-dashboardreporter-app-nightly.zip plugins install mahendrapaipuri-dashboardreporter-app
 ```
+
+> [!TIP]
+> If the above command is executed as `root`, the plugins folder might be owned by
+`root` user and group which makes it inaccessible for `grafana`. If that is the case,
+change ownership to the user running Grafana server which is usually `grafana`.
+
+The plugin needs to run as unsigned plugin on on-premise Grafana installations and it
+needs to be whitelisted.
 
 > [!IMPORTANT]
 > The final step is to _whitelist_ the plugin as it is an unsigned plugin and Grafana,

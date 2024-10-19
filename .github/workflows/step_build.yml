@@ -45,9 +45,17 @@ jobs:
         with:
           install-dependencies: true
 
+      # Install chrome manually until the upstream action
+      # fixes it for latest ubuntu
+      - name: Install chrome
+        run: |
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome-stable_current_amd64.deb
+          which google-chrome
+
       - name: Start headless chrome for remote tests
         run: >-
-          chrome
+          google-chrome
           --remote-debugging-port=44251
           --no-sandbox
           --disable-gpu

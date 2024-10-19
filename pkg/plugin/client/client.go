@@ -40,9 +40,6 @@ var (
 
 // Tables related javascripts.
 const (
-	selPageScrollbar                                 = `#page-scrollbar`
-	selTimePickerTimeRangeToolTip                    = `div[role="tooltip"]`
-	selTimePickerButton                              = `button[aria-controls="TimePickerContent"]`
 	selDownloadCSVButton                             = `div[aria-label="Panel inspector Data content"] button[type="button"][aria-disabled="false"]`
 	selInspectPanelDataTabExpandDataOptions          = `div[role='dialog'] button[aria-expanded=false]`
 	selInspectPanelDataTabApplyTransformationsToggle = `div[data-testid="dataOptions"] input:not(#excel-toggle):not(#formatted-data-toggle) + label`
