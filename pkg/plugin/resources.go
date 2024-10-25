@@ -135,12 +135,11 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 		return nil, err
 	}
 
+	// Bail we cannot get token provisioned by externalServiceAccount and no token
+	// has been manually configured. In this case we cannot check permissions and moreover
+	// we cannot make API requests to Grafana
 	saToken, err := grafanaConfig.PluginAppClientSecret()
-	if err != nil || (saToken == "" && app.conf.Token == "") {
-		if err == nil {
-			err = errors.New("neither service account token nor configured token found")
-		}
-
+	if err != nil && app.conf.Token == "" {
 		ctxLogger.Error("failed to fetch service account and configured token", "error", err)
 
 		return nil, err
