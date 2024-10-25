@@ -338,13 +338,46 @@ extra configuration to get an API token from Grafana.
   Grafana to make API requests to Grafana. This can be done automatically by enabling
   feature flag `externalServiceAccounts`, which will create a service account and
   provision a service account token automatically for the plugin. Please consult
-  [Local Installation](#local-installation) on how to configure the feature flags on
+  [Installation](#installation) on how to configure the feature flags on
   Grafana server.
 
 > [!NOTE]
 > If the operators do not wish or cannot use `externalServiceAccounts` feature flag on
 their Grafana deployment, it is possible to manually create an API token and set it in
 the [plugin configuration options](#authentication-settings).
+
+### Multiple Orgs
+
+Grafana does not support yet automatically provisioning the plugins with service tokens
+using `externalServiceAccounts`. More details can be found in this [GH issue](https://github.com/grafana/grafana/issues/91844).
+A workaround in this case is to turn off the feature flag `externalServiceAccounts` and
+manually create service account token for each Org. and setting it in the plugin
+configuration file. In this case, the provisioned config for the plugin will look like this:
+
+```yaml
+apps:
+  - type: mahendrapaipuri-dashboardreporter-app
+    org_id: 1
+    org_name: Main Org.
+    disabled: false
+    secureJsonData:
+      saToken: <ServiceAccountTokenForMainOrg>
+    jsonData:
+      appUrl: http://localhost:3000
+
+  - type: mahendrapaipuri-dashboardreporter-app
+    org_id: 2
+    org_name: Test Org.
+    disabled: false
+    secureJsonData:
+      saToken: <ServiceAccountTokenForTestOrg>
+    jsonData:
+      appUrl: http://localhost:3000
+```
+
+> [!IMPORTANT]
+> It is compulsory to disable `externalServiceAccounts` feature flag in multiple Org. setting
+as plugin wont work as expected with this feature flag.
 
 ## Using plugin
 
@@ -403,7 +436,7 @@ any HTTP client of your favorite programming language.
 
 ## Security
 
-All the feature flags listed in the [Local Installation](#local-installation) section
+All the feature flags listed in the [Installation](#installation) section
 must be enabled on Grafana server for secure operation of your Grafana instance.
 These feature flags enables the plugin to verify
 the if the user who is making the request to generate the report has
