@@ -40,7 +40,7 @@
     "@grafana/plugin-e2e": "^1.6.1",
     "@grafana/tsconfig": "2.0.0",
     "@grafana/plugin-meta-extractor": "^0.0.8",
-    "@playwright/test": "^1.41.2",
+    "@playwright/test": "^1.48.2",
     "@swc/core": "^1.7.36",
     "@swc/helpers": "^0.5.13",
     "@swc/jest": "^0.2.26",
