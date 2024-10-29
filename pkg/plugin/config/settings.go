@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -29,9 +28,9 @@ type Config struct {
 	MaxBrowserWorkers   int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"    json:"maxBrowserWorkers"`
 	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"     json:"maxRenderWorkers"`
 	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"      json:"remoteChromeUrl"`
-	IncludePanelIDs     []int
-	ExcludePanelIDs     []int
-	IncludePanelDataIDs []int
+	IncludePanelIDs     []string
+	ExcludePanelIDs     []string
+	IncludePanelDataIDs []string
 
 	// HTTP Client
 	HTTPClientOptions httpclient.Options
@@ -50,34 +49,19 @@ func (c *Config) String() string {
 	includedPanelIDs := "all"
 
 	if len(c.IncludePanelIDs) > 0 {
-		panelIDs := make([]string, len(c.IncludePanelIDs))
-		for index, id := range c.IncludePanelIDs {
-			panelIDs[index] = strconv.Itoa(id)
-		}
-
-		includedPanelIDs = strings.Join(panelIDs, ",")
+		includedPanelIDs = strings.Join(c.IncludePanelIDs, ",")
 	}
 
 	excludedPanelIDs := "none"
 
 	if len(c.ExcludePanelIDs) > 0 {
-		panelIDs := make([]string, len(c.ExcludePanelIDs))
-		for index, id := range c.ExcludePanelIDs {
-			panelIDs[index] = strconv.Itoa(id)
-		}
-
-		excludedPanelIDs = strings.Join(panelIDs, ",")
+		excludedPanelIDs = strings.Join(c.ExcludePanelIDs, ",")
 	}
 
 	includeDataPanelIDs := "none"
 
 	if len(c.IncludePanelDataIDs) > 0 {
-		panelIDs := make([]string, len(c.IncludePanelDataIDs))
-		for index, id := range c.IncludePanelDataIDs {
-			panelIDs[index] = strconv.Itoa(id)
-		}
-
-		includeDataPanelIDs = strings.Join(panelIDs, ",")
+		includeDataPanelIDs = strings.Join(c.IncludePanelDataIDs, ",")
 	}
 
 	appURL := "unset"

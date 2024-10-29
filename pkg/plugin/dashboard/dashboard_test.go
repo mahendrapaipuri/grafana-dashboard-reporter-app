@@ -31,7 +31,7 @@ func TestDashboard(t *testing.T) {
 	{"Slug":"testDash"}
 }`
 
-		dashDataString := `[{"width":"940px","height":"258px","transform":"translate(0px, 0px)","id":"12"},{"width":"940px","height":"258px","transform":"translate(948px, 0px)","id":"26"},{"width":"940px","height":"258px","transform":"translate(0px, 266px)","id":"27"}]`
+		dashDataString := `[{"width":940,"height":258,"x":0,"y":0,"id":"12"},{"width":940,"height":258,"x":940,"y":0,"id":"26"},{"width":940,"height":258,"x":0,"y":0,"id":"27"}]`
 
 		var dashData []interface{}
 		if err := json.Unmarshal([]byte(dashDataString), &dashData); err != nil {
@@ -42,9 +42,9 @@ func TestDashboard(t *testing.T) {
 
 		Convey("Panels should contain all panels from dashboard browser data", func() {
 			So(dash.Panels, ShouldHaveLength, 3)
-			So(dash.Panels[0].ID, ShouldEqual, 12)
-			So(dash.Panels[1].ID, ShouldEqual, 26)
-			So(dash.Panels[2].ID, ShouldEqual, 27)
+			So(dash.Panels[0].ID, ShouldEqual, "12")
+			So(dash.Panels[1].ID, ShouldEqual, "26")
+			So(dash.Panels[2].ID, ShouldEqual, "27")
 		})
 	})
 
@@ -77,9 +77,9 @@ func TestDashboard(t *testing.T) {
 
 		Convey("Panels should contain all panels from dashboard JSON model", func() {
 			So(dash.Panels, ShouldHaveLength, 5)
-			So(dash.Panels[0].ID, ShouldEqual, 0)
-			So(dash.Panels[1].ID, ShouldEqual, 1)
-			So(dash.Panels[2].ID, ShouldEqual, 2)
+			So(dash.Panels[0].ID, ShouldEqual, "0")
+			So(dash.Panels[1].ID, ShouldEqual, "1")
+			So(dash.Panels[2].ID, ShouldEqual, "2")
 		})
 	})
 }
@@ -104,9 +104,9 @@ func TestVariableValues(t *testing.T) {
 }
 
 func TestFilterPanels(t *testing.T) {
-	Convey("When filtering panels based on config", t, func() {
+	Convey("When filtering panels based on integer panel IDs", t, func() {
 		allPanels := []Panel{
-			{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7},
+			{ID: "1"}, {ID: "2"}, {ID: "3"}, {ID: "4"}, {ID: "15"}, {ID: "26"}, {ID: "37"},
 		}
 		cases := map[string]struct {
 			Config config.Config
@@ -114,22 +114,61 @@ func TestFilterPanels(t *testing.T) {
 		}{
 			"include": {
 				config.Config{
-					IncludePanelIDs: []int{1, 4, 6},
+					IncludePanelIDs: []string{"1", "4", "3"},
 				},
-				[]Panel{{ID: 1}, {ID: 4}, {ID: 6}},
+				[]Panel{{ID: "1"}, {ID: "3"}, {ID: "4"}},
 			},
 			"exclude": {
 				config.Config{
-					ExcludePanelIDs: []int{2, 4, 3},
+					ExcludePanelIDs: []string{"2", "4", "3"},
 				},
-				[]Panel{{ID: 1}, {ID: 5}, {ID: 6}, {ID: 7}},
+				[]Panel{{ID: "1"}, {ID: "15"}, {ID: "26"}, {ID: "37"}},
 			},
 			"include_and_exclude": {
 				config.Config{
-					ExcludePanelIDs: []int{2, 4, 3},
-					IncludePanelIDs: []int{1, 4, 6},
+					ExcludePanelIDs: []string{"2", "4", "3"},
+					IncludePanelIDs: []string{"1", "4", "6"},
 				},
-				[]Panel{{ID: 1}, {ID: 4}, {ID: 5}, {ID: 6}, {ID: 7}},
+				[]Panel{{ID: "1"}, {ID: "4"}, {ID: "15"}, {ID: "26"}, {ID: "37"}},
+			},
+		}
+
+		for clName, cl := range cases {
+			filteredPanels := filterPanels(allPanels, cl.Config)
+
+			Convey("Panels should be properly filtered: "+clName, func() {
+				So(filteredPanels, ShouldResemble, cl.Result)
+			})
+		}
+	})
+
+	// For Grafana >= v11.3.0
+	Convey("When filtering panels based on string panel IDs", t, func() {
+		allPanels := []Panel{
+			{ID: "panel-1-clone-0"}, {ID: "panel-1-clone-1"}, {ID: "panel-3"}, {ID: "panel-4"}, {ID: "panel-5"}, {ID: "panel-6"}, {ID: "panel-7"},
+		}
+		cases := map[string]struct {
+			Config config.Config
+			Result []Panel
+		}{
+			"include": {
+				config.Config{
+					IncludePanelIDs: []string{"panel-1", "panel-4", "panel-6"},
+				},
+				[]Panel{{ID: "panel-1-clone-0"}, {ID: "panel-1-clone-1"}, {ID: "panel-4"}, {ID: "panel-6"}},
+			},
+			"exclude": {
+				config.Config{
+					ExcludePanelIDs: []string{"panel-1", "panel-4", "panel-3"},
+				},
+				[]Panel{{ID: "panel-5"}, {ID: "panel-6"}, {ID: "panel-7"}},
+			},
+			"include_and_exclude": {
+				config.Config{
+					ExcludePanelIDs: []string{"panel-2", "panel-4", "panel-3"},
+					IncludePanelIDs: []string{"panel-1", "panel-4", "panel-6"},
+				},
+				[]Panel{{ID: "panel-1-clone-0"}, {ID: "panel-1-clone-1"}, {ID: "panel-4"}, {ID: "panel-5"}, {ID: "panel-6"}, {ID: "panel-7"}},
 			},
 		}
 

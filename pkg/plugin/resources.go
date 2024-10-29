@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -55,6 +54,26 @@ func getDashboardVariables(r *http.Request) url.Values {
 	}
 
 	return variables
+}
+
+// makePanelIDs returns panel IDs based on Grafana version.
+func makePanelIDs(appVersion string, ids []string) []string {
+	// For Grafana < 11.3.0, we can use the IDs as such
+	if semver.Compare(appVersion, "v11.3.0") == -1 {
+		return ids
+	}
+
+	panelIDs := make([]string, len(ids))
+
+	for i, id := range ids {
+		if !strings.HasPrefix(id, "panel") {
+			panelIDs[i] = "panel-" + id
+		} else {
+			panelIDs[i] = id
+		}
+	}
+
+	return panelIDs
 }
 
 // featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server.
@@ -311,45 +330,15 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if req.URL.Query().Has("includePanelID") {
-		conf.IncludePanelIDs = make([]int, len(req.URL.Query()["includePanelID"]))
-
-		for i, stringID := range req.URL.Query()["includePanelID"] {
-			conf.IncludePanelIDs[i], err = strconv.Atoi(stringID)
-			if err != nil {
-				ctxLogger.Debug("invalid includePanelID parameter: " + err.Error())
-				http.Error(w, "invalid includePanelID parameter: "+err.Error(), http.StatusBadRequest)
-
-				return
-			}
-		}
+		conf.IncludePanelIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["includePanelID"])
 	}
 
 	if req.URL.Query().Has("excludePanelID") {
-		conf.ExcludePanelIDs = make([]int, len(req.URL.Query()["excludePanelID"]))
-
-		for i, stringID := range req.URL.Query()["excludePanelID"] {
-			conf.ExcludePanelIDs[i], err = strconv.Atoi(stringID)
-			if err != nil {
-				ctxLogger.Debug("invalid includePanelID parameter: " + err.Error())
-				http.Error(w, "invalid excludePanelID parameter: "+err.Error(), http.StatusBadRequest)
-
-				return
-			}
-		}
+		conf.ExcludePanelIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["excludePanelID"])
 	}
 
 	if req.URL.Query().Has("includePanelDataID") {
-		conf.IncludePanelDataIDs = make([]int, len(req.URL.Query()["includePanelDataID"]))
-
-		for i, stringID := range req.URL.Query()["includePanelDataID"] {
-			conf.IncludePanelDataIDs[i], err = strconv.Atoi(stringID)
-			if err != nil {
-				ctxLogger.Debug("invalid includePanelDataID parameter: " + err.Error())
-				http.Error(w, "invalid includePanelDataID parameter: "+err.Error(), http.StatusBadRequest)
-
-				return
-			}
-		}
+		conf.IncludePanelDataIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["includePanelDataID"])
 	}
 
 	ctxLogger.Info("generate report using config: " + conf.String())
@@ -419,6 +408,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		app.chromeInstance,
 		app.workerPools,
 		grafanaAppURL,
+		app.grafanaSemVer,
 		credential,
 		variables,
 	)

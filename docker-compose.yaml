@@ -6,7 +6,7 @@ services:
       context: ./.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.2.0}
+        grafana_version: ${GRAFANA_VERSION:-11.3.0}
         development: ${DEVELOPMENT:-false}
     cap_add:
       - SYS_PTRACE
@@ -29,7 +29,7 @@ services:
       - GF_LOG_LEVEL=${GF_LOG_LEVEL:-info}
       - GF_DATAPROXY_LOGGING=true
       # allow anonymous admin so we don't have to set up a password to start testing
-      - GF_AUTH_ANONYMOUS_ENABLED=${GF_AUTH_ANONYMOUS_ENABLED:-true}
+      - GF_AUTH_ANONYMOUS_ENABLED=${GF_AUTH_ANONYMOUS_ENABLED:-false}
       - GF_AUTH_LOGIN_COOKIE_NAME=${GF_AUTH_LOGIN_COOKIE_NAME:-grafana_session}
       - GF_AUTH_BASIC_ENABLED=${GF_AUTH_BASIC_ENABLED:-false}
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
@@ -38,6 +38,7 @@ services:
       # We need to toggle external service accounts so that Grafana will get
       # the token from a service account to read dashboards
       - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-accessControlOnCall,idForwarding,externalServiceAccounts}
+      - GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED=${GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED:-true}
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
