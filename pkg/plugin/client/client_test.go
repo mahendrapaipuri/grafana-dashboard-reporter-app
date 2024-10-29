@@ -93,6 +93,7 @@ func TestGrafanaClientFetchesDashboardWithLocalChrome(t *testing.T) {
 				chromeInstance,
 				workerPools,
 				ts.URL,
+				"v11.1.0",
 				credential,
 				url.Values{},
 			)
@@ -165,6 +166,7 @@ func TestGrafanaClientFetchesDashboardWithRemoteChrome(t *testing.T) {
 				chromeInstance,
 				workerPools,
 				ts.URL,
+				"v11.1.0",
 				credential,
 				url.Values{},
 			)
@@ -215,7 +217,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"httpClient": {
-				New(log.NewNullLogger(), conf, http.DefaultClient, nil, workerPools, ts.URL, credential, variables),
+				New(log.NewNullLogger(), conf, http.DefaultClient, nil, workerPools, ts.URL, "v11.1.0", credential, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -223,7 +225,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			grf := cl.client
 			_, err := grf.PanelPNG(
 				context.Background(), "testDash",
-				dashboard.Panel{ID: 44, Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
+				dashboard.Panel{ID: "44", Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
 				dashboard.TimeRange{From: "now-1h", To: "now"},
 			)
 
@@ -266,7 +268,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 			pngEndpoint string
 		}{
 			"httpClient": {
-				New(log.NewNullLogger(), conf, http.DefaultClient, nil, workerPools, ts.URL, credential, variables),
+				New(log.NewNullLogger(), conf, http.DefaultClient, nil, workerPools, ts.URL, "v11.1.0", credential, variables),
 				"/render/d-solo/testDash/_",
 			},
 		}
@@ -275,7 +277,7 @@ func TestGrafanaClientFetchesPanelPNG(t *testing.T) {
 
 			Convey("The httpClient should request grid layout panels with width=2400 and height=216", func() {
 				_, err := grf.PanelPNG(context.Background(), "testDash",
-					dashboard.Panel{ID: 44, Type: "graph", Title: "title", GridPos: dashboard.GridPos{H: 6, W: 24}},
+					dashboard.Panel{ID: "44", Type: "graph", Title: "title", GridPos: dashboard.GridPos{H: 6, W: 24}},
 					dashboard.TimeRange{From: "now", To: "now-1h"},
 				)
 
@@ -313,12 +315,13 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 			nil,
 			workerPools,
 			ts.URL,
+			"v11.1.0",
 			Credential{},
 			url.Values{},
 		)
 
 		_, err := grf.PanelPNG(context.Background(), "testDash",
-			dashboard.Panel{ID: 44, Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
+			dashboard.Panel{ID: "44", Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
 			dashboard.TimeRange{From: "now-1h", To: "now"},
 		)
 
@@ -345,12 +348,13 @@ func TestGrafanaClientFetchPanelPNGErrorHandling(t *testing.T) {
 			nil,
 			workerPools,
 			ts.URL,
+			"v11.1.0",
 			Credential{},
 			url.Values{},
 		)
 
 		_, err := grf.PanelPNG(context.Background(), "testDash",
-			dashboard.Panel{ID: 44, Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
+			dashboard.Panel{ID: "44", Type: "singlestat", Title: "title", GridPos: dashboard.GridPos{}},
 			dashboard.TimeRange{From: "now-1h", To: "now"},
 		)
 

@@ -17,12 +17,14 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/browser"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
+	"golang.org/x/mod/semver"
 )
 
 // Javascripts vars.
@@ -32,18 +34,74 @@ var (
 	// does not have any side-effect, so we will always execute both of them. This
 	// avoids more logic to detect Grafana version.
 	unCollapseRowsJS = map[string]string{
-		"v10": `[...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0].click())`,
-		"v11": `[...document.querySelectorAll("[data-testid='dashboard-row-container']")].map((e) => [...e.querySelectorAll("[aria-expanded=false]")].map((e) => e.click()))`,
+		"v10":   `[...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0].click())`,
+		"v11":   `[...document.querySelectorAll("[data-testid='dashboard-row-container']")].map((e) => [...e.querySelectorAll("[aria-expanded=false]")].map((e) => e.click()))`,
+		"v11.3": `[...document.querySelectorAll("[aria-label='Expand row']")].map((e) => e.click())`,
 	}
-	dashboardDataJS = `[...document.getElementsByClassName('react-grid-item')].map((e) => ({"width": e.style.width, "height": e.style.height, "transform": e.style.transform, "id": e.getAttribute("data-panelid")}))`
+
+	// dashboardDataJS is a javascript to get dashboard related data.
+	dashboardDataJS = `[...document.querySelectorAll('[%[1]s]')].map((e)=>({"x": e.getBoundingClientRect().x, "y": e.getBoundingClientRect().y, "width": e.getBoundingClientRect().width, "height": e.getBoundingClientRect().height, "id": e.getAttribute("%[1]s")}))`
+
+	// waitPanelsJS is a javascript to wait for all panels to load.
+	// Seems like in Grafana v11.3.0+, panels are "lazily" loading. We need to scroll to the rows/panels for them to be visible.
+	// Even after expanding rows, we need to wait for panels to load data for our `dashboardDataJS` to get the panels data.
+	// It is a bit useless to wait for data to load in panels just to get the list of active panels and their positions but seems
+	// like we do not have many options here.
+	waitPanelsJS = `const loadPanels = async(sel = 'data-viz-panel-key', timeout = 30000) => {
+	  // Define a timer to wait until next try
+	  let timer = ms => new Promise(res => setTimeout(res, ms));
+	  
+	  // Always scroll to bottom of the page
+	  window.scrollTo(0,document.body.scrollHeight);
+	  
+	  // Wait duration between retries
+	  const waitDurationMsecs = 1000;
+
+	  // Maximum number of checks based on timeout
+	  const maxChecks = timeout / waitDurationMsecs;
+
+	  // Initialise parameters
+	  let lastPanels = [];
+	  let checkCounts = 1;
+
+	  // Panel count should be unchanged for minStableSizeIterations times
+	  let countStableSizeIterations = 0;
+	  const minStableSizeIterations = 3;
+
+	  while (checkCounts++ <= maxChecks) {
+	    // Get current number of panels
+	 	let currentPanels = document.querySelectorAll('[' + sel + ']');
+
+	    // If current panels and last panels are same, increment iterator
+		if (lastPanels.length !== 0 && currentPanels.length === lastPanels.length) {
+	      countStableSizeIterations++;
+	    } else {
+	      countStableSizeIterations = 0; // reset the counter
+	    }
+
+	    // If panel count is stable for minStableSizeIterations, return. We assume that
+		// the dashboard has loaded with all panels
+		if (countStableSizeIterations >= minStableSizeIterations) {
+	      return;
+	    }
+
+	    // If not, wait and retry
+		lastPanels = currentPanels;
+	    await timer(waitDurationMsecs);
+	  }
+
+	  return;
+	};`
 )
 
 // Tables related javascripts.
 const (
-	selDownloadCSVButton                             = `div[aria-label="Panel inspector Data content"] button[type="button"][aria-disabled="false"]`
+	selDownloadCSVButton                             = `div[aria-label="Panel inspector Data content"] button[type="button"]`
 	selInspectPanelDataTabExpandDataOptions          = `div[role='dialog'] button[aria-expanded=false]`
 	selInspectPanelDataTabApplyTransformationsToggle = `div[data-testid="dataOptions"] input:not(#excel-toggle):not(#formatted-data-toggle) + label`
 )
+
+var clickDownloadCSVButton = fmt.Sprintf(`[...document.querySelectorAll('%s')].map((e)=>(e.click()))`, selDownloadCSVButton)
 
 // Browser vars.
 var (
@@ -84,6 +142,7 @@ type GrafanaClient struct {
 	chromeInstance chrome.Instance
 	workerPools    worker.Pools
 	appURL         string
+	appVersion     string
 	credential     Credential
 	queryParams    url.Values
 }
@@ -98,6 +157,7 @@ func New(
 	chromeInstance chrome.Instance,
 	workerPools worker.Pools,
 	appURL string,
+	appVersion string,
 	credential Credential,
 	queryParams url.Values,
 ) GrafanaClient {
@@ -108,6 +168,7 @@ func New(
 		chromeInstance,
 		workerPools,
 		appURL,
+		appVersion,
 		credential,
 		queryParams,
 	}
@@ -217,6 +278,7 @@ func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 
 	// Create a new tab
 	tab := g.chromeInstance.NewTab(g.logger, g.conf)
+	tab.WithTimeout(60 * time.Second)
 	defer tab.Close(g.logger)
 
 	var headers map[string]any
@@ -231,25 +293,59 @@ func (g GrafanaClient) dashboardFromBrowser(dashUID string) ([]interface{}, erro
 		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
 
-	tasks := make(chromedp.Tasks, 0, len(unCollapseRowsJS)+1)
+	tasks := make(chromedp.Tasks, 0)
+
+	// JS attribute for fetching dashboard data has changed in v11.3.0
+	var dashDataJS string
+	if semver.Compare(g.appVersion, "v11.3.0") == -1 {
+		dashDataJS = fmt.Sprintf(dashboardDataJS, "data-panelid")
+	} else {
+		dashDataJS = fmt.Sprintf(dashboardDataJS, "data-viz-panel-key")
+
+		// Set viewport. Seems like it is crucial for Grafana v11.3.0+
+		tasks = append(tasks, chromedp.EmulateViewport(viewportWidth, viewportHeight))
+
+		// Add `loadPanels()` func to tab
+		tasks = append(tasks, chromedp.Evaluate(waitPanelsJS, nil))
+
+		// Wait for all panels to lazy load
+		tasks = append(tasks, chromedp.Evaluate(`loadPanels();`, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+			return p.WithAwaitPromise(true)
+		}))
+	}
 
 	// If full dashboard mode is requested, add js that uncollapses rows
 	if g.conf.DashboardMode == "full" {
 		for _, jsExpr := range unCollapseRowsJS {
 			tasks = append(tasks, chromedp.Evaluate(jsExpr, nil))
 		}
+
+		// For Grafana v11.3.0+, wait for all expanded panels to load
+		if semver.Compare(g.appVersion, "v11.3.0") > -1 {
+			tasks = append(tasks, chromedp.Evaluate(`loadPanels();`, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+				return p.WithAwaitPromise(true)
+			}))
+		}
 	}
 
 	// Fetch dashboard data
 	var dashboardData []interface{}
 
+	// var buf []byte
+
 	// JS that will fetch dashboard model
-	tasks = append(tasks, chromedp.EmulateViewport(viewportWidth, viewportHeight))
-	tasks = append(tasks, chromedp.Evaluate(dashboardDataJS, &dashboardData))
+	tasks = append(tasks, chromedp.Tasks{
+		chromedp.Evaluate(dashDataJS, &dashboardData),
+		// chromedp.FullScreenshot(&buf, 90),
+	}...)
 
 	if err := tab.Run(tasks); err != nil {
-		return nil, fmt.Errorf("error fetching dashboard URL from browser %s: %w", dashURL, err)
+		return nil, fmt.Errorf("error fetching dashboard data from browser %s: %w", dashURL, err)
 	}
+
+	// if err := os.WriteFile("fullScreenshot.png", buf, 0o644); err != nil {
+	// 	g.logger.Error("failed to write screenshot", "err", err)
+	// }
 
 	if len(dashboardData) == 0 {
 		return nil, ErrJavaScriptReturnedNoData
@@ -326,7 +422,7 @@ func (g GrafanaClient) PanelPNG(ctx context.Context, dashUID string, p dashboard
 func (g GrafanaClient) getPanelPNGURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {
 	values := url.Values{}
 	values.Add("theme", g.conf.Theme)
-	values.Add("panelId", strconv.Itoa(p.ID))
+	values.Add("panelId", p.ID)
 	values.Add("from", t.From)
 	values.Add("to", t.To)
 
@@ -429,9 +525,9 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 	// If an error occurs, it will be sent to the errCh channel.
 	// If a element can't be found, a timeout will occur and the context will be canceled.
 	go func() {
-		task := chromedp.Click(selDownloadCSVButton, chromedp.ByQuery)
+		task := chromedp.Evaluate(clickDownloadCSVButton, nil)
 		if err := tab.Run(task); err != nil {
-			errCh <- fmt.Errorf("error fetching dashboard URL from browser %s: %w", panelURL, err)
+			errCh <- fmt.Errorf("error fetching CSV URL from browser %s: %w", panelURL, err)
 		}
 	}()
 
@@ -443,9 +539,9 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 			return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyBlobURL)
 		}
 	case err := <-errCh:
-		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
+		return nil, fmt.Errorf("error fetching CSV data using URL from browser %s: %w", panelURL, err)
 	case <-tab.Context().Done():
-		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, tab.Context().Err())
+		return nil, fmt.Errorf("error fetching CSV data using URL from browser %s: %w", panelURL, tab.Context().Err())
 	}
 
 	close(blobURLCh)
@@ -487,10 +583,10 @@ func (g GrafanaClient) PanelCSV(_ context.Context, dashUID string, p dashboard.P
 func (g GrafanaClient) getPanelCSVURL(p dashboard.Panel, dashUID string, t dashboard.TimeRange) string {
 	values := url.Values{}
 	values.Add("theme", g.conf.Theme)
-	values.Add("viewPanel", strconv.Itoa(p.ID))
+	values.Add("viewPanel", p.ID)
 	values.Add("from", t.From)
 	values.Add("to", t.To)
-	values.Add("inspect", strconv.Itoa(p.ID))
+	values.Add("inspect", p.ID)
 	values.Add("inspectTab", "data")
 
 	// Add templated queryParams to URL

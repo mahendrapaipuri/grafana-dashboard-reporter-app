@@ -8,7 +8,7 @@ services:
       context: ../.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.1.0}
+        grafana_version: ${GRAFANA_VERSION:-11.3.0}
     ports:
       - 3080:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
@@ -35,6 +35,7 @@ services:
       # We need to toggle external service accounts so that Grafana will get
       # the token from a service account to read dashboards
       - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-accessControlOnCall,idForwarding,externalServiceAccounts}
+      - GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED=true
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
@@ -71,7 +72,7 @@ services:
       context: ../.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.1.0}
+        grafana_version: ${GRAFANA_VERSION:-11.3.0}
     ports:
       - 3443:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
@@ -96,6 +97,7 @@ services:
       # We need to toggle external service accounts so that Grafana will get
       # the token from a service account to read dashboards
       - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-accessControlOnCall,idForwarding,externalServiceAccounts}
+      - GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED=true
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false

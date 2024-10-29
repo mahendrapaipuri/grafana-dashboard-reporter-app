@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"net/url"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -23,8 +22,7 @@ import (
 // height scale should be fine with 36px as width and aspect ratio
 // should choose a height appropriately.
 var (
-	translateRegex = regexp.MustCompile(`translate\((?P<X>\d+)px, (?P<Y>\d+)px\)`)
-	scales         = map[string]float64{
+	scales = map[string]float64{
 		"width":  80,
 		"height": 36,
 	}
@@ -59,14 +57,53 @@ type GridPos struct {
 	Y float64 `json:"y"`
 }
 
+type PanelID string
+
+func (i *PanelID) UnmarshalJSON(b []byte) error {
+	var item interface{}
+	if err := json.Unmarshal(b, &item); err != nil {
+		return err
+	}
+
+	switch v := item.(type) {
+	case int:
+		*i = PanelID(strconv.Itoa(v))
+	case float64:
+		*i = PanelID(strconv.Itoa(int(v)))
+	case string:
+		*i = PanelID(v)
+	}
+
+	return nil
+}
+
 // Panel represents a Grafana dashboard panel.
 type Panel struct {
-	ID           int     `json:"id"`
+	ID           string  `json:"-"`
 	Type         string  `json:"type"`
 	Title        string  `json:"title"`
 	GridPos      GridPos `json:"gridPos"`
 	EncodedImage PanelImage
 	CSVData      CSVData
+}
+
+func (p *Panel) UnmarshalJSON(b []byte) error {
+	type tmp Panel
+
+	var s struct {
+		tmp
+		ID PanelID `json:"id"`
+	}
+
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+
+	*p = Panel(s.tmp)
+	p.ID = string(s.ID)
+
+	return err
 }
 
 type PanelImage struct {
@@ -179,10 +216,21 @@ func panelsFromBrowser(dashboard Dashboard, dashData []interface{}) ([]Panel, er
 		panels  []Panel
 	)
 
+	// We get HTML element's bounding box absolute coordinates which means
+	// x and y start at non zero. We need to check those offsets and subtract
+	// from all coordinates to ensure we start at (0, 0)
+	xOffset := math.MaxFloat64
+	yOffset := math.MaxFloat64
+
+	// Seems like different versions of Grafana returns the max width differently.
+	// So we check the maxWidth from returned coordinates and (w, h) tuples.
+	// Max Width = Max X + Width for that element
+	// We divide this maxWidth in 24 columns as done in Grafana to calculate Panel
+	// coordinates
+	var maxWidth float64
+
 	// Iterate over the slice of interfaces and build each panel
 	for _, panelData := range dashData {
-		var vInt, xInt, yInt float64
-
 		var p Panel
 
 		pMap, ok := panelData.(map[string]interface{})
@@ -191,52 +239,37 @@ func panelsFromBrowser(dashboard Dashboard, dashData []interface{}) ([]Panel, er
 		}
 
 		for k, v := range pMap {
-			vString, ok := v.(string)
-			if !ok {
-				continue
+			switch v := v.(type) {
+			case float64:
+				switch k {
+				case "width":
+					p.GridPos.W = v
+				case "height":
+					p.GridPos.H = v
+				case "x":
+					p.GridPos.X = v
+
+					if v < xOffset {
+						xOffset = v
+					}
+				case "y":
+					p.GridPos.Y = v
+
+					if v < yOffset {
+						yOffset = v
+					}
+				}
+			case string:
+				p.ID = v
 			}
 
-			switch k {
-			case "width":
-				if vInt, err = strconv.ParseFloat(strings.TrimSuffix(vString, "px"), 64); err != nil {
-					allErrs = errors.Join(err, allErrs)
-				}
-
-				p.GridPos.W = math.Round(vInt / scales[k])
-			case "height":
-				if vInt, err = strconv.ParseFloat(strings.TrimSuffix(vString, "px"), 64); err != nil {
-					allErrs = errors.Join(err, allErrs)
-				}
-
-				p.GridPos.H = math.Round(vInt / scales[k])
-			case "transform":
-				matches := translateRegex.FindStringSubmatch(vString)
-				if len(matches) == 3 {
-					xCoord := matches[translateRegex.SubexpIndex("X")]
-					if xInt, err = strconv.ParseFloat(xCoord, 64); err != nil {
-						allErrs = errors.Join(err, allErrs)
-					} else {
-						p.GridPos.X = math.Round(xInt / scales["width"])
-					}
-
-					yCoord := matches[translateRegex.SubexpIndex("Y")]
-					if yInt, err = strconv.ParseFloat(yCoord, 64); err != nil {
-						allErrs = errors.Join(err, allErrs)
-					} else {
-						p.GridPos.Y = math.Round(yInt / scales["height"])
-					}
-				} else {
-					allErrs = errors.Join(errors.New("failed to capture X and Y coordinate regex groups"), allErrs)
-				}
-			case "id":
-				if p.ID, err = strconv.Atoi(vString); err != nil {
-					allErrs = errors.Join(err, allErrs)
-				}
+			if p.GridPos.X+p.GridPos.W > maxWidth {
+				maxWidth = p.GridPos.X + p.GridPos.W
 			}
 		}
 
 		// If height comes to 1 or less, it is row panel and ignore it
-		if p.GridPos.H <= 1 {
+		if math.Round(p.GridPos.H/scales["height"]) <= 1 {
 			continue
 		}
 
@@ -263,6 +296,19 @@ func panelsFromBrowser(dashboard Dashboard, dashData []interface{}) ([]Panel, er
 
 		// Create panel model and append to panels
 		panels = append(panels, p)
+	}
+
+	// Remove xOffset and yOffset from all coordinates of panels
+	// and estimate new width scale based on max width
+	newScales := scales
+	newScales["width"] = math.Round((maxWidth - xOffset) / 24)
+
+	// Estimate Panel coordinates in Grafana column scale
+	for ipanel := range panels {
+		panels[ipanel].GridPos.X = math.Round((panels[ipanel].GridPos.X - xOffset) / scales["width"])
+		panels[ipanel].GridPos.Y = math.Round((panels[ipanel].GridPos.Y - yOffset) / scales["height"])
+		panels[ipanel].GridPos.W = math.Round(panels[ipanel].GridPos.W / scales["width"])
+		panels[ipanel].GridPos.H = math.Round(panels[ipanel].GridPos.H / scales["height"])
 	}
 
 	// Check if we fetched any panels
@@ -350,18 +396,49 @@ func filterPanels(panels []Panel, config config.Config) []Panel {
 	// Iterate over all panels and check if they should be included or not
 	var filteredPanels []Panel
 
-	var filteredPanelIDs []int
+	var filteredPanelIDs []string
+
 	for _, panel := range panels {
-		if len(config.IncludePanelIDs) > 0 && slices.Contains(config.IncludePanelIDs, panel.ID) &&
-			!slices.Contains(filteredPanelIDs, panel.ID) {
-			filteredPanelIDs = append(filteredPanelIDs, panel.ID)
-			filteredPanels = append(filteredPanels, panel)
+		// Attempt to convert panel ID to int. If we succeed, do direct
+		// comparison else do prefix check
+		var doDirectComp bool
+		if _, err := strconv.ParseInt(panel.ID, 10, 0); err == nil {
+			doDirectComp = true
 		}
 
-		if len(config.ExcludePanelIDs) > 0 && !slices.Contains(config.ExcludePanelIDs, panel.ID) &&
-			!slices.Contains(filteredPanelIDs, panel.ID) {
-			filteredPanelIDs = append(filteredPanelIDs, panel.ID)
-			filteredPanels = append(filteredPanels, panel)
+		for _, id := range config.IncludePanelIDs {
+			if !doDirectComp {
+				if strings.HasPrefix(panel.ID, id) && !slices.Contains(filteredPanelIDs, panel.ID) {
+					filteredPanelIDs = append(filteredPanelIDs, panel.ID)
+					filteredPanels = append(filteredPanels, panel)
+				}
+			} else {
+				if panel.ID == id && !slices.Contains(filteredPanelIDs, panel.ID) {
+					filteredPanelIDs = append(filteredPanelIDs, panel.ID)
+					filteredPanels = append(filteredPanels, panel)
+				}
+			}
+		}
+
+		if len(config.ExcludePanelIDs) > 0 {
+			exclude := false
+
+			for _, id := range config.ExcludePanelIDs {
+				if !doDirectComp {
+					if strings.HasPrefix(panel.ID, id) {
+						exclude = true
+					}
+				} else {
+					if panel.ID == id {
+						exclude = true
+					}
+				}
+			}
+
+			if !exclude && !slices.Contains(filteredPanelIDs, panel.ID) {
+				filteredPanelIDs = append(filteredPanelIDs, panel.ID)
+				filteredPanels = append(filteredPanels, panel)
+			}
 		}
 	}
 

@@ -104,6 +104,17 @@ The plugin can work without enabling any of the above feature flags for `Grafana
 However, for `Grafana > 10.4.4`, feature `externalServiceAccounts` must be enabled for
 the plugin to work.
 
+> [!IMPORTANT]
+> From Grafana v11.3.0+, to use `externalServiceAccounts` feature, the following configuration
+must be added to `auth` section of Grafana.
+
+```ini
+[auth]
+managed_service_accounts_enabled = true
+```
+
+More details can be found in Grafana [docs](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#managed_service_accounts_enabled)
+
 ### Install with Docker-compose
 
 There is a docker compose file provided in the repo. Create a directory `dist` in the

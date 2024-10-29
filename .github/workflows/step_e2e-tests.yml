@@ -36,12 +36,19 @@ jobs:
             # snapshots-folder: remote-chrome
             name: remote-chrome-10.4.7-without-features
 
-          # Latest Grafana with remote chrome
+          # Grafana v11 with remote chrome
           - grafana-version: 11.1.0
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             # snapshots-folder: remote-chrome
             name: remote-chrome-11.1.0-with-features
+
+          # Latest Grafana with local chrome
+          - grafana-version: 11.3.0
+            remote-chrome-url: ws://localhost:9222
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            # snapshots-folder: remote-chrome
+            name: local-chrome-11.3.0-with-features
 
     steps:
       - uses: actions/checkout@v4
