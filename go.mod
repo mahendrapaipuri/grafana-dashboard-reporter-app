@@ -1,6 +1,7 @@
 module github.com/mahendrapaipuri/grafana-dashboard-reporter-app
 
-go 1.22.0
+go 1.23
+
 toolchain go1.23.2
 
 require (
