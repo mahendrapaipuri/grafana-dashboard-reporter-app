@@ -101,8 +101,8 @@ enable = accessControlOnCall,idForwarding,externalServiceAccounts
 ```
 
 The plugin can work without enabling any of the above feature flags for `Grafana <= 10.4.3`.
-However, for `Grafana > 10.4.4`, feature `externalServiceAccounts` must be enabled for
-the plugin to work.
+However, for `Grafana > 10.4.4`, feature either `externalServiceAccounts` must be enabled for
+the plugin to work or a manually created service account token must be configured with the plugin.
 
 > [!IMPORTANT]
 > From Grafana v11.3.0+, to use `externalServiceAccounts` feature, the following configuration
@@ -194,11 +194,17 @@ that it is not possible to set that configuration option using that specific sou
 
 ### Authentication settings
 
-This config section allows to configure authentication related settings.
+This config section allows to configure authentication related settings. **This section
+is only relevant when `externalServiceAccounts` feature flag is not enabled**.
 
 - `file:saToken; ui:Service Account Token`: A service account token that will be used
    to generate reports _via_ API requests. More details on how to use it is briefed in
   [Using Grafana API](#using-grafana-api) section.
+
+> [!IMPORTANT]
+> When creating a service account, `Admin` role must be chosen as the plugin needs few
+additional permissions. Once a service account with an `Admin` role has been created,
+a new service token can be generated and configured with the plugin.
 
 ### Report settings
 
