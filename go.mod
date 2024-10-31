@@ -1,12 +1,11 @@
 module github.com/mahendrapaipuri/grafana-dashboard-reporter-app
 
 go 1.22.0
-
-toolchain go1.22.5
+toolchain go1.23.2
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20241003230502-a4a8f7c660df
-	github.com/chromedp/chromedp v0.11.0
+	github.com/chromedp/cdproto v0.0.0-20241022234722-4d5d5faf59fb
+	github.com/chromedp/chromedp v0.11.1
 	github.com/grafana/grafana-plugin-sdk-go v0.258.0
 	github.com/magefile/mage v1.15.0
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
@@ -24,7 +23,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
-	github.com/chromedp/sysutil v1.0.0 // indirect
+	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elazarl/goproxy v0.0.0-20240618083138-03be62527ccb // indirect
