@@ -35,7 +35,7 @@
   "author": "Mahendra Paipuri",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@babel/core": "^7.25.2",
+    "@babel/core": "^7.26.0",
     "@grafana/eslint-config": "^7.0.0",
     "@grafana/plugin-e2e": "^1.6.1",
     "@grafana/tsconfig": "2.0.0",
