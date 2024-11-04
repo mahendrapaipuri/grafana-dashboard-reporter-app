@@ -688,6 +688,13 @@
   dependencies:
     tslib "2.6.3"
 
+"@grafana/schema@11.3.0":
+  version "11.3.0"
+  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.3.0.tgz#30d57d3d696b5926f173048949bb994d72056329"
+  integrity sha512-KOgk0omDs8URuhL++ksgMDPMB49di8oCKqMNI10z3zSQniECUow+3Ggz1WeenReL7ajyJVG/O3rGVEaqteDMzg==
+  dependencies:
+    tslib "2.7.0"
+
 "@grafana/tsconfig@2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@grafana/tsconfig/-/tsconfig-2.0.0.tgz#277aba907ddbe0301dc37248923e6bd2b68f5151"
