@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"io"
 	"reflect"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -205,14 +204,17 @@ func (r *PDF) renderPNGsParallel(ctx context.Context) error {
 	numPanels := len(r.grafanaDashboard.Panels)
 	errs := make(chan error, numPanels)
 
-	wg := sync.WaitGroup{}
-	wg.Add(numPanels)
+	// Get the indexes of PNG panels that need to be included in the report
+	pngPanels := selectPanels(r.grafanaDashboard.Panels, r.conf.IncludePanelIDs, r.conf.ExcludePanelIDs, true)
 
-	for iPanel := range numPanels {
+	wg := sync.WaitGroup{}
+	wg.Add(len(pngPanels))
+
+	for _, panelIndex := range pngPanels {
 		r.workerPools[worker.Renderer].Do(func() {
 			defer wg.Done()
 
-			errs <- r.renderPNG(ctx, iPanel)
+			errs <- r.renderPNG(ctx, panelIndex)
 		})
 	}
 
@@ -234,19 +236,18 @@ func (r *PDF) renderPNGsParallel(ctx context.Context) error {
 func (r *PDF) renderCSVsParallel(ctx context.Context) error {
 	numPanels := len(r.grafanaDashboard.Panels)
 
-	tablePanelIDs := make([]int, 0, numPanels)
 	errs := make(chan error, numPanels)
 
-	for panelIndex, panel := range r.grafanaDashboard.Panels {
-		if slices.Contains(r.conf.IncludePanelDataIDs, panel.ID) {
-			tablePanelIDs = append(tablePanelIDs, panelIndex)
-		}
+	// Get the indexes of table panels that need to be included in the report
+	tablePanels := selectPanels(r.grafanaDashboard.Panels, r.conf.IncludePanelDataIDs, nil, false)
+	if len(tablePanels) == 0 {
+		return nil
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(len(tablePanelIDs))
+	wg.Add(len(tablePanels))
 
-	for _, panelIndex := range tablePanelIDs {
+	for _, panelIndex := range tablePanels {
 		r.workerPools[worker.Browser].Do(func() {
 			defer wg.Done()
 
@@ -309,7 +310,11 @@ func (r *PDF) generateHTMLFile() error {
 	// Template functions
 	funcMap := template.FuncMap{
 		// The name "inc" is what the function will be called in the template text.
-		"inc": func(i float64) float64 {
+		"inc": func(i int) int {
+			return i + 1
+		},
+
+		"add": func(i float64) float64 {
 			return i + 1
 		},
 

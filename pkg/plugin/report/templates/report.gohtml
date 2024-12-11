@@ -56,24 +56,28 @@
     }
 
     {{- if .IsGridLayout}} 
-        {{- range $i, $v := .Panels}} 
+        {{- range $i, $v := .Dashboard.Panels}} 
     .grid-image-{{$i}} {
-        grid-column: {{inc $v.GridPos.X}} / span {{$v.GridPos.W}};
-        grid-row: {{inc $v.GridPos.Y}} / span {{$v.GridPos.H}};
+        grid-column: {{add $v.GridPos.X}} / span {{$v.GridPos.W}};
+        grid-row: {{add $v.GridPos.Y}} / span {{$v.GridPos.H}};
     }
 
         {{end}}
 
     {{else}}
-        {{- range $i, $v := .Panels}} 
+        {{$p := 0}}
+        {{- range $i, $v := .Dashboard.Panels}}
+            {{- if $v.EncodedImage.Image }}
     .grid-image-{{$i}} {
         grid-column: 1 / span 24;
-        grid-row: {{mult $i}} / span 30;
+        grid-row: {{mult $p}} / span 30;
     }
+            {{$p = inc $p}}
+            {{- end }}
 
-        {{end}}
+        {{- end}}
 
-    {{end}}
+    {{- end}}
 </style>
 
 <head>
@@ -85,9 +89,11 @@
     <div class="container">
         <div class="grid">
             {{- range $i, $v := .Dashboard.Panels}}
+            {{- if $v.EncodedImage.Image }}
             <figure class="grid-image grid-image-{{$i}}">
                 <img src="{{ print $v.EncodedImage | url }}" id="image{{$v.ID}}" alt="{{$v.Title}}" class="grid-image">
             </figure>
+            {{- end }}
             {{- end }}
         </div>
     </div>
