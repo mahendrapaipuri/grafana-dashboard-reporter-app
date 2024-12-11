@@ -49,6 +49,7 @@ plugin-validator
 
 # Ignore PDF files
 *.pdf
+!docs/reports/*.pdf
 !.ci/reports/*/*.pdf
 
 # Playwright stuff
