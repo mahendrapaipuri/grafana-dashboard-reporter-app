@@ -83,7 +83,7 @@ apps:
       #
       dashboardMode: default
 
-      # Time zone to use the report. This should be provided in IANA format.
+      # Time zone to use in the report. This should be provided in IANA format.
       # More details on IANA format can be obtained from https://www.iana.org/time-zones
       # Eg America/New_York, Asia/Singapore, Australia/Melbourne, Europe/Berlin
       #
@@ -95,6 +95,19 @@ apps:
       # need to escape URL characters
       #
       timeZone: ''
+
+      # Time format to use in the report. The format should be provided as the Golang
+      # time layout. More details can be found in https://pkg.go.dev/time#Layout.
+      #
+      # By default format "Mon Jan _2 15:04:05 MST 2006" is used in the report. If the
+      # provided layout is invalid, it will be ignored and default layout will be used
+      # in the report.
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?timeFormat=2006-01-02+15%3A04%3A05 during report generation process. Note that we 
+      # need to escape URL characters
+      #
+      timeFormat: ''
 
       # Branding logo in the report.
       #

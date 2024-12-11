@@ -30,6 +30,7 @@ export type JsonData = {
   layout?: string;
   dashboardMode?: string;
   timeZone?: string;
+  timeFormat?: string;
   logo?: string;
   headerTemplate?: string;
   footerTemplate?: string;
@@ -67,6 +68,10 @@ type State = {
   timeZone: string;
   // If timeZone has changed
   timeZoneChanged: boolean;
+  // time format in Golang layout
+  timeFormat: string;
+  // If timeFormat has changed
+  timeFormatChanged: boolean;
   // base64 encoded logo
   logo: string;
   // If logo has changed
@@ -121,6 +126,8 @@ export const AppConfig = ({ plugin }: Props) => {
     dashboardModeChanged: false,
     timeZone: jsonData?.timeZone || "",
     timeZoneChanged: false,
+    timeFormat: jsonData?.timeFormat || "",
+    timeFormatChanged: false,
     logo: jsonData?.logo || "",
     logoChanged: false,
     headerTemplate: jsonData?.headerTemplate || "",
@@ -214,6 +221,14 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangetimeFormat = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      timeFormat: event.target.value,
+      timeFormatChanged: true,
+    });
+  };
+
   const onChangeLogo = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
@@ -301,6 +316,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
+                    timeFormat: state.timeFormat,
                     logo: state.logo,
                     headerTemplate: state.headerTemplate,
                     footerTemplate: state.footerTemplate,
@@ -342,6 +358,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
                     timeZone: state.timeZone,
+                    timeFormat: state.timeFormat,
                     logo: state.logo,
                     headerTemplate: state.headerTemplate,
                     footerTemplate: state.footerTemplate,
@@ -468,6 +485,23 @@ export const AppConfig = ({ plugin }: Props) => {
             label={`Time Zone`}
             value={state.timeZone}
             onChange={onChangetimeZone}
+          />
+        </Field>
+
+        {/* Time format */}
+        <Field
+          label="Time Format"
+          description="Time Format as Golang time Layout (https://pkg.go.dev/time#Layout)."
+          data-testid={testIds.appConfig.tf}
+          className={s.marginTop}
+        >
+          <Input
+            type="string"
+            width={60}
+            id="tz"
+            label={`Time Format`}
+            value={state.timeFormat}
+            onChange={onChangetimeFormat}
           />
         </Field>
 
@@ -637,6 +671,7 @@ export const AppConfig = ({ plugin }: Props) => {
                 layout: state.layout,
                 dashboardMode: state.dashboardMode,
                 timeZone: state.timeZone,
+                timeFormat: state.timeFormat,
                 logo: state.logo,
                 headerTemplate: state.headerTemplate,
                 footerTemplate: state.footerTemplate,
@@ -661,6 +696,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.orientationChanged &&
               !state.dashboardModeChanged &&
               !state.timeZoneChanged &&
+              !state.timeFormatChanged &&
               !state.logoChanged &&
               !state.headerTemplateChanged &&
               !state.footerTemplateChanged &&

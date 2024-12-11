@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
@@ -22,6 +23,7 @@ type Config struct {
 	Layout              string `env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"          json:"layout"`
 	DashboardMode       string `env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"  json:"dashboardMode"`
 	TimeZone            string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"        json:"timeZone"`
+	TimeFormat          string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEFORMAT, overwrite"      json:"timeFormat"`
 	EncodedLogo         string `env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"            json:"logo"`
 	HeaderTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE, overwrite" json:"headerTemplate"`
 	FooterTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE, overwrite" json:"footerTemplate"`
@@ -71,10 +73,10 @@ func (c *Config) String() string {
 
 	return fmt.Sprintf(
 		"Theme: %s; Orientation: %s; Layout: %s; Dashboard Mode: %s; "+
-			"Time Zone: %s; Encoded Logo: %s; "+
+			"Time Zone: %s; Time Format: %s; Encoded Logo: %s; "+
 			"Max Renderer Workers: %d; Max Browser Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
 			"TLS Skip verify: %v; Included Panel IDs: %s; Excluded Panel IDs: %s Included Data for Panel IDs: %s",
-		c.Theme, c.Orientation, c.Layout, c.DashboardMode, c.TimeZone,
+		c.Theme, c.Orientation, c.Layout, c.DashboardMode, c.TimeZone, c.TimeFormat,
 		encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers, c.RemoteChromeURL, appURL,
 		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs, includeDataPanelIDs,
 	)
@@ -90,6 +92,7 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 		Layout:            "simple",
 		DashboardMode:     "default",
 		TimeZone:          "",
+		TimeFormat:        time.UnixDate,
 		EncodedLogo:       "",
 		HeaderTemplate:    "",
 		FooterTemplate:    "",

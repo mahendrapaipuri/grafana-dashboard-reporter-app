@@ -329,6 +329,10 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		conf.TimeZone = req.URL.Query().Get("timeZone")
 	}
 
+	if req.URL.Query().Has("timeFormat") {
+		conf.TimeFormat = req.URL.Query().Get("timeFormat")
+	}
+
 	if req.URL.Query().Has("includePanelID") {
 		conf.IncludePanelIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["includePanelID"])
 	}
