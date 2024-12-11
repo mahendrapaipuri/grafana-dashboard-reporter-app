@@ -6,8 +6,9 @@ services:
       context: ./.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.3.0}
+        grafana_version: ${GRAFANA_VERSION:-11.4.0}
         development: ${DEVELOPMENT:-false}
+        go_version: ${GOVERSION:-1.23.2}
     cap_add:
       - SYS_PTRACE
     ports:
@@ -56,8 +57,10 @@ services:
       - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
       - RENDERING_CLUSTERING_TIMEOUT=60
       - IGNORE_HTTPS_ERRORS=true
+      # - RENDERING_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-accelerated-2d-canvas,--disable-gpu,--remote-debugging-port=9090
     ports:
       - 8081
+      # - 9090
   chrome:
     image: chromedp/headless-shell:latest
     shm_size: 2G
