@@ -330,8 +330,7 @@ Besides there are **two** special query parameters available namely:
 
 > [!NOTE]
 > If a given panel ID is set in both `includePanelID` and `excludePanelID` query parameter,
-  it will be **included** in the report. Query parameter `includePanelID` has more
-  precedence over `excludePanelID`.
+  it will be **excluded** in the report.
 
 #### Rendering tabular data in the report
 
@@ -472,6 +471,7 @@ to a version `> 1.5.0` ASAP. -->
 Here are the example reports that are generated out of the test dashboards
 
 - [Report with portrait orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full.pdf)
+- [Report with portrait orientation, simple layout, full dashboard mode and tabular data](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full_table.pdf)
 - [Report with landscape orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_simple_full.pdf)
 - [Report with portrait orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_full.pdf)
 - [Report with landscape orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_grid_full.pdf)

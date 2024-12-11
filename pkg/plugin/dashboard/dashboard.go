@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"net/url"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -111,6 +110,10 @@ type PanelImage struct {
 	MimeType string
 }
 
+func (p PanelImage) String() string {
+	return fmt.Sprintf("data:%s;base64,%s", p.MimeType, p.Image)
+}
+
 // IsSingleStat returns true if panel is of type SingleStat.
 func (p Panel) IsSingleStat() bool {
 	return p.Is(SingleStat)
@@ -183,20 +186,15 @@ func New(log log.Logger, config config.Config, dashJSON []byte, dashData []inter
 	}
 
 	// Attempt to update panels from browser data
-	// If there are no errors, update the panels from browser dashboard model and
-	// return
-	var panels []Panel
 
 	var err error
-	if panels, err = panelsFromBrowser(dashboard, dashData); err != nil {
+	if dashboard.Panels, err = panelsFromBrowser(dashboard, dashData); err != nil {
 		log.Warn("failed to get panels from browser data", "error", err)
 		// If we fail to get panels from browser data, get them from dashboard JSON model
 		// and correct grid positions
-		panels = panelsFromJSON(dashboard.RowOrPanels, config.DashboardMode)
+		dashboard.Panels = panelsFromJSON(dashboard.RowOrPanels, config.DashboardMode)
 	}
 
-	// Filter the panels based on IncludePanelIDs/ExcludePanelIDs
-	dashboard.Panels = filterPanels(panels, config)
 	// Add query parameters to dashboard model
 	dashboard.VariableValues = variablesValues(queryParams)
 
@@ -383,68 +381,4 @@ func panelsFromJSON(rowOrPanels []RowOrPanel, dashboardMode string) []Panel {
 	}
 
 	return panels
-}
-
-// filterPanels filters the panels based on IncludePanelIDs and ExcludePanelIDs
-// config parameters.
-func filterPanels(panels []Panel, config config.Config) []Panel {
-	// If config parameters are empty, return original panels
-	if len(config.IncludePanelIDs) == 0 && len(config.ExcludePanelIDs) == 0 {
-		return panels
-	}
-
-	// Iterate over all panels and check if they should be included or not
-	var filteredPanels []Panel
-
-	var filteredPanelIDs []string
-
-	for _, panel := range panels {
-		// Attempt to convert panel ID to int. If we succeed, do direct
-		// comparison else do prefix check
-		var doDirectComp bool
-		if _, err := strconv.ParseInt(panel.ID, 10, 0); err == nil {
-			doDirectComp = true
-		}
-
-		for _, id := range config.IncludePanelIDs {
-			if !doDirectComp {
-				if strings.HasPrefix(panel.ID, id) && !slices.Contains(filteredPanelIDs, panel.ID) {
-					filteredPanelIDs = append(filteredPanelIDs, panel.ID)
-					filteredPanels = append(filteredPanels, panel)
-				}
-			} else {
-				if panel.ID == id && !slices.Contains(filteredPanelIDs, panel.ID) {
-					filteredPanelIDs = append(filteredPanelIDs, panel.ID)
-					filteredPanels = append(filteredPanels, panel)
-				}
-			}
-		}
-
-		if len(config.ExcludePanelIDs) > 0 {
-			exclude := false
-
-			for _, id := range config.ExcludePanelIDs {
-				if !doDirectComp {
-					if strings.HasPrefix(panel.ID, id) {
-						exclude = true
-					}
-				} else {
-					if panel.ID == id {
-						exclude = true
-					}
-				}
-			}
-
-			if !exclude && !slices.Contains(filteredPanelIDs, panel.ID) {
-				filteredPanelIDs = append(filteredPanelIDs, panel.ID)
-				filteredPanels = append(filteredPanels, panel)
-			}
-		}
-	}
-
-	return filteredPanels
-}
-
-func (p PanelImage) String() string {
-	return fmt.Sprintf("data:%s;base64,%s", p.MimeType, p.Image)
 }
