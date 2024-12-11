@@ -40,10 +40,10 @@ jobs:
             echo "has-backend=true" >> $GITHUB_OUTPUT
           fi
 
-      # Install chrome as we will use it in e2e tests
-      - uses: browser-actions/setup-chrome@v1
-        with:
-          install-dependencies: true
+      # # Install chrome as we will use it in e2e tests
+      # - uses: browser-actions/setup-chrome@v1
+      #   with:
+      #     install-dependencies: true
 
       # Install chrome manually until the upstream action
       # fixes it for latest ubuntu
