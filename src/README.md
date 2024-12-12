@@ -232,6 +232,14 @@ This config section allows to configure report related settings.
   [IANA format](https://www.iana.org/time-zones). By default, local Grafana server's
   time zone will be used.
 
+> [!NOTE]
+> Starting from Grafana v11.3.0, the dashboard's configured time zone is exposed as a
+query parameter in the dashboard URL and it will be used to set the time zone of the report.
+Hence, for deployments with Grafana v11.3.0 or above, this parameter will not have effect. For
+deployments with Grafana < v11.3.0, the time zone must be configured on
+[grafana-image-renderer](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#rendering_timezone)
+as well to render the panels in that given time zone.
+
 - `file:timeFormat; env:GF_REPORTER_PLUGIN_REPORT_TIMEFORMAT; ui:Time Format`: The time format
   that will be used in the report. It has to conform to the
   [Golang time Layout](https://pkg.go.dev/time#Layout). By default,  format

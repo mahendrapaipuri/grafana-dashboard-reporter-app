@@ -474,7 +474,7 @@ export const AppConfig = ({ plugin }: Props) => {
         {/* Time zone */}
         <Field
           label="Time Zone"
-          description="Time Zone in IANA format. By default time zone of the server will be used."
+          description="Time Zone in IANA format. By default time zone of the server will be used. Only relevant for Grafana < 11.3.0."
           data-testid={testIds.appConfig.tz}
           className={s.marginTop}
         >

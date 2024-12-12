@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -327,6 +328,19 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 	if req.URL.Query().Has("timeZone") {
 		conf.TimeZone = req.URL.Query().Get("timeZone")
+	}
+
+	// Starting from Grafana v11.3.0, Grafana sets timezone query parameter.
+	// We should give priority to that over the plugin's config value.
+	// We will still support plugin's config parameter for backwards compatibility
+	if req.URL.Query().Has("timezone") {
+		timeZone := req.URL.Query().Get("timezone")
+		if !slices.Contains([]string{"browser", "default"}, timeZone) {
+			if timeZone == "utc" {
+				timeZone = "Etc/UTC"
+			}
+			conf.TimeZone = timeZone
+		}
 	}
 
 	if req.URL.Query().Has("timeFormat") {

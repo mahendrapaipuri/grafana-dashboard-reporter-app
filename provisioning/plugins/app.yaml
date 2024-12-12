@@ -90,6 +90,12 @@ apps:
       # If empty or an invalid format is provided, the plugin defaults to using local
       # location of the Grafana server.
       #
+      # This config option is only relevant for Grafana < 11.3.0. For instances, using
+      # Grafana 11.3.0 or above, time zone of the current dashboard will be used as
+      # the timezone for the report generation. For deployments with Grafana < v11.3.0, 
+      # the time zone must be configured on grafana-image-renderer (https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#rendering_timezone)
+      # as well to render the panels in that given time zone.
+      #
       # This setting can be overridden for a particular dashboard by using query parameter
       # ?timeZone=America%2FNew_York during report generation process. Note that we 
       # need to escape URL characters
