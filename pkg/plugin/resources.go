@@ -339,6 +339,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			if timeZone == "utc" {
 				timeZone = "Etc/UTC"
 			}
+
 			conf.TimeZone = timeZone
 		}
 	}
