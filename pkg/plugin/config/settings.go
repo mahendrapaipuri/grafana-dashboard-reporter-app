@@ -46,7 +46,7 @@ type Config struct {
 	IncludePanelDataIDs []string
 
 	// Time location
-	TimeLocation *time.Location
+	Location *time.Location
 
 	// HTTP Client
 	HTTPClientOptions httpclient.Options
@@ -79,10 +79,10 @@ func (c *Config) Validate() error {
 
 	// Set time zone to current server time zone if empty
 	if loc, err := time.LoadLocation(c.TimeZone); err != nil || c.TimeZone == "" {
-		c.TimeLocation = time.Now().Local().Location()
-		c.TimeZone = c.TimeLocation.String()
+		c.Location = time.Now().Local().Location()
+		c.TimeZone = c.Location.String()
 	} else {
-		c.TimeLocation = loc
+		c.Location = loc
 		c.TimeZone = loc.String()
 	}
 

@@ -65,12 +65,12 @@ func (t templateData) IsGridLayout() bool {
 
 // From returns from time string.
 func (t templateData) From() string {
-	return t.TimeRange.FromFormatted(t.Conf.TimeLocation, t.Conf.TimeFormat)
+	return t.TimeRange.FromFormatted(t.Conf.Location, t.Conf.TimeFormat)
 }
 
 // To returns to time string.
 func (t templateData) To() string {
-	return t.TimeRange.ToFormatted(t.Conf.TimeLocation, t.Conf.TimeFormat)
+	return t.TimeRange.ToFormatted(t.Conf.Location, t.Conf.TimeFormat)
 }
 
 // Logo returns encoded logo.
@@ -331,7 +331,7 @@ func (r *PDF) generateHTMLFile() error {
 	// Template data
 	data := templateData{
 		*r.options,
-		time.Now().Local().In(r.conf.TimeLocation).Format(r.conf.TimeFormat),
+		time.Now().Local().In(r.conf.Location).Format(r.conf.TimeFormat),
 		r.grafanaDashboard,
 		r.conf,
 	}
