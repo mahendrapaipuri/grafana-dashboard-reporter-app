@@ -20,6 +20,7 @@ type TimeRange struct {
 //     To:  "now-1d/d" -> end of yesterday
 //     When used as boundary, the same string will evaluate to a different time if used in 'From' or 'To'
 //   - absolute unix time: "142321234"
+//   - absolute time string: "2024-12-02T23:00:00.000Z" start from Grafana v11.3.0
 //
 // The required behaviour is clearly documented in the unit tests, time_test.go.
 type now time.Time
@@ -34,6 +35,7 @@ const (
 const (
 	relTimeRegExp      = "^now([+-][0-9]+)([mhdwMy])$"
 	boundaryTimeRegExp = "^(.*?)/([dwMy])$"
+	layout             = "2006-01-02T15:04:05.000Z"
 )
 
 // Convenience function to raise panic with custom message.
@@ -85,8 +87,14 @@ func roundTimeToBoundary(t time.Time, b boundary, boundaryUnit string) time.Time
 
 // Parse time stamp to time.Unix() format.
 func parseAbsTime(s string) time.Time {
+	// Check if time is in unix timestamp format
 	if timeInMs, err := strconv.ParseInt(s, 10, 64); err == nil {
 		return time.Unix(timeInMs/1000, 0)
+	}
+
+	// Check if time is in 2024-12-02T23:00:00.000Z format
+	if absTime, err := time.Parse(layout, s); err == nil && absTime.Unix() > 0 {
+		return absTime
 	}
 
 	panic(unrecognized(s))
