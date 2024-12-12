@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -287,46 +288,40 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 	if req.URL.Query().Has("theme") {
 		conf.Theme = req.URL.Query().Get("theme")
-		if conf.Theme != "light" && conf.Theme != "dark" {
-			ctxLogger.Debug("invalid theme parameter: " + conf.Theme)
-			http.Error(w, "invalid theme parameter: "+conf.Theme, http.StatusBadRequest)
-
-			return
-		}
 	}
 
 	if req.URL.Query().Has("layout") {
 		conf.Layout = req.URL.Query().Get("layout")
-		if conf.Layout != "simple" && conf.Layout != "grid" {
-			ctxLogger.Debug("invalid layout parameter: " + conf.Layout)
-			http.Error(w, "invalid layout parameter: "+conf.Layout, http.StatusBadRequest)
-
-			return
-		}
 	}
 
 	if req.URL.Query().Has("orientation") {
 		conf.Orientation = req.URL.Query().Get("orientation")
-		if conf.Orientation != "portrait" && conf.Orientation != "landscape" {
-			ctxLogger.Debug("invalid orientation parameter: " + conf.Orientation)
-			http.Error(w, "invalid orientation parameter: "+conf.Orientation, http.StatusBadRequest)
-
-			return
-		}
 	}
 
 	if req.URL.Query().Has("dashboardMode") {
 		conf.DashboardMode = req.URL.Query().Get("dashboardMode")
-		if conf.DashboardMode != "default" && conf.DashboardMode != "full" {
-			ctxLogger.Warn("invalid dashboardMode parameter: " + conf.DashboardMode)
-			http.Error(w, "invalid dashboardMode parameter: "+conf.DashboardMode, http.StatusBadRequest)
-
-			return
-		}
 	}
 
 	if req.URL.Query().Has("timeZone") {
 		conf.TimeZone = req.URL.Query().Get("timeZone")
+	}
+
+	// Starting from Grafana v11.3.0, Grafana sets timezone query parameter.
+	// We should give priority to that over the plugin's config value.
+	// We will still support plugin's config parameter for backwards compatibility
+	if req.URL.Query().Has("timezone") {
+		timeZone := req.URL.Query().Get("timezone")
+		if !slices.Contains([]string{"browser", "default"}, timeZone) {
+			if timeZone == "utc" {
+				timeZone = "Etc/UTC"
+			}
+
+			conf.TimeZone = timeZone
+		}
+	}
+
+	if req.URL.Query().Has("timeFormat") {
+		conf.TimeFormat = req.URL.Query().Get("timeFormat")
 	}
 
 	if req.URL.Query().Has("includePanelID") {
@@ -339,6 +334,14 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 	if req.URL.Query().Has("includePanelDataID") {
 		conf.IncludePanelDataIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["includePanelDataID"])
+	}
+
+	// Validate config again
+	if err := conf.Validate(); err != nil {
+		ctxLogger.Debug("invalid config: "+conf.String(), "err", err)
+		http.Error(w, "invalid config setting", http.StatusBadRequest)
+
+		return
 	}
 
 	ctxLogger.Info("generate report using config: " + conf.String())

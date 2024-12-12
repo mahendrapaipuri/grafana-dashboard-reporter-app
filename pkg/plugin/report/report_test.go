@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
@@ -77,7 +78,7 @@ func TestReport(t *testing.T) {
 			worker.Renderer: worker.New(ctx, 2),
 		}
 
-		rep, err := New(logger, config.Config{}, nil, workerPools, gClient, &Options{
+		rep, err := New(logger, config.Config{TimeFormat: time.UnixDate, Location: time.Now().Location()}, nil, workerPools, gClient, &Options{
 			TimeRange: dashboard.TimeRange{From: "1453206447000", To: "1453213647000"},
 			DashUID:   "testDash",
 		})

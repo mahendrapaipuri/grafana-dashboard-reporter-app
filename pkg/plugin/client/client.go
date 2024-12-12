@@ -426,6 +426,10 @@ func (g GrafanaClient) getPanelPNGURL(p dashboard.Panel, dashUID string, t dashb
 	values.Add("from", t.From)
 	values.Add("to", t.To)
 
+	if g.conf.TimeZone != "" {
+		values.Add("timezone", g.conf.TimeZone)
+	}
+
 	// If using a grid layout we use 100px for width and 36px for height scaling.
 	// Grafana panels are fitted into 24 units width and height units are said to
 	// 30px in docs but 36px seems to be better.

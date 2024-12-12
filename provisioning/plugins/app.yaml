@@ -83,18 +83,37 @@ apps:
       #
       dashboardMode: default
 
-      # Time zone to use the report. This should be provided in IANA format.
+      # Time zone to use in the report. This should be provided in IANA format.
       # More details on IANA format can be obtained from https://www.iana.org/time-zones
       # Eg America/New_York, Asia/Singapore, Australia/Melbourne, Europe/Berlin
       #
       # If empty or an invalid format is provided, the plugin defaults to using local
       # location of the Grafana server.
       #
+      # This config option is only relevant for Grafana < 11.3.0. For instances, using
+      # Grafana 11.3.0 or above, time zone of the current dashboard will be used as
+      # the timezone for the report generation. For deployments with Grafana < v11.3.0, 
+      # the time zone must be configured on grafana-image-renderer (https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#rendering_timezone)
+      # as well to render the panels in that given time zone.
+      #
       # This setting can be overridden for a particular dashboard by using query parameter
       # ?timeZone=America%2FNew_York during report generation process. Note that we 
       # need to escape URL characters
       #
       timeZone: ''
+
+      # Time format to use in the report. The format should be provided as the Golang
+      # time layout. More details can be found in https://pkg.go.dev/time#Layout.
+      #
+      # By default format "Mon Jan _2 15:04:05 MST 2006" is used in the report. If the
+      # provided layout is invalid, it will be ignored and default layout will be used
+      # in the report.
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?timeFormat=2006-01-02+15%3A04%3A05 during report generation process. Note that we 
+      # need to escape URL characters
+      #
+      timeFormat: ''
 
       # Branding logo in the report.
       #

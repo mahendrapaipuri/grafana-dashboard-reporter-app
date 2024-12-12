@@ -48,15 +48,6 @@ type Options struct {
 	TimeRange   dashboard.TimeRange
 }
 
-// Location of time zone.
-func (o Options) location(timeZone string) *time.Location {
-	if location, err := time.LoadLocation(timeZone); err != nil {
-		return time.Now().Local().Location()
-	} else {
-		return location
-	}
-}
-
 // Data structures used inside HTML template.
 type templateData struct {
 	Options
@@ -73,12 +64,12 @@ func (t templateData) IsGridLayout() bool {
 
 // From returns from time string.
 func (t templateData) From() string {
-	return t.TimeRange.FromFormatted(t.location(t.Conf.TimeZone))
+	return t.TimeRange.FromFormatted(t.Conf.Location, t.Conf.TimeFormat)
 }
 
 // To returns to time string.
 func (t templateData) To() string {
-	return t.TimeRange.ToFormatted(t.location(t.Conf.TimeZone))
+	return t.TimeRange.ToFormatted(t.Conf.Location, t.Conf.TimeFormat)
 }
 
 // Logo returns encoded logo.
@@ -345,7 +336,7 @@ func (r *PDF) generateHTMLFile() error {
 	// Template data
 	data := templateData{
 		*r.options,
-		time.Now().Local().In(r.options.location(r.conf.TimeZone)).Format(time.RFC850),
+		time.Now().Local().In(r.conf.Location).Format(r.conf.TimeFormat),
 		r.grafanaDashboard,
 		r.conf,
 	}

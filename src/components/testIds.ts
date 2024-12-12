@@ -9,6 +9,7 @@ export const testIds = {
     orientation: "data-testid ac-orientation",
     dashboardMode: "data-testid ac-dashboard-mode",
     tz: "data-testid ac-timezone",
+    tf: "data-testid ac-timeformat",
     logo: "data-testid ac-logo",
     headerTemplate: "data-testid ac-header-template",
     footerTemplate: "data-testid ac-footer-template",

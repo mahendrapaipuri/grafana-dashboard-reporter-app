@@ -232,6 +232,19 @@ This config section allows to configure report related settings.
   [IANA format](https://www.iana.org/time-zones). By default, local Grafana server's
   time zone will be used.
 
+> [!NOTE]
+> Starting from Grafana v11.3.0, the dashboard's configured time zone is exposed as a
+query parameter in the dashboard URL and it will be used to set the time zone of the report.
+Hence, for deployments with Grafana v11.3.0 or above, this parameter will not have effect. For
+deployments with Grafana < v11.3.0, the time zone must be configured on
+[grafana-image-renderer](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#rendering_timezone)
+as well to render the panels in that given time zone.
+
+- `file:timeFormat; env:GF_REPORTER_PLUGIN_REPORT_TIMEFORMAT; ui:Time Format`: The time format
+  that will be used in the report. It has to conform to the
+  [Golang time Layout](https://pkg.go.dev/time#Layout). By default,  format
+  "Mon Jan _2 15:04:05 MST 2006" is used.
+
 - `file:logo; env: GF_REPORTER_PLUGIN_REPORT_LOGO; ui:Branding Logo`: This parameter
   takes a base64 encoded image that will be included in the footer of each page in the
   report. Typically, operators can include their organization logos to have "customized"
@@ -311,6 +324,11 @@ to set these values. Currently, the supported query parameters are:
   as value. **Note** that it should be encoded to escape URL specific characters. For example
   to use `America/New_York` query parameter should be
   `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeZone=America%2FNew_York`
+
+- Query field for dashboard mode is `timeFormat` and it takes a value in [Golang time layout](https://pkg.go.dev/time#Layout)
+  as value. **Note** that it should be encoded to escape URL specific characters. For example
+  to use `Monday, 02-Jan-06 15:04:05 MST` query parameter should be
+  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeFormat=Monday%2C+02-Jan-06+15%3A04%3A05+MST`
 
 Besides there are **two** special query parameters available namely:
 
