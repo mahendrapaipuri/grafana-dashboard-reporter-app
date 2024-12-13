@@ -577,13 +577,43 @@
     uplot "1.6.31"
     xss "^1.0.14"
 
-"@grafana/data@11.3.1", "@grafana/data@^11.2.1":
+"@grafana/data@11.3.1":
   version "11.3.1"
   resolved "https://registry.yarnpkg.com/@grafana/data/-/data-11.3.1.tgz#9d1d74a4330bb9468ed865ef94867973ece86951"
   integrity sha512-65YHLouah5gId58ov0l5ZxoRSjAFWqv4Be0Apght69Ko1rLPVdfIAlZCwREfEN+OiSJ4d4t8AFtaD8CRbawmrw==
   dependencies:
     "@braintree/sanitize-url" "7.0.1"
     "@grafana/schema" "11.3.1"
+    "@types/d3-interpolate" "^3.0.0"
+    "@types/string-hash" "1.1.3"
+    d3-interpolate "3.0.1"
+    date-fns "3.6.0"
+    dompurify "^3.0.0"
+    eventemitter3 "5.0.1"
+    fast_array_intersect "1.1.0"
+    history "4.10.1"
+    lodash "4.17.21"
+    marked "12.0.2"
+    marked-mangle "1.1.9"
+    moment "2.30.1"
+    moment-timezone "0.5.46"
+    ol "7.4.0"
+    papaparse "5.4.1"
+    react-use "17.5.1"
+    rxjs "7.8.1"
+    string-hash "^1.1.3"
+    tinycolor2 "1.6.0"
+    tslib "2.7.0"
+    uplot "1.6.31"
+    xss "^1.0.14"
+
+"@grafana/data@^11.4.0":
+  version "11.4.0"
+  resolved "https://registry.yarnpkg.com/@grafana/data/-/data-11.4.0.tgz#d30fb918aac1e21120bac27b54f59a4ad42fc999"
+  integrity sha512-/Og3njCvDRR+jYWAYlEjNZfyO0KaYiH/3Hvz5lXYd/B29sN8ZOfyvdB3lp+727y4sHIG+Jb1NiX0L3qHD7dLgQ==
+  dependencies:
+    "@braintree/sanitize-url" "7.0.1"
+    "@grafana/schema" "11.4.0"
     "@types/d3-interpolate" "^3.0.0"
     "@types/string-hash" "1.1.3"
     d3-interpolate "3.0.1"
@@ -724,6 +754,13 @@
   version "11.3.1"
   resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.3.1.tgz#e99472a441596c0d5f23c276469f9e066f6c67f6"
   integrity sha512-/q8v4u1+/WzTRjz7Qniwfea5rF3EmkSrk5XDhM8o2n+G/z2G1VL7k/oqp151MsulM82g9hE+UvcpmmWEd4mD8Q==
+  dependencies:
+    tslib "2.7.0"
+
+"@grafana/schema@11.4.0":
+  version "11.4.0"
+  resolved "https://registry.yarnpkg.com/@grafana/schema/-/schema-11.4.0.tgz#5733ae4fb362be4858702ab1042c3c92e42856a0"
+  integrity sha512-ZcUZtVdNSuBmTjwPAgWwQ/9/ilozAXggfXye797Odp3mXU9erQX7CqV9JV3y5pyj1+KMd+khzfjxEZotsjHWIA==
   dependencies:
     tslib "2.7.0"
 
