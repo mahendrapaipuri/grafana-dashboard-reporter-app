@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os/exec"
 	"strings"
 	"testing"
@@ -108,57 +107,6 @@ func TestReportResource(t *testing.T) {
 			}, &r)
 
 			So(repDashName, ShouldEqual, "testDash")
-		})
-
-		Convey("It should extract the grafana variables and forward them to the new Grafana Client ", func() {
-			var clientVars url.Values
-
-			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if strings.HasPrefix(r.URL.Path, "/d/") {
-					clientVars = r.URL.Query()
-				}
-
-				if _, err := w.Write([]byte(`{"dashboard": {"title": "foo","panels":[{"type":"singlestat", "id":0}]}}`)); err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-
-					return
-				}
-			}))
-			defer ts.Close()
-
-			ctx := backend.WithGrafanaConfig(context.Background(), backend.NewGrafanaCfg(map[string]string{
-				backend.AppURL: ts.URL,
-			}))
-
-			var r mockCallResourceResponseSender
-			err = app.CallResource(ctx, &backend.CallResourceRequest{
-				PluginContext: backend.PluginContext{
-					OrgID:    3,
-					PluginID: "my-plugin",
-					User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
-				},
-				Method: http.MethodGet,
-				Path:   "report?dashUid=testDash&var-test=testValue",
-			}, &r)
-			expected := url.Values{}
-			expected.Add("var-test", "testValue")
-			So(clientVars, ShouldResemble, expected)
-
-			Convey("Variables should not contain other query parameters ", func() {
-				var r mockCallResourceResponseSender
-				err = app.CallResource(ctx, &backend.CallResourceRequest{
-					PluginContext: backend.PluginContext{
-						OrgID:    3,
-						PluginID: "my-plugin",
-						User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
-					},
-					Method: http.MethodGet,
-					Path:   "report?dashUid=testDash&var-test=testValue&apiToken=abcd",
-				}, &r)
-				expected := url.Values{}
-				expected.Add("var-test", "testValue")
-				So(clientVars, ShouldResemble, expected)
-			})
 		})
 	})
 }

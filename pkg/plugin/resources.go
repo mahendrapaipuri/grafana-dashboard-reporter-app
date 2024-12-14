@@ -2,20 +2,18 @@ package plugin
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/authlib/authn"
 	"github.com/mahendrapaipuri/authlib/authz"
-	"github.com/mahendrapaipuri/authlib/cache"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/client"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/report"
 	"golang.org/x/mod/semver"
@@ -32,35 +30,10 @@ const (
 	idForwardingFlag         = "idForwarding"        // added in Grafana 10.3.0
 )
 
-// Add filename to Header.
-func addFilenameHeader(w http.ResponseWriter, title string) {
-	// Sanitize title to escape non ASCII characters
-	// Ref: https://stackoverflow.com/questions/62705546/unicode-characters-in-attachment-name
-	// Ref: https://medium.com/@JeremyLaine/non-ascii-content-disposition-header-in-django-3a20acc05f0d
-	filename := url.PathEscape(title)
-	header := `inline; filename*=UTF-8''` + filename + ".pdf"
-	w.Header().Add("Content-Disposition", header)
-}
-
-// Get dashboard variables via query parameters.
-func getDashboardVariables(r *http.Request) url.Values {
-	variables := url.Values{}
-
-	for k, v := range r.URL.Query() {
-		if strings.HasPrefix(k, "var-") {
-			for _, singleV := range v {
-				variables.Add(k, singleV)
-			}
-		}
-	}
-
-	return variables
-}
-
-// makePanelIDs returns panel IDs based on Grafana version.
-func makePanelIDs(appVersion string, ids []string) []string {
+// convertPanelIDs returns panel IDs based on Grafana version.
+func (app *App) convertPanelIDs(ids []string) []string {
 	// For Grafana < 11.3.0, we can use the IDs as such
-	if semver.Compare(appVersion, "v11.3.0") == -1 {
+	if semver.Compare(app.grafanaSemVer, "v11.3.0") == -1 {
 		return ids
 	}
 
@@ -75,6 +48,59 @@ func makePanelIDs(appVersion string, ids []string) []string {
 	}
 
 	return panelIDs
+}
+
+// updateConfig updates the default config from query parameters.
+func (app *App) updateConfig(req *http.Request, conf *config.Config) {
+	if req.URL.Query().Has("theme") {
+		conf.Theme = req.URL.Query().Get("theme")
+	}
+
+	if req.URL.Query().Has("layout") {
+		conf.Layout = req.URL.Query().Get("layout")
+	}
+
+	if req.URL.Query().Has("orientation") {
+		conf.Orientation = req.URL.Query().Get("orientation")
+	}
+
+	if req.URL.Query().Has("dashboardMode") {
+		conf.DashboardMode = req.URL.Query().Get("dashboardMode")
+	}
+
+	if req.URL.Query().Has("timeZone") {
+		conf.TimeZone = req.URL.Query().Get("timeZone")
+	}
+
+	// Starting from Grafana v11.3.0, Grafana sets timezone query parameter.
+	// We should give priority to that over the plugin's config value.
+	// We will still support plugin's config parameter for backwards compatibility
+	if req.URL.Query().Has("timezone") {
+		timeZone := req.URL.Query().Get("timezone")
+		if !slices.Contains([]string{"browser", "default"}, timeZone) {
+			if timeZone == "utc" {
+				timeZone = "Etc/UTC"
+			}
+
+			conf.TimeZone = timeZone
+		}
+	}
+
+	if req.URL.Query().Has("timeFormat") {
+		conf.TimeFormat = req.URL.Query().Get("timeFormat")
+	}
+
+	if req.URL.Query().Has("includePanelID") {
+		conf.IncludePanelIDs = app.convertPanelIDs(req.URL.Query()["includePanelID"])
+	}
+
+	if req.URL.Query().Has("excludePanelID") {
+		conf.ExcludePanelIDs = app.convertPanelIDs(req.URL.Query()["excludePanelID"])
+	}
+
+	if req.URL.Query().Has("includePanelDataID") {
+		conf.IncludePanelDataIDs = app.convertPanelIDs(req.URL.Query()["includePanelDataID"])
+	}
 }
 
 // featureTogglesEnabled checks if the necessary feature toogles are enabled on Grafana server.
@@ -115,111 +141,56 @@ func (app *App) grafanaAppURL(grafanaConfig *backend.GrafanaCfg) (string, error)
 	return strings.TrimSuffix(grafanaAppURL, "/"), nil
 }
 
-// HasAccess verifies if the current request context has access to certain action.
-func (app *App) HasAccess(req *http.Request, action string, resource authz.Resource) (bool, error) {
-	// Retrieve the id token
-	idToken := req.Header.Get(GrafanaUserSignInTokenHeaderName)
-	if idToken == "" {
-		return false, errors.New("id token not found")
-	}
+// dashboardModel fetches dashboard JSON model from Grafana API.
+func (app *App) dashboardModel(ctx context.Context, appURL, dashUID string, authHeader http.Header, values url.Values) (*dashboard.Model, error) {
+	dashURL := fmt.Sprintf("%s/api/dashboards/uid/%s", appURL, dashUID)
 
-	authzClient, err := app.GetAuthZClient(req)
+	// Create a new GET request
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dashURL, nil)
 	if err != nil {
-		return false, err
+		return nil, fmt.Errorf("error creating request for %s: %w", dashURL, err)
 	}
 
-	// Check user access
-	hasAccess, err := authzClient.HasAccess(req.Context(), idToken, action, resource)
-	if err != nil || !hasAccess {
-		return false, err
-	}
-
-	return true, nil
-}
-
-// GetAuthZClient returns an authz enforcement client configured thanks to the plugin context.
-func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, error) {
-	ctx := req.Context()
-	ctxLogger := log.DefaultLogger.FromContext(ctx)
-
-	// Prevent two concurrent calls from updating the client
-	app.mx.Lock()
-	defer app.mx.Unlock()
-
-	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
-
-	grafanaAppURL, err := app.grafanaAppURL(grafanaConfig)
-	if err != nil {
-		ctxLogger.Error("failed to get app URL", "err", err)
-
-		return nil, err
-	}
-
-	// Bail we cannot get token provisioned by externalServiceAccount and no token
-	// has been manually configured. In this case we cannot check permissions and moreover
-	// we cannot make API requests to Grafana
-	saToken, err := grafanaConfig.PluginAppClientSecret()
-	if err != nil && app.conf.Token == "" {
-		ctxLogger.Error("failed to fetch service account and configured token", "error", err)
-
-		return nil, err
-	} else {
-		if saToken == "" {
-			saToken = app.conf.Token
+	// Forward auth headers
+	for name, values := range authHeader {
+		for _, value := range values {
+			req.Header.Add(name, value)
 		}
 	}
 
-	if saToken == app.saToken {
-		ctxLogger.Debug("token unchanged returning existing authz client")
-
-		return app.authzClient, nil
-	}
-
-	// Header "typ" has been added only in Grafana 11.1.0 (https://github.com/grafana/grafana/pull/87430)
-	// So this check will fail for Grafana < 11.1.0
-	// Set VerifierConfig{DisableTypHeaderCheck: true} for those cases
-	disableTypHeaderCheck := false
-	if semver.Compare(app.grafanaSemVer, "v11.1.0") == -1 {
-		disableTypHeaderCheck = true
-	}
-
-	// Initialize the authorization client
-	client, err := authz.NewEnforcementClient(authz.Config{
-		APIURL: grafanaAppURL,
-		Token:  saToken,
-		// Grafana is signing the JWTs on local setups
-		JWKsURL: grafanaAppURL + "/api/signing-keys/keys",
-	},
-		// Use the configured HTTP client
-		authz.WithHTTPClient(app.httpClient),
-		// Configure verifier
-		authz.WithVerifier(authn.NewVerifier[authz.CustomClaims](authn.VerifierConfig{
-			DisableTypHeaderCheck: disableTypHeaderCheck,
-		},
-			authn.TokenTypeID,
-			authn.NewKeyRetriever(authn.KeyRetrieverConfig{
-				SigningKeysURL: grafanaAppURL + "/api/signing-keys/keys",
-			},
-				authn.WithHTTPClientKeyRetrieverOpt(app.httpClient)),
-		)),
-		// Fetch all the user permission prefixed with dashboards
-		authz.WithSearchByPrefix("dashboards"),
-		// Use a cache with a lower expiry time
-		authz.WithCache(cache.NewLocalCache(cache.Config{
-			Expiry:          10 * time.Second,
-			CleanupInterval: 5 * time.Second,
-		})),
-	)
+	// Make request
+	resp, err := app.httpClient.Do(req)
 	if err != nil {
-		ctxLogger.Error("failed to initialize authz client", "err", err)
+		return nil, fmt.Errorf("error executing request for %s: %w", dashURL, err)
+	}
+	defer resp.Body.Close()
 
-		return nil, err
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body from %s: %w", dashURL, err)
 	}
 
-	app.authzClient = client
-	app.saToken = saToken
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(
+			"failed to fetch dashboard model: URL: %s. Status: %s, message: %s",
+			dashURL,
+			resp.Status,
+			string(body),
+		)
+	}
 
-	return client, nil
+	var model dashboard.Model
+
+	// Read data into dashboard.Model
+	err = json.Unmarshal(body, &model) //nolint:musttag
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body into dashboard model: %w", err)
+	}
+
+	// Add template variables to model
+	model.Dashboard.Variables = values
+
+	return &model, nil
 }
 
 // handleReport handles creating a PDF report from a given dashboard UID
@@ -247,7 +218,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	dashboardUID := req.URL.Query().Get("dashUid")
 	if dashboardUID == "" {
 		ctxLogger.Debug("Query parameter dashUid not found")
-		http.Error(w, "Query parameter dashUid not found", http.StatusBadRequest)
+		http.Error(w, "missing dashUid query parameter", http.StatusBadRequest)
 
 		return
 	}
@@ -258,96 +229,26 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	grafanaAppURL, err := app.grafanaAppURL(grafanaConfig)
 	if err != nil {
 		ctxLogger.Error("failed to get app URL", "err", err)
-		http.Error(w, "failed to get app URL", http.StatusInternalServerError)
+		http.Error(w, "error generating report", http.StatusInternalServerError)
 
 		return
 	}
 
-	// If the required feature flags are enabled, check if user has access to the resource
-	// using authz client.
-	// Here we check if user has permissions to do an action "dashboards:read" on
-	// dashboards resource of a given dashboard UID
-	if app.featureTogglesEnabled(req.Context()) {
-		if hasAccess, err := app.HasAccess(
-			req, "dashboards:read",
-			authz.Resource{
-				Kind: "dashboards",
-				Attr: "uid",
-				ID:   dashboardUID,
-			},
-		); err != nil || !hasAccess {
-			if err != nil {
-				ctxLogger.Error("failed to check permissions", "err", err)
-			}
+	// Update plugin's config from query params
+	app.updateConfig(req, &conf)
 
-			http.Error(w, "permission denied", http.StatusForbidden)
-
-			return
-		}
-	}
-
-	if req.URL.Query().Has("theme") {
-		conf.Theme = req.URL.Query().Get("theme")
-	}
-
-	if req.URL.Query().Has("layout") {
-		conf.Layout = req.URL.Query().Get("layout")
-	}
-
-	if req.URL.Query().Has("orientation") {
-		conf.Orientation = req.URL.Query().Get("orientation")
-	}
-
-	if req.URL.Query().Has("dashboardMode") {
-		conf.DashboardMode = req.URL.Query().Get("dashboardMode")
-	}
-
-	if req.URL.Query().Has("timeZone") {
-		conf.TimeZone = req.URL.Query().Get("timeZone")
-	}
-
-	// Starting from Grafana v11.3.0, Grafana sets timezone query parameter.
-	// We should give priority to that over the plugin's config value.
-	// We will still support plugin's config parameter for backwards compatibility
-	if req.URL.Query().Has("timezone") {
-		timeZone := req.URL.Query().Get("timezone")
-		if !slices.Contains([]string{"browser", "default"}, timeZone) {
-			if timeZone == "utc" {
-				timeZone = "Etc/UTC"
-			}
-
-			conf.TimeZone = timeZone
-		}
-	}
-
-	if req.URL.Query().Has("timeFormat") {
-		conf.TimeFormat = req.URL.Query().Get("timeFormat")
-	}
-
-	if req.URL.Query().Has("includePanelID") {
-		conf.IncludePanelIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["includePanelID"])
-	}
-
-	if req.URL.Query().Has("excludePanelID") {
-		conf.ExcludePanelIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["excludePanelID"])
-	}
-
-	if req.URL.Query().Has("includePanelDataID") {
-		conf.IncludePanelDataIDs = makePanelIDs(app.grafanaSemVer, req.URL.Query()["includePanelDataID"])
-	}
-
-	// Validate config again
+	// Validate new updated config
 	if err := conf.Validate(); err != nil {
 		ctxLogger.Debug("invalid config: "+conf.String(), "err", err)
-		http.Error(w, "invalid config setting", http.StatusBadRequest)
+		http.Error(w, "invalid query parameters found", http.StatusBadRequest)
 
 		return
 	}
 
 	ctxLogger.Info("generate report using config: " + conf.String())
 
-	// credential is header name value pair that will be used in API requests
-	var credential client.Credential
+	// authHeader is header name value pair that will be used in API requests
+	authHeader := http.Header{}
 
 	switch {
 	// This case is irrelevant starting from Grafana 10.4.4.
@@ -358,17 +259,11 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	case req.Header.Get(backend.CookiesHeaderName) != "":
 		ctxLogger.Debug("using user cookie")
 
-		credential = client.Credential{
-			HeaderName:  backend.CookiesHeaderName,
-			HeaderValue: req.Header.Get(backend.CookiesHeaderName),
-		}
+		authHeader.Add(backend.CookiesHeaderName, req.Header.Get(backend.CookiesHeaderName))
 	case conf.Token != "":
 		ctxLogger.Debug("using user configured token")
 
-		credential = client.Credential{
-			HeaderName:  backend.OAuthIdentityTokenHeaderName,
-			HeaderValue: "Bearer " + conf.Token,
-		}
+		authHeader.Add(backend.OAuthIdentityTokenHeaderName, "Bearer "+conf.Token)
 	default:
 		ctxLogger.Debug("using service account token")
 
@@ -387,57 +282,79 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		credential = client.Credential{
-			HeaderName:  backend.OAuthIdentityTokenHeaderName,
-			HeaderValue: "Bearer " + saToken,
+		authHeader.Add(backend.OAuthIdentityTokenHeaderName, "Bearer "+saToken)
+	}
+
+	// Get dashboard JSON model from API
+	model, err := app.dashboardModel(req.Context(), grafanaAppURL, dashboardUID, authHeader, req.URL.Query())
+	if err != nil {
+		ctxLogger.Error("failed to get dashboard JSON model", "err", err)
+		http.Error(w, "error generating report", http.StatusInternalServerError)
+
+		return
+	}
+
+	// If dashboard is in a folder, check if user has permissions on either the dashboard
+	// or the folder.
+	resources := []authz.Resource{
+		{
+			Kind: "dashboards",
+			Attr: "uid",
+			ID:   dashboardUID,
+		},
+	}
+	if model.Meta.FolderUID != "" {
+		resources = append(resources, authz.Resource{
+			Kind: "folders",
+			Attr: "uid",
+			ID:   model.Meta.FolderUID,
+		})
+	}
+
+	// If the required feature flags are enabled, check if user has access to the resource
+	// using authz client.
+	// Here we check if user has permissions to do an action "dashboards:read" on
+	// dashboards resource of a given dashboard UID
+	if app.featureTogglesEnabled(req.Context()) {
+		if hasAccess, err := app.HasAccess(
+			req, "dashboards:read",
+			resources...,
+		); err != nil || !hasAccess {
+			if err != nil {
+				ctxLogger.Error("failed to check permissions", "err", err)
+			} else {
+				ctxLogger.Error("user does not have necessary permissions to view dashboard", "user", currentUser, "dash_uid", dashboardUID)
+			}
+
+			http.Error(w, "permission denied", http.StatusForbidden)
+
+			return
 		}
 	}
 
-	// Get Dashboard variables
-	variables := getDashboardVariables(req)
-	if len(variables) == 0 {
-		ctxLogger.Debug("no variables found", "user", currentUser, "dash_uid", dashboardUID)
-	}
-
-	// Get time range
-	timeRange := dashboard.NewTimeRange(req.URL.Query().Get("from"), req.URL.Query().Get("to"))
-	ctxLogger.Debug("time range", "range", timeRange, "user", currentUser, "dash_uid", dashboardUID)
-
-	// Make app new Grafana client to get dashboard JSON model and Panel PNGs
-	grafanaClient := client.New(
+	grafanaDashboard := dashboard.New(
 		ctxLogger,
-		conf,
+		&conf,
 		app.httpClient,
 		app.chromeInstance,
 		app.workerPools,
 		grafanaAppURL,
 		app.grafanaSemVer,
-		credential,
-		variables,
+		model,
+		authHeader,
 	)
 
 	ctxLogger.Info(fmt.Sprintf("generate report using %s chrome", app.chromeInstance.Name()))
 
 	// Make app new Report to put all PNGs into app HTML template and print it into app PDF
-	pdfReport, err := report.New(
+	pdfReport := report.New(
 		ctxLogger,
-		conf,
+		&conf,
+		app.httpClient,
 		app.chromeInstance,
 		app.workerPools,
-		grafanaClient,
-		&report.Options{
-			DashUID:     dashboardUID,
-			Layout:      conf.Layout,
-			Orientation: conf.Orientation,
-			TimeRange:   timeRange,
-		},
+		grafanaDashboard,
 	)
-	if err != nil {
-		ctxLogger.Error("error creating new Report instance", "err", err)
-		http.Error(w, "error generating report", http.StatusInternalServerError)
-
-		return
-	}
 
 	// Generate report
 	if err = pdfReport.Generate(req.Context(), w); err != nil {
@@ -446,9 +363,6 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 
 		return
 	}
-
-	// Add PDF file name to Header
-	addFilenameHeader(w, pdfReport.Title())
 
 	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
 }

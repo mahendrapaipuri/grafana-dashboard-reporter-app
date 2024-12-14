@@ -73,7 +73,7 @@ func TestPanelSelector(t *testing.T) {
 	// For Grafana >= v11.3.0
 	Convey("When filtering png panels based on string panel IDs", t, func() {
 		allPanels := []dashboard.Panel{
-			{ID: "panel-1-clone-0"}, {ID: "panel-1-clone-1"}, {ID: "panel-3"}, {ID: "panel-4"}, {ID: "panel-5"}, {ID: "panel-6"}, {ID: "panel-7"},
+			{ID: "panel-1-clone-0"}, {ID: "panel-1-clone-1"}, {ID: "panel-3"}, {ID: "panel-4"}, {ID: "panel-5"}, {ID: "panel-6"}, {ID: "panel-7"}, {ID: "panel-12-clone-0"},
 		}
 		cases := map[string]struct {
 			IncludeIDs, ExcludeIDs []string
@@ -88,9 +88,9 @@ func TestPanelSelector(t *testing.T) {
 			},
 			"exclude": {
 				nil,
-				[]string{"panel-1", "panel-4", "panel-3"},
+				[]string{"panel-5", "panel-4", "panel-3"},
 				true,
-				[]int{4, 5, 6},
+				[]int{0, 1, 5, 6, 7},
 			},
 			"exclude_false": {
 				nil,
