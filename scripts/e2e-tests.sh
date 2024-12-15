@@ -21,10 +21,22 @@ fi
 
 # Tests
 echo "Making basic report generation request by admin"
-curl -k -o "$VARIANT-admin.pdf" "$GRAFANA_PROTOCOL://admin:admin@localhost:$GRAFANA_PORT/$API_PATH?dashUid=$DASH_UID&$QUERY_PARAMS"
+RESP_CODE=$(curl -k -o /dev/null -w "%{http_code}" "$GRAFANA_PROTOCOL://admin:admin@localhost:$GRAFANA_PORT/$API_PATH?dashUid=$DASH_UID&$QUERY_PARAMS")
 
-echo "Making request by user from team with permission on dashboard"
-curl -k -o "$VARIANT-teamuser.pdf" "$GRAFANA_PROTOCOL://teamuser:teamuser@localhost:$GRAFANA_PORT/$API_PATH?dashUid=$ALT_DASH_UID"
+# Check response
+if [[ "$RESP_CODE" != "200" ]]; then
+    echo "Expected 200 got $RESP_CODE"
+    exit 1
+fi
+
+echo "Making request by user from a team with permission on dashboard"
+RESP_CODE=$(curl -k -o /dev/null -w "%{http_code}" "$GRAFANA_PROTOCOL://teamuser:teamuser@localhost:$GRAFANA_PORT/$API_PATH?dashUid=$ALT_DASH_UID")
+
+# Check response
+if [[ "$RESP_CODE" != "200" ]]; then
+    echo "Expected 200 got $RESP_CODE"
+    exit 1
+fi
 
 echo "Making request by normal user without permission on dashboard"
 RESP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" "$GRAFANA_PROTOCOL://normaluser:normaluser@localhost:$GRAFANA_PORT/$API_PATH?dashUid=$ALT_DASH_UID")
@@ -32,4 +44,5 @@ RESP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" "$GRAFANA_PROTOCOL://norma
 # Check response
 if [[ "$RESP_CODE" != "403" ]]; then
     echo "Expected 403 got $RESP_CODE"
+    exit 1
 fi
