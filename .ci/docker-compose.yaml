@@ -17,7 +17,7 @@ services:
       # Dont set config in provisioning just to ensure that plugin works without any
       # extra config
       - ./config/plain:/etc/grafana/provisioning/plugins
-      - ./db/plain:/srv
+      - ./runtime/plain:/srv
     environment:
       # basic settings
       # output to terminal
@@ -82,7 +82,7 @@ services:
       - ./dashboards:/etc/grafana/provisioning/dashboards
       - ./config/tls:/etc/grafana/provisioning/plugins
       - ./certs:/etc/grafana/tls
-      - ./db/tls:/srv
+      - ./runtime/tls:/srv
     environment:
       # basic settings
       # output to terminal

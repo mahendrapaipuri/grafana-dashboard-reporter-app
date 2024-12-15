@@ -223,6 +223,9 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Add dash uid and user to logger
+	ctxLogger = ctxLogger.With("user", currentUser, "dash_uid", dashboardUID)
+
 	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
 
 	// Get Grafana App URL by looking both at passed config and user defined config
@@ -323,7 +326,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				ctxLogger.Error("failed to check permissions", "err", err)
 			} else {
-				ctxLogger.Error("user does not have necessary permissions to view dashboard", "user", currentUser, "dash_uid", dashboardUID)
+				ctxLogger.Error("user does not have necessary permissions to view dashboard")
 			}
 
 			http.Error(w, "permission denied", http.StatusForbidden)
@@ -364,7 +367,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ctxLogger.Info("report generated", "user", currentUser, "dash_uid", dashboardUID)
+	ctxLogger.Info("report generated")
 }
 
 // handleHealth is an example HTTP GET resource that returns an OK response.
