@@ -19,7 +19,7 @@ test("should be possible to generate report", async ({ request }, testInfo) => {
   // on dashboard except for the case where Grafana 10.4.7 and not using appropriate
   // feature toogles. In the exceptional case, the test should pass
   if (
-    testInfo.project.name === "tls" &&
+    testInfo.project.name === "tlsViewerUser" &&
     process.env.GRAFANA_VERSION !== "10.4.7" &&
     process.env.GF_FEATURE_TOGGLES_ENABLE !== "externalServiceAccounts"
   ) {
