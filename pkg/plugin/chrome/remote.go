@@ -26,7 +26,7 @@ func (i *RemoteInstance) Name() string {
 }
 
 // NewTab starts and returns a new tab on current browser instance.
-func (i *RemoteInstance) NewTab(logger log.Logger, _ config.Config) *Tab {
+func (i *RemoteInstance) NewTab(logger log.Logger, _ *config.Config) *Tab {
 	chromeLogger := logger.With("subsystem", "chromium")
 	browserCtx, _ := chromedp.NewContext(i.allocCtx,
 		chromedp.WithErrorf(chromeLogger.Error),

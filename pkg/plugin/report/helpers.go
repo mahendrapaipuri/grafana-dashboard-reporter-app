@@ -30,45 +30,25 @@ func selectPanels(panels []dashboard.Panel, includeIDs, excludeIDs []string, def
 	// includeIDs
 	if len(includeIDs) == 0 && defaultInclude {
 		for _, p := range panels {
-			includeIDs = append(includeIDs, p.ID)
+			includeIDs = append(includeIDs, strings.Split(p.ID, "-clone")[0])
 		}
 	}
 
 	for iPanel, panel := range panels {
 		// Attempt to convert panel ID to int. If we succeed, do direct
 		// comparison else do prefix check
-		var doDirectComp bool
-		if _, err := strconv.ParseInt(panel.ID, 10, 0); err == nil {
-			doDirectComp = true
+		panelID := panel.ID
+		if _, err := strconv.ParseInt(panel.ID, 10, 0); err != nil {
+			panelID = strings.Split(panel.ID, "-clone")[0]
 		}
 
 		for _, id := range includeIDs {
-			if !doDirectComp {
-				if strings.HasPrefix(panel.ID, id) && !slices.Contains(renderPanels, iPanel) {
-					renderPanels = append(renderPanels, iPanel)
-				}
-			} else {
-				if panel.ID == id && !slices.Contains(renderPanels, iPanel) {
-					renderPanels = append(renderPanels, iPanel)
-				}
+			if panelID == id && !slices.Contains(renderPanels, iPanel) {
+				renderPanels = append(renderPanels, iPanel)
 			}
 		}
 
-		exclude := false
-
-		for _, id := range excludeIDs {
-			if !doDirectComp {
-				if strings.HasPrefix(panel.ID, id) {
-					exclude = true
-				}
-			} else {
-				if panel.ID == id {
-					exclude = true
-				}
-			}
-		}
-
-		if exclude && slices.Contains(renderPanels, iPanel) {
+		if slices.Contains(excludeIDs, panelID) && slices.Contains(renderPanels, iPanel) {
 			renderPanels = remove(renderPanels, iPanel)
 		}
 	}

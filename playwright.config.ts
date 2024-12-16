@@ -55,7 +55,7 @@ export default defineConfig<PluginOptions>({
   projects: [
     // Login to Grafana with admin user and store the cookie on disk for use in other tests
     {
-      name: "authenticate",
+      name: "authenticateAdminUser",
       testDir: "./tests/setup",
       testMatch: [/.*auth\.setup\.ts/],
       use: {
@@ -80,26 +80,75 @@ export default defineConfig<PluginOptions>({
         },
       },
     },
+    // Login to Grafana with teamuser user and store the cookie on disk for use in other tests
+    {
+      name: "authenticateTeamUser",
+      testDir: "./tests/setup",
+      testMatch: [/.*auth\.setup\.ts/],
+      use: {
+        baseURL: `http://localhost:3080`,
+        user: {
+          user: "teamuser",
+          password: "teamuser",
+        },
+      },
+    },
+    // Login to Grafana with normaluser user and store the cookie on disk for use in other tests
+    {
+      name: "authenticateNormalUser",
+      testDir: "./tests/setup",
+      testMatch: [/.*auth\.setup\.ts/],
+      use: {
+        baseURL: `https://localhost:3443`,
+        user: {
+          user: "normaluser",
+          password: "normaluser",
+        },
+      },
+    },
     // Plain without TLS and using admin user
     {
-      name: "plain",
+      name: "plainAdminUser",
+      testIgnore: /(appReportTeamUser|appReportNormalUser)\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: `http://localhost:3080`,
         storageState: "playwright/.auth/admin.json",
       },
-      dependencies: ["authenticate"],
+      dependencies: ["authenticateAdminUser"],
     },
     // With TLS and using user with Viewer role
     {
-      name: "tls",
-      testIgnore: /appConfig\.spec\.ts/,
+      name: "tlsViewerUser",
+      testIgnore: /(appConfig|appReportTeamUser|appReportNormalUser)\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: `https://localhost:3443`,
         storageState: "playwright/.auth/viewer.json",
       },
       dependencies: ["createUserAndAuthenticate"],
+    },
+    // Plain without TLS and using teamuser
+    {
+      name: "plainTeamUser",
+      testMatch: /appReportTeamUser\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: `http://localhost:3080`,
+        storageState: "playwright/.auth/teamuser.json",
+      },
+      dependencies: ["authenticateTeamUser"],
+    },
+     // With TLS and using normaluser
+     {
+      name: "tlsNormalUser",
+      testMatch: /appReportNormalUser\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: `https://localhost:3443`,
+        storageState: "playwright/.auth/normaluser.json",
+      },
+      dependencies: ["authenticateNormalUser"],
     },
   ],
 });

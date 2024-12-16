@@ -56,7 +56,7 @@
     }
 
     {{- if .IsGridLayout}} 
-        {{- range $i, $v := .Dashboard.Panels}} 
+        {{- range $i, $v := .Panels}} 
     .grid-image-{{$i}} {
         grid-column: {{add $v.GridPos.X}} / span {{$v.GridPos.W}};
         grid-row: {{add $v.GridPos.Y}} / span {{$v.GridPos.H}};
@@ -66,7 +66,7 @@
 
     {{else}}
         {{$p := 0}}
-        {{- range $i, $v := .Dashboard.Panels}}
+        {{- range $i, $v := .Panels}}
             {{- if $v.EncodedImage.Image }}
     .grid-image-{{$i}} {
         grid-column: 1 / span 24;
@@ -82,13 +82,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Grafana Dashboard Report</title>
+    <title>{{.Title}}</title>
 </head>
 
 <body>
     <div class="container">
         <div class="grid">
-            {{- range $i, $v := .Dashboard.Panels}}
+            {{- range $i, $v := .Panels}}
             {{- if $v.EncodedImage.Image }}
             <figure class="grid-image grid-image-{{$i}}">
                 <img src="{{ print $v.EncodedImage | url }}" id="image{{$v.ID}}" alt="{{$v.Title}}" class="grid-image">
@@ -97,7 +97,7 @@
             {{- end }}
         </div>
     </div>
-    {{- range $i, $v := .Dashboard.Panels }}
+    {{- range $i, $v := .Panels }}
     {{- if $v.CSVData }}
     <div style="break-after:page"></div>
 

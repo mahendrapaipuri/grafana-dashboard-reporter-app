@@ -120,7 +120,7 @@ func (i *LocalInstance) Name() string {
 }
 
 // NewTab starts and returns a new tab on current browser instance.
-func (i *LocalInstance) NewTab(_ log.Logger, _ config.Config) *Tab {
+func (i *LocalInstance) NewTab(_ log.Logger, _ *config.Config) *Tab {
 	ctx, _ := chromedp.NewContext(i.browserCtx)
 
 	return &Tab{
