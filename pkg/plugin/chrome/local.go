@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 
@@ -38,7 +39,13 @@ func init() {
 			// In recent releases of grafana-image-renderer, the binary is called chrome-headless-shell
 			validChromeBins := []string{"chrome", "chrome-headless-shell"}
 			if !info.IsDir() && slices.Contains(validChromeBins, info.Name()) {
-				chromeExec = path
+				// If the chrome shipped is not "usable", plugin cannot be used
+				// even a "usable" chrome (for instance chromium installed using snap on Ubuntu)
+				// exists.
+				// So, test the chromium before using it
+				if _, err := exec.Command(path, "--help").Output(); err == nil {
+					chromeExec = path
+				}
 
 				return nil
 			}

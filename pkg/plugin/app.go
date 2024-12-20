@@ -105,6 +105,8 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	}
 
 	if err != nil {
+		app.ctxLogger.Error("failed to start browser", "err", err)
+
 		return nil, fmt.Errorf("failed to start browser: %w", err)
 	}
 
