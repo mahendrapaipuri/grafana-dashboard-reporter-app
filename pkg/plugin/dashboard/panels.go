@@ -37,7 +37,7 @@ var (
 	  let timer = ms => new Promise(res => setTimeout(res, ms));
 	  
 	  // Always scroll to bottom of the page
-	  window.scrollTo(0,document.body.scrollHeight);
+	  window.scrollTo(0, document.body.scrollHeight);
 	  
 	  // Wait duration between retries
 	  const waitDurationMsecs = 1000;
@@ -100,9 +100,15 @@ var (
 	// 32px + 1920px = 1952px so that "effective" width becomes 1920px which is
 	// multiple of 24. This should give us nicer panels without overlaps.
 	//
+	// Seems like we need to use a longer height that will have all the
+	// panels in the view for them to load properly. Using a regular
+	// height of 1080px resulting in missing panels from JS data. So, we
+	// set a "long" enough height here to cover all the panels in the dashboard
+	// Need to improve this part!!
+	//
 	// This can be flaky though! Need to make it better in the future?!
 	viewportWidth  int64 = 1952
-	viewportHeight int64 = 1080
+	viewportHeight int64 = 10800
 )
 
 // panels fetches dashboard panels from Grafana chromium browser instance.
@@ -183,7 +189,7 @@ func (d *Dashboard) panelData(_ context.Context) ([]interface{}, error) {
 	// JS that will fetch dashboard model
 	tasks = append(tasks, chromedp.Tasks{
 		chromedp.Evaluate(dashDataJS, &dashboardData),
-		// chromedp.FullScreenshot(&buf, 90),
+		// chromedp.CaptureScreenshot(&buf),
 	}...)
 
 	if err := tab.Run(tasks); err != nil {
