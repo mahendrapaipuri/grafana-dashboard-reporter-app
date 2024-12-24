@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
@@ -130,7 +129,7 @@ func (d *Dashboard) panelData(_ context.Context) ([]interface{}, error) {
 
 	// Create a new tab
 	tab := d.chromeInstance.NewTab(d.logger, d.conf)
-	tab.WithTimeout(60 * time.Second)
+	tab.WithTimeout(2 * d.conf.HTTPClientOptions.Timeouts.Timeout)
 	defer tab.Close(d.logger)
 
 	headers := make(map[string]any)

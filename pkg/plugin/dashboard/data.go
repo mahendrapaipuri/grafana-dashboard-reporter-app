@@ -24,7 +24,7 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 	tab := d.chromeInstance.NewTab(d.logger, d.conf)
 	// Set a timeout for the tab
 	// Fail-safe for newer Grafana versions, if css has been changed.
-	tab.WithTimeout(60 * time.Second)
+	tab.WithTimeout(d.conf.HTTPClientOptions.Timeouts.Timeout)
 	defer tab.Close(d.logger)
 
 	headers := make(map[string]any)
