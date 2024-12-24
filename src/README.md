@@ -210,7 +210,7 @@ a new service token can be generated and configured with the plugin.
 
 This config section allows to configure report related settings.
 
-- `file:theme; env:GF_REPORTER_PLUGIN_REPORT_THEME; ui: Theme`: Theme of the panels in
+- `file:theme; env:GF_REPORTER_PLUGIN_REPORT_THEME; ui:Theme`: Theme of the panels in
   the report.
 
 - `file:layout; env:GF_REPORTER_PLUGIN_REPORT_LAYOUT; ui:Layout`: Layout of the report.
@@ -300,6 +300,9 @@ The following configuration settings allow more control over plugin's functional
 > Starting from `v1.4.0`, config parameter `dataPath` is not needed anymore as the plugin
 will get the Grafana's data path based on its own executable path. If the existing provisioned
 configs have this parameter set, it will be ignored while loading the plugin's configuration.
+
+More advanced settings on HTTP client can be configured using provisioned config file which are
+presented in [Advanced Settings](#advanced-settings).
 
 #### Overriding global report settings
 
@@ -494,6 +497,80 @@ Here are the example reports that are generated out of the test dashboards
 - [Report with portrait orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_full.pdf)
 - [Report with landscape orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_grid_full.pdf)
 - [Report with portrait orientation, grid layout and default dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_default.pdf)
+
+## Advanced Settings
+
+The plugin makes API requests to Grafana to fetch PNGs of individual panels in a dashboard.
+If a wider time window is selected in the dashboard during report generation, API requests
+might need a bigger timeout for the panel data to load in its entirety. By default, a timeout
+of 30 seconds is used in the HTTP client. If a bigger timeout is needed for a particular use
+case, it can be done using provisioned config file. A basic provisioned config file with
+to set timeout to 120 seconds can be defined as follows:
+
+```yaml
+apiVersion: 1
+
+apps:
+  - type: mahendrapaipuri-dashboardreporter-app
+    org_id: 1
+    org_name: Main Org.
+    disabled: false
+    
+    jsonData:
+      # HTTP Client timeout in seconds
+      #
+      timeout: 120
+```
+
+Along with timeout, there are several other HTTP client options can be set through
+provisioned config file which are shown below along with their default values:
+
+```yaml
+apiVersion: 1
+
+apps:
+  - type: mahendrapaipuri-dashboardreporter-app
+    org_id: 1
+    org_name: Main Org.
+    disabled: false
+    
+    jsonData:
+      # HTTP Client timeout in seconds
+      #
+      timeout: 30
+
+      # HTTP Client dial timeout in seconds
+      #
+      dialTimeout: 10
+
+      # HTTP Keep Alive timeout in seconds
+      #
+      httpKeepAlive: 30
+
+      # HTTP TLS handshake timeout in seconds
+      #
+      httpTLSHandshakeTimeout: 10
+
+      # HTTP idle connection timeout in seconds
+      #
+      httpIdleConnTimeout: 90
+
+      # HTTP max connections per host
+      #
+      httpMaxConnsPerHost: 0
+
+      # HTTP max idle connections
+      #
+      httpMaxIdleConns: 100
+
+      # HTTP max idle connections per host
+      #
+      httpMaxIdleConnsPerHost: 100
+```
+
+> [!NOTE]
+> These settings can be configured only through provisioned config file and it is not
+possible to set them using either environment variables or Grafana UI.
 
 ## Troubleshooting
 
