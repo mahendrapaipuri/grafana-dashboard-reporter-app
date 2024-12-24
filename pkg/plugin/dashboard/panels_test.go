@@ -9,15 +9,19 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+var muLock sync.RWMutex
 
 func TestDashboardFetchWithLocalChrome(t *testing.T) {
 	var execPath string
@@ -73,8 +77,10 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 		requestCookie := ""
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			muLock.Lock()
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+			muLock.Unlock()
 
 			if _, err := w.Write(data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -86,8 +92,9 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 
 		Convey("When using the panels fetcher", func() {
 			conf := config.Config{
-				Layout:        "simple",
-				DashboardMode: "default",
+				Layout:            "simple",
+				DashboardMode:     "default",
+				HTTPClientOptions: httpclient.Options{Timeouts: &httpclient.DefaultTimeoutOptions},
 			}
 
 			ctx := context.Background()
@@ -173,8 +180,10 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 		requestCookie := ""
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			muLock.Lock()
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+			muLock.Unlock()
 
 			if _, err := w.Write(data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -186,8 +195,9 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 
 		Convey("When using the Grafana httpClient", func() {
 			conf := config.Config{
-				Layout:        "simple",
-				DashboardMode: "default",
+				Layout:            "simple",
+				DashboardMode:     "default",
+				HTTPClientOptions: httpclient.Options{Timeouts: &httpclient.DefaultTimeoutOptions},
 			}
 
 			ctx := context.Background()
