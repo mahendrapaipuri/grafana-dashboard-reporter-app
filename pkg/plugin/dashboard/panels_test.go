@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -19,6 +20,8 @@ import (
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+var muLock sync.RWMutex
 
 func TestDashboardFetchWithLocalChrome(t *testing.T) {
 	var execPath string
@@ -74,8 +77,10 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 		requestCookie := ""
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			muLock.Lock()
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+			muLock.Unlock()
 
 			if _, err := w.Write(data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -175,8 +180,10 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 		requestCookie := ""
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			muLock.Lock()
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+			muLock.Unlock()
 
 			if _, err := w.Write(data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

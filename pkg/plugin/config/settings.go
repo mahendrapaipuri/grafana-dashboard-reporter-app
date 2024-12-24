@@ -171,6 +171,8 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 		},
 	}
 
+	var err error
+
 	// Fetch token, if configured in SecureJSONData
 	if settings.DecryptedSecureJSONData != nil {
 		if saToken, ok := settings.DecryptedSecureJSONData[SaToken]; ok && saToken != "" {
@@ -179,14 +181,10 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 	}
 
 	// Update plugin settings defaults
-	if settings.JSONData == nil || string(settings.JSONData) == "null" {
-		return config, nil
-	}
-
-	var err error
-
-	if err = json.Unmarshal(settings.JSONData, &config); err != nil { //nolint:musttag
-		return Config{}, err
+	if settings.JSONData != nil && string(settings.JSONData) != "null" {
+		if err = json.Unmarshal(settings.JSONData, &config); err != nil { //nolint:musttag
+			return Config{}, err
+		}
 	}
 
 	// Override provisioned config from env vars, if set

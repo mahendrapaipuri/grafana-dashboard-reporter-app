@@ -72,13 +72,6 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 		return nil, fmt.Errorf("error loading config: %w", err)
 	}
 
-	// Validate plugin config
-	if err := app.conf.Validate(); err != nil {
-		app.ctxLogger.Error("error config validation", "err", err)
-
-		return nil, fmt.Errorf("error config validation: %w", err)
-	}
-
 	app.ctxLogger.Info("starting plugin with initial config: " + app.conf.String())
 
 	// Make a new HTTP client
