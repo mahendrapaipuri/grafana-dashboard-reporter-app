@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
@@ -86,8 +87,9 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 
 		Convey("When using the panels fetcher", func() {
 			conf := config.Config{
-				Layout:        "simple",
-				DashboardMode: "default",
+				Layout:            "simple",
+				DashboardMode:     "default",
+				HTTPClientOptions: httpclient.Options{Timeouts: &httpclient.DefaultTimeoutOptions},
 			}
 
 			ctx := context.Background()
@@ -186,8 +188,9 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 
 		Convey("When using the Grafana httpClient", func() {
 			conf := config.Config{
-				Layout:        "simple",
-				DashboardMode: "default",
+				Layout:            "simple",
+				DashboardMode:     "default",
+				HTTPClientOptions: httpclient.Options{Timeouts: &httpclient.DefaultTimeoutOptions},
 			}
 
 			ctx := context.Background()
