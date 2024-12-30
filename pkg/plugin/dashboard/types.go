@@ -115,6 +115,10 @@ type Panel struct {
 	CSVData      CSVData
 }
 
+func (p *Panel) String() string {
+	return fmt.Sprintf("Panel ID: %s and Title: %s", p.ID, p.Title)
+}
+
 func (p *Panel) UnmarshalJSON(b []byte) error {
 	type tmp Panel
 

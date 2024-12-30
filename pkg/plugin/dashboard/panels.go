@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
@@ -118,6 +119,8 @@ func (d *Dashboard) panels(ctx context.Context) ([]Panel, error) {
 		return nil, fmt.Errorf("failed to get dashboard data from browser: %w", err)
 	}
 
+	d.logger.Debug("dashboard data fetch from browser", "data", dashboardData, "num_panels", len(dashboardData))
+
 	// Make panels from data
 	return d.createPanels(dashboardData)
 }
@@ -209,9 +212,10 @@ func (d *Dashboard) panelData(_ context.Context) ([]interface{}, error) {
 // panels creates slice of panels from the data fetched from browser's DOM model.
 func (d *Dashboard) createPanels(dashData []interface{}) ([]Panel, error) {
 	var (
-		allErrs error
-		err     error
-		panels  []Panel
+		allErrs    error
+		err        error
+		panels     []Panel
+		panelReprs []string
 	)
 
 	// We get HTML element's bounding box absolute coordinates which means
@@ -299,6 +303,7 @@ func (d *Dashboard) createPanels(dashData []interface{}) ([]Panel, error) {
 
 		// Create panel model and append to panels
 		panels = append(panels, p)
+		panelReprs = append(panelReprs, p.String())
 	}
 
 	// Remove xOffset and yOffset from all coordinates of panels
@@ -320,6 +325,8 @@ func (d *Dashboard) createPanels(dashData []interface{}) ([]Panel, error) {
 
 		return nil, allErrs
 	}
+
+	d.logger.Debug("fetched panels", "panels", strings.Join(panelReprs, ";"))
 
 	return panels, allErrs
 }
