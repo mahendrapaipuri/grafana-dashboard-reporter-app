@@ -18,8 +18,8 @@ const panelData = selector => [...document.querySelectorAll('[' + selector + ']'
  * #see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator#options
  */
 function semverCompare(a, b) {
-    if (a.startsWith(b + "-")) return -1
-    if (b.startsWith(a + "-")) return 1
+    if (a.startsWith(b + "-")) {return -1}
+    if (b.startsWith(a + "-")) {return 1}
     return a.localeCompare(b, undefined, { numeric: true, sensitivity: "case", caseFirst: "upper" })
 }
 
