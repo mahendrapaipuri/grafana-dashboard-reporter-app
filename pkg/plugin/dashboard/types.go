@@ -10,7 +10,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 )
 
 // Dashboard represents a Grafana dashboard resource.
@@ -19,9 +18,9 @@ type Dashboard struct {
 	conf           *config.Config
 	httpClient     *http.Client
 	chromeInstance chrome.Instance
-	workerPools    worker.Pools
-	appURL         string
+	appURL         *url.URL
 	appVersion     string
+	jsContent      string
 	model          *Model
 	authHeader     http.Header
 }

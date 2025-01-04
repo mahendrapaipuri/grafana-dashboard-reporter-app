@@ -18,6 +18,7 @@ jobs:
           - grafana-version: 10.3.0
             remote-chrome-url: ''
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            native-rendering: false
             # snapshots-folder: local-chrome
             name: local-chrome-10.3.0-with-features
 
@@ -25,6 +26,7 @@ jobs:
           - grafana-version: 10.4.5
             remote-chrome-url: ''
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            native-rendering: true
             # snapshots-folder: local-chrome
             name: local-chrome-10.4.5-with-features
 
@@ -33,6 +35,7 @@ jobs:
           - grafana-version: 10.4.7
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'externalServiceAccounts'
+            native-rendering: false
             # snapshots-folder: remote-chrome
             name: remote-chrome-10.4.7-without-features
 
@@ -40,15 +43,25 @@ jobs:
           - grafana-version: 11.1.0
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            native-rendering: false
             # snapshots-folder: remote-chrome
             name: remote-chrome-11.1.0-with-features
 
-          # Latest Grafana with local chrome
-          - grafana-version: 11.3.0
+          # Latest Grafana with local chrome and grafana-image-renderer
+          - grafana-version: 11.4.0
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            native-rendering: false
             # snapshots-folder: remote-chrome
-            name: local-chrome-11.3.0-with-features
+            name: local-chrome-11.4.0-with-features
+
+          # Latest Grafana with local chrome and native-renderer
+          - grafana-version: 11.4.0
+            remote-chrome-url: ws://localhost:9222
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            native-rendering: true
+            # snapshots-folder: remote-chrome
+            name: local-chrome-11.4.0-with-features-native-renderer
 
     steps:
       - uses: actions/checkout@v4
@@ -76,6 +89,7 @@ jobs:
         env:
           GRAFANA_VERSION: ${{ matrix.grafana-version }}
           GF_REPORTER_PLUGIN_REMOTE_CHROME_URL: ${{ matrix.remote-chrome-url }}
+          GF_REPORTER_PLUGIN_NATIVE_RENDERER: ${{ matrix.native-rendering }}
           GF_FEATURE_TOGGLES_ENABLE: ${{ matrix.feature-flags }}
         run: |
           # Upload/Download artifacts wont preserve permissions

@@ -6,87 +6,26 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
-	"golang.org/x/mod/semver"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
-// Javascripts vars.
+// Regex for parsing X and Y co-ordinates from CSS
+// Scales for converting width and height to Grafana units.
+//
+// This is based on viewportWidth that we used in client.go which
+// is 1952px. Stripping margin 32px we get 1920px / 24 = 80px
+// height scale should be fine with 36px as width and aspect ratio
+// should choose a height appropriately.
 var (
-	// JS to uncollapse rows for different Grafana versions.
-	// Seems like executing JS corresponding to v10 on v11 or v11 on v10
-	// does not have any side-effect, so we will always execute both of them. This
-	// avoids more logic to detect Grafana version.
-	unCollapseRowsJS = map[string]string{
-		"v10":   `[...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0].click())`,
-		"v11":   `[...document.querySelectorAll("[data-testid='dashboard-row-container']")].map((e) => [...e.querySelectorAll("[aria-expanded=false]")].map((e) => e.click()))`,
-		"v11.3": `[...document.querySelectorAll("[aria-label='Expand row']")].map((e) => e.click())`,
+	scales = map[string]float64{
+		"width":  80,
+		"height": 36,
 	}
-
-	// dashboardDataJS is a javascript to get dashboard related data.
-	dashboardDataJS = `[...document.querySelectorAll('[%[1]s]')].map((e)=>({"x": e.getBoundingClientRect().x, "y": e.getBoundingClientRect().y, "width": e.getBoundingClientRect().width, "height": e.getBoundingClientRect().height, "title": e.innerText.split('\n')[0], "id": e.getAttribute("%[1]s")}))`
-
-	// waitPanelsJS is a javascript to wait for all panels to load.
-	// Seems like in Grafana v11.3.0+, panels are "lazily" loading. We need to scroll to the rows/panels for them to be visible.
-	// Even after expanding rows, we need to wait for panels to load data for our `dashboardDataJS` to get the panels data.
-	// It is a bit useless to wait for data to load in panels just to get the list of active panels and their positions but seems
-	// like we do not have many options here.
-	waitPanelsJS = `const loadPanels = async(sel = 'data-viz-panel-key', timeout = 30000) => {
-	  // Define a timer to wait until next try
-	  let timer = ms => new Promise(res => setTimeout(res, ms));
-	  
-	  // Always scroll to bottom of the page
-	  window.scrollTo(0, document.body.scrollHeight);
-	  
-	  // Wait duration between retries
-	  const waitDurationMsecs = 1000;
-
-	  // Maximum number of checks based on timeout
-	  const maxChecks = timeout / waitDurationMsecs;
-
-	  // Initialise parameters
-	  let lastPanels = [];
-	  let checkCounts = 1;
-
-	  // Panel count should be unchanged for minStableSizeIterations times
-	  let countStableSizeIterations = 0;
-	  const minStableSizeIterations = 3;
-
-	  while (checkCounts++ <= maxChecks) {
-	    // Get current number of panels
-	 	let currentPanels = document.querySelectorAll('[' + sel + ']');
-
-	    // If current panels and last panels are same, increment iterator
-		if (lastPanels.length !== 0 && currentPanels.length === lastPanels.length) {
-	      countStableSizeIterations++;
-	    } else {
-	      countStableSizeIterations = 0; // reset the counter
-	    }
-
-	    // If panel count is stable for minStableSizeIterations, return. We assume that
-		// the dashboard has loaded with all panels
-		if (countStableSizeIterations >= minStableSizeIterations) {
-	      return;
-	    }
-
-	    // If not, wait and retry
-		lastPanels = currentPanels;
-	    await timer(waitDurationMsecs);
-	  }
-
-	  return;
-	};`
 )
-
-// Tables related javascripts.
-const (
-	selDownloadCSVButton                             = `div[aria-label="Panel inspector Data content"] button[type="button"]`
-	selInspectPanelDataTabExpandDataOptions          = `div[role='dialog'] button[aria-expanded=false]`
-	selInspectPanelDataTabApplyTransformationsToggle = `div[data-testid="dataOptions"] input:not(#excel-toggle):not(#formatted-data-toggle) + label`
-)
-
-var clickDownloadCSVButton = fmt.Sprintf(`[...document.querySelectorAll('%s')].map((e)=>(e.click()))`, selDownloadCSVButton)
 
 // Browser vars.
 var (
@@ -114,7 +53,7 @@ var (
 // panels fetches dashboard panels from Grafana chromium browser instance.
 func (d *Dashboard) panels(ctx context.Context) ([]Panel, error) {
 	// Fetch dashboard data from browser
-	dashboardData, err := d.panelData(ctx)
+	dashboardData, err := d.panelMetaData(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get dashboard data from browser: %w", err)
 	}
@@ -125,10 +64,12 @@ func (d *Dashboard) panels(ctx context.Context) ([]Panel, error) {
 	return d.createPanels(dashboardData)
 }
 
-// panelData fetches dashboard panels data from Grafana chromium browser instance.
-func (d *Dashboard) panelData(_ context.Context) ([]interface{}, error) {
+// panelMetaData fetches dashboard panels metadata from Grafana chromium browser instance.
+func (d *Dashboard) panelMetaData(_ context.Context) ([]interface{}, error) {
 	// Get dashboard URL
 	dashURL := fmt.Sprintf("%s/d/%s/_?%s", d.appURL, d.model.Dashboard.UID, d.model.Dashboard.Variables.Encode())
+
+	defer helpers.TimeTrack(time.Now(), "fetch dashboard panels metadata", d.logger, "url", dashURL)
 
 	// Create a new tab
 	tab := d.chromeInstance.NewTab(d.logger, d.conf)
@@ -150,48 +91,23 @@ func (d *Dashboard) panelData(_ context.Context) ([]interface{}, error) {
 
 	tasks := make(chromedp.Tasks, 0)
 
-	// JS attribute for fetching dashboard data has changed in v11.3.0
-	var dashDataJS string
-	if semver.Compare(d.appVersion, "v11.3.0") == -1 {
-		dashDataJS = fmt.Sprintf(dashboardDataJS, "data-panelid")
-	} else {
-		dashDataJS = fmt.Sprintf(dashboardDataJS, "data-viz-panel-key")
-
-		// Set viewport. Seems like it is crucial for Grafana v11.3.0+
-		tasks = append(tasks, chromedp.EmulateViewport(viewportWidth, viewportHeight))
-
-		// Add `loadPanels()` func to tab
-		tasks = append(tasks, chromedp.Evaluate(waitPanelsJS, nil))
-
-		// Wait for all panels to lazy load
-		tasks = append(tasks, chromedp.Evaluate(`loadPanels();`, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-			return p.WithAwaitPromise(true)
-		}))
-	}
-
-	// If full dashboard mode is requested, add js that uncollapses rows
-	if d.conf.DashboardMode == "full" {
-		for _, jsExpr := range unCollapseRowsJS {
-			tasks = append(tasks, chromedp.Evaluate(jsExpr, nil))
-		}
-
-		// For Grafana v11.3.0+, wait for all expanded panels to load
-		if semver.Compare(d.appVersion, "v11.3.0") > -1 {
-			tasks = append(tasks, chromedp.Evaluate(`loadPanels();`, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-				return p.WithAwaitPromise(true)
-			}))
-		}
-	}
-
 	// Fetch dashboard data
 	var dashboardData []interface{}
 
 	// var buf []byte
 
+	js := fmt.Sprintf(
+		`waitForQueriesAndVisualizations(version = '%s', mode = '%s', timeout = %d);`,
+		d.appVersion, d.conf.DashboardMode, d.conf.HTTPClientOptions.Timeouts.Timeout.Milliseconds(),
+	)
+
 	// JS that will fetch dashboard model
 	tasks = append(tasks, chromedp.Tasks{
-		chromedp.Evaluate(dashDataJS, &dashboardData),
-		// chromedp.CaptureScreenshot(&buf),
+		chromedp.Evaluate(d.jsContent, nil),
+		chromedp.EmulateViewport(viewportWidth, viewportHeight),
+		chromedp.Evaluate(js, &dashboardData, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+			return p.WithAwaitPromise(true)
+		}),
 	}...)
 
 	if err := tab.Run(tasks); err != nil {

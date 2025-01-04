@@ -335,17 +335,22 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	grafanaDashboard := dashboard.New(
+	grafanaDashboard, err := dashboard.New(
 		ctxLogger,
 		&conf,
 		app.httpClient,
 		app.chromeInstance,
-		app.workerPools,
 		grafanaAppURL,
 		app.grafanaSemVer,
 		model,
 		authHeader,
 	)
+	if err != nil {
+		ctxLogger.Error("failed to create a new dashboard", "err", err)
+		http.Error(w, "error generating report", http.StatusInternalServerError)
+
+		return
+	}
 
 	ctxLogger.Info(fmt.Sprintf("generate report using %s chrome", app.chromeInstance.Name()))
 

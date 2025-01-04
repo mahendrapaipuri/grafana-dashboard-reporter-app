@@ -2,50 +2,58 @@ package dashboard
 
 import (
 	"context"
+	"embed"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
-// Regex for parsing X and Y co-ordinates from CSS
-// Scales for converting width and height to Grafana units.
+// Embed the entire directory.
 //
-// This is based on viewportWidth that we used in client.go which
-// is 1952px. Stripping margin 32px we get 1920px / 24 = 80px
-// height scale should be fine with 36px as width and aspect ratio
-// should choose a height appropriately.
-var (
-	scales = map[string]float64{
-		"width":  80,
-		"height": 36,
-	}
-)
+//go:embed js
+var jsFS embed.FS
 
 // New creates a new instance of the Dashboard struct.
 func New(logger log.Logger, conf *config.Config, httpClient *http.Client, chromeInstance chrome.Instance,
-	pools worker.Pools, appURL, appVersion string, model *Model, authHeader http.Header,
-) *Dashboard {
+	appURL, appVersion string, model *Model, authHeader http.Header,
+) (*Dashboard, error) {
+	// Parse app URL
+	u, err := url.Parse(appURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse app URL: %w", errors.Unwrap(err))
+	}
+
+	// Read JS from embedded file
+	js, err := jsFS.ReadFile("js/panels.js")
+	if err != nil {
+		return nil, fmt.Errorf("failed to load JS: %w", err)
+	}
+
 	return &Dashboard{
 		logger,
 		conf,
 		httpClient,
 		chromeInstance,
-		pools,
-		appURL,
+		u,
 		appVersion,
+		string(js),
 		model,
 		authHeader,
-	}
+	}, nil
 }
 
 // GetData fetches dashboard related data.
 func (d *Dashboard) GetData(ctx context.Context) (*Data, error) {
+	defer helpers.TimeTrack(time.Now(), "dashboard data", d.logger)
+
 	// Make panels from loading the dashboard in a browser instance
 	panels, err := d.panels(ctx)
 	if err != nil {

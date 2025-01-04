@@ -19,6 +19,7 @@ import (
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 )
 
@@ -51,6 +52,8 @@ func New(logger log.Logger, conf *config.Config, httpClient *http.Client, chrome
 }
 
 func (r *Report) Generate(ctx context.Context, writer http.ResponseWriter) error {
+	defer helpers.TimeTrack(time.Now(), "report generation", r.logger)
+
 	// Get panel data from dashboard
 	dashboardData, err := r.dashboard.GetData(ctx)
 	if err != nil {
@@ -87,6 +90,8 @@ func (r *Report) Generate(ctx context.Context, writer http.ResponseWriter) error
 
 // populatePanels populates the panels with PNG and tabular data.
 func (r *Report) populatePanels(ctx context.Context, dashboardData *dashboard.Data) error {
+	defer helpers.TimeTrack(time.Now(), "panel PNGs and/or data generation", r.logger)
+
 	// Get the indexes of PNG panels that need to be included in the report
 	pngPanels := selectPanels(dashboardData.Panels, r.conf.IncludePanelIDs, r.conf.ExcludePanelIDs, true)
 
@@ -98,21 +103,6 @@ func (r *Report) populatePanels(ctx context.Context, dashboardData *dashboard.Da
 	wg := sync.WaitGroup{}
 
 	for idx, panel := range dashboardData.Panels {
-		if slices.Contains(tablePanels, idx) {
-			wg.Add(1)
-
-			r.pools[worker.Browser].Do(func() {
-				defer wg.Done()
-
-				panelData, err := r.dashboard.PanelCSV(ctx, panel)
-				if err != nil {
-					errorCh <- fmt.Errorf("failed to fetch CSV data for panel %s: %w", panel.ID, err)
-				}
-
-				dashboardData.Panels[idx].CSVData = panelData
-			})
-		}
-
 		if slices.Contains(pngPanels, idx) {
 			wg.Add(1)
 
@@ -125,6 +115,21 @@ func (r *Report) populatePanels(ctx context.Context, dashboardData *dashboard.Da
 				}
 
 				dashboardData.Panels[idx].EncodedImage = panelPNG
+			})
+		}
+
+		if slices.Contains(tablePanels, idx) {
+			wg.Add(1)
+
+			r.pools[worker.Browser].Do(func() {
+				defer wg.Done()
+
+				panelData, err := r.dashboard.PanelCSV(ctx, panel)
+				if err != nil {
+					errorCh <- fmt.Errorf("failed to fetch CSV data for panel %s: %w", panel.ID, err)
+				}
+
+				dashboardData.Panels[idx].CSVData = panelData
 			})
 		}
 	}
@@ -246,6 +251,8 @@ func (r *Report) generateHTMLFile(dashboardData *dashboard.Data) (HTML, error) {
 
 // renderPDF renders HTML page into PDF using Chromium.
 func (r *Report) renderPDF(htmlReport HTML, writer io.Writer) error {
+	defer helpers.TimeTrack(time.Now(), "pdf rendering", r.logger)
+
 	// Create a new tab
 	tab := r.chromeInstance.NewTab(r.logger, r.conf)
 	defer tab.Close(r.logger)

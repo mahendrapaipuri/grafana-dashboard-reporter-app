@@ -40,20 +40,24 @@ services:
       # the token from a service account to read dashboards
       - GF_FEATURE_TOGGLES_ENABLE=${GF_FEATURE_TOGGLES_ENABLE:-accessControlOnCall,idForwarding,externalServiceAccounts}
       - GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED=${GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED:-true}
-      # disable alerting because it vomits logs
+      # disable alerting and Grafana live because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
+      - GF_LIVE_MAX_CONNECTIONS=0
+      - GF_PLUGINS_DISABLE_PLUGINS=grafana-lokiexplore-app
       # Grafana image renderer
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:${GF_SERVER_HTTP_PORT:-3000}/
       - "GF_LOG_FILTERS=rendering:debug plugin.mahendrapaipuri-dashboardreporter-app:debug"
+      # Current plugin config
+      - GF_REPORTER_PLUGIN_NATIVE_RENDERER=${GF_REPORTER_PLUGIN_NATIVE_RENDERER:-false}
   renderer:
     image: grafana/grafana-image-renderer:latest
     environment:
       # Recommendation of grafana-image-renderer for optimal performance
       # https://grafana.com/docs/grafana/latest/setup-grafana/image-rendering/#configuration
       - RENDERING_MODE=clustered
-      - RENDERING_CLUSTERING_MODE=browser
+      - RENDERING_CLUSTERING_MODE=context
       - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
       - RENDERING_CLUSTERING_TIMEOUT=60
       - IGNORE_HTTPS_ERRORS=true

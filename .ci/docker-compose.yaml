@@ -41,6 +41,8 @@ services:
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
+      - GF_LIVE_MAX_CONNECTIONS=0
+      - GF_PLUGINS_DISABLE_PLUGINS=grafana-lokiexplore-app
       # Grafana image renderer
       - GF_RENDERING_SERVER_URL=http://renderer_plain:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana_plain:${GF_SERVER_HTTP_PORT:-3000}/
@@ -49,6 +51,7 @@ services:
       # Set CI mode to remove header in report
       - __REPORTER_APP_CI_MODE=true
       - GF_REPORTER_PLUGIN_REMOTE_CHROME_URL=${GF_REPORTER_PLUGIN_REMOTE_CHROME_URL:-}
+      - GF_REPORTER_PLUGIN_NATIVE_RENDERER=${GF_REPORTER_PLUGIN_NATIVE_RENDERER:-false}
 
   renderer_plain:
     image: grafana/grafana-image-renderer:latest
@@ -105,6 +108,8 @@ services:
       # disable alerting because it vomits logs
       - GF_ALERTING_ENABLED=false
       - GF_UNIFIED_ALERTING_ENABLED=false
+      - GF_LIVE_MAX_CONNECTIONS=0
+      - GF_PLUGINS_DISABLE_PLUGINS=grafana-lokiexplore-app
        # TLS
       - GF_SERVER_PROTOCOL=https
       - GF_SERVER_CERT_KEY=/etc/grafana/tls/localhost.key
@@ -117,6 +122,7 @@ services:
       # Set CI mode to remove header in report
       - __REPORTER_APP_CI_MODE=true
       - GF_REPORTER_PLUGIN_REMOTE_CHROME_URL=${GF_REPORTER_PLUGIN_REMOTE_CHROME_URL:-}
+      - GF_REPORTER_PLUGIN_NATIVE_RENDERER=${GF_REPORTER_PLUGIN_NATIVE_RENDERER:-false}
       - GF_REPORTER_PLUGIN_SKIP_TLS_CHECK=true
 
   renderer_tls:

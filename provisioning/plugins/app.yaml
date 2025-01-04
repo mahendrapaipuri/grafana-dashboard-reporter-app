@@ -162,3 +162,13 @@ apps:
       # chrome instance
       #
       remoteChromeUrl: ''
+
+      # Render Panel PNGs natively using current plugin.
+      # When set to `true`, the plugin generates panel PNGs natively without using
+      # `grafana-image-renderer`. Thus, if it is set to `true`, there is no need
+      # to install `grafana-image-renderer`. However, `chromium` must be available
+      # for report and panel PNG generation
+      #
+      # THIS IS HIGHLY EXPERIMENTAL FEATURE.
+      #
+      nativeRenderer: false

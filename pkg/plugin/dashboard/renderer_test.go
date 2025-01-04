@@ -12,7 +12,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -42,18 +41,11 @@ func TestFetchPanelPNG(t *testing.T) {
 		variables.Add("from", "now-1h")
 		variables.Add("to", "now")
 
-		ctx := context.Background()
-		workerPools := worker.Pools{
-			worker.Browser:  worker.New(ctx, 6),
-			worker.Renderer: worker.New(ctx, 2),
-		}
-
-		dash := New(
+		dash, err := New(
 			log.NewNullLogger(),
 			&conf,
 			http.DefaultClient,
 			&chrome.LocalInstance{},
-			workerPools,
 			ts.URL,
 			"v11.1.0",
 			&Model{Dashboard: struct {
@@ -72,7 +64,12 @@ func TestFetchPanelPNG(t *testing.T) {
 				backend.OAuthIdentityTokenHeaderName: []string{"Bearer token"},
 			},
 		)
-		_, err := dash.PanelPNG(context.Background(), Panel{ID: "44", Type: "singlestat", Title: "title", GridPos: GridPos{}})
+
+		Convey("New dashboard should receive no errors", func() {
+			So(err, ShouldBeNil)
+		})
+
+		_, err = dash.PanelPNG(context.Background(), Panel{ID: "44", Type: "singlestat", Title: "title", GridPos: GridPos{}})
 
 		Convey("It should receives no errors", func() {
 			So(err, ShouldBeNil)
@@ -108,12 +105,11 @@ func TestFetchPanelPNG(t *testing.T) {
 		// Use grid layout
 		conf.Layout = "grid"
 
-		dash = New(
+		dash, err = New(
 			log.NewNullLogger(),
 			&conf,
 			http.DefaultClient,
 			&chrome.LocalInstance{},
-			workerPools,
 			ts.URL,
 			"v11.1.0",
 			&Model{Dashboard: struct {
@@ -132,6 +128,10 @@ func TestFetchPanelPNG(t *testing.T) {
 				backend.OAuthIdentityTokenHeaderName: []string{"token"},
 			},
 		)
+
+		Convey("New dashboard should receive no errors using grid layout", func() {
+			So(err, ShouldBeNil)
+		})
 
 		_, err = dash.PanelPNG(context.Background(), Panel{ID: "44", Type: "graph", Title: "title", GridPos: GridPos{H: 6, W: 24}})
 
