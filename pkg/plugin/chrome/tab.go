@@ -102,6 +102,11 @@ func (t *Tab) Context() context.Context {
 	return t.ctx
 }
 
+// Target returns tab's target ID.
+func (t *Tab) Target() *chromedp.Target {
+	return chromedp.FromContext(t.Context()).Target
+}
+
 // PrintToPDF returns chroms tasks that print the requested HTML into a PDF and returns the PDF stream handle.
 func (t *Tab) PrintToPDF(options PDFOptions, writer io.Writer) error {
 	err := chromedp.Run(t.ctx, chromedp.Tasks{

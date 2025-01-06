@@ -2,7 +2,7 @@
 
 # Constants
 API_PATH="api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report"
-DASH_UID="fdlwjnyim1la8f"
+DASH_UID="b3228ada-fd89-4aed-8605-d5f7b95aa237"
 
 # CLI ARGS
 VARIANT="$1"
@@ -10,12 +10,12 @@ VARIANT="$1"
 if [[ "$VARIANT" == "plain" ]]; then
     GRAFANA_PROTOCOL="http"
     GRAFANA_PORT="3080"
-    QUERY_PARAMS="layout=simple&orientation=portrait&dashboardMode=default&var-testvar0=All&var-testvar1=foo&var-testvar2=1"
+    QUERY_PARAMS='from=now-60d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=simple&orientation=portrait&dashboardMode=default'
     REPORT_NAME="default"
 else
     GRAFANA_PROTOCOL="https"
     GRAFANA_PORT="3443"
-    QUERY_PARAMS="layout=grid&orientation=landscape&dashboardMode=full&from=now-5m&to=now&var-testvar0=All&var-testvar1=foo&var-testvar2=1"
+    QUERY_PARAMS='from=now-60d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=grid&orientation=landscape&dashboardMode=full'
     REPORT_NAME="alternative"
 fi
 

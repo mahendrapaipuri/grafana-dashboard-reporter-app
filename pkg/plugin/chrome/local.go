@@ -141,10 +141,4 @@ func (i *LocalInstance) Close(logger log.Logger) {
 			logger.Error("got error from cancel browser context", "error", err)
 		}
 	}
-
-	if i.allocCtx != nil {
-		if err := chromedp.Cancel(i.allocCtx); err != nil {
-			logger.Error("got error from cancel browser allocator context", "error", err)
-		}
-	}
 }

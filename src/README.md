@@ -47,10 +47,10 @@ generating and sending reports automatically, they should look into official plu
 
 However, it is still possible to install this plugin using `grafana-cli` by overriding
 `pluginUrl` by using URL from [releases](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases).
-For example following command will install plugin version `v1.6.3`
+For example following command will install plugin version `1.7.1`
 
 ```bash
-grafana-cli --pluginUrl https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v1.6.3/mahendrapaipuri-dashboardreporter-app-1.6.3.zip plugins install mahendrapaipuri-dashboardreporter-app
+VERSION=1.7.1 grafana-cli --pluginUrl "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
 ```
 
 Similarly, `nightly` version can be installed suing
@@ -589,6 +589,23 @@ error messages will be as follows:
 - If `chromium` fails to run, it suggests that there are missing dependent libraries on
 the host. In that case, we advise to install `chromium` on the machine which will
 install all the dependent libraries.
+
+- On Ubuntu, for a more hassle-free experience, install `google-chrome`
+from [DEB package](https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb)
+instead of installing `chromium` from `snap`.
+
+- If Grafana server is running inside a systemd service file, sometimes users might
+see errors as follows:
+
+  ```bash
+  couldn't create browser context: chrome failed to start:\nchrome_crashpad_handler: --database is required\nTry 'chrome_crashpad_handler --help' for more information.\n[147301:147301:0102/092026.518581:ERROR:socket.cc(120)] recvmsg: Connection reset by peer (104)\n"
+  ```
+
+  This is due to `google-chrome`/`chromium` not able to create user profile
+  directories. A solution is to set environment variables
+  `XDG_CONFIG_HOME=/tmp/.chrome` and `XDG_CACHE_HOME=/tmp/.chrome` on the Grafana
+  process. If users do not wish to use `/tmp`, any folder where Grafana process
+  has write permissions can be used.
 
 - If you get `permission denied` response when generating a report, it is due to the
   user not having `View` permissions on the dashboard that they are attempting to generate

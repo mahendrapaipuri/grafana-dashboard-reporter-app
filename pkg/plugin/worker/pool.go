@@ -19,12 +19,12 @@ const (
 )
 
 func New(ctx context.Context, maxWorker int) *Pool {
-	queue := make(chan func(), maxWorker)
-	ctx, cancel := context.WithCancel(ctx)
-
 	if maxWorker <= 0 {
 		maxWorker = runtime.NumCPU()
 	}
+
+	queue := make(chan func(), maxWorker)
+	ctx, cancel := context.WithCancel(ctx)
 
 	for range maxWorker {
 		go func() {

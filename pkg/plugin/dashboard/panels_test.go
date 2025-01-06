@@ -17,7 +17,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -97,17 +96,11 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 				HTTPClientOptions: httpclient.Options{Timeouts: &httpclient.DefaultTimeoutOptions},
 			}
 
-			ctx := context.Background()
-			workerPools := worker.Pools{
-				worker.Browser:  worker.New(ctx, 6),
-				worker.Renderer: worker.New(ctx, 2),
-			}
-			dash := New(
+			dash, err := New(
 				log.NewNullLogger(),
 				&conf,
 				http.DefaultClient,
 				chromeInstance,
-				workerPools,
 				ts.URL,
 				"v11.4.0",
 				&Model{Dashboard: struct {
@@ -125,7 +118,12 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 					backend.CookiesHeaderName: []string{"cookie"},
 				},
 			)
-			d, err := dash.panelData(context.Background())
+
+			Convey("New dashboard should receive no errors", func() {
+				So(err, ShouldBeNil)
+			})
+
+			d, err := dash.panelMetaData(context.Background())
 
 			Convey("It should receive no errors", func() {
 				So(err, ShouldBeNil)
@@ -200,17 +198,11 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 				HTTPClientOptions: httpclient.Options{Timeouts: &httpclient.DefaultTimeoutOptions},
 			}
 
-			ctx := context.Background()
-			workerPools := worker.Pools{
-				worker.Browser:  worker.New(ctx, 6),
-				worker.Renderer: worker.New(ctx, 2),
-			}
-			dash := New(
+			dash, err := New(
 				log.NewNullLogger(),
 				&conf,
 				http.DefaultClient,
 				chromeInstance,
-				workerPools,
 				ts.URL,
 				"v11.4.0",
 				&Model{Dashboard: struct {
@@ -228,7 +220,12 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 					backend.CookiesHeaderName: []string{"cookie"},
 				},
 			)
-			d, err := dash.panelData(context.Background())
+
+			Convey("New dashboard should receive no errors", func() {
+				So(err, ShouldBeNil)
+			})
+
+			d, err := dash.panelMetaData(context.Background())
 
 			Convey("It should receive no errors", func() {
 				So(err, ShouldBeNil)
@@ -248,12 +245,11 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 
 func TestDashboardCreatePanels(t *testing.T) {
 	Convey("When creating panels for Dashboard", t, func() {
-		dash := New(
+		dash, err := New(
 			log.NewNullLogger(),
 			nil,
 			nil,
 			nil,
-			worker.Pools{},
 			"http://localhost:3000",
 			"v11.4.0",
 			&Model{Dashboard: struct {
@@ -270,10 +266,14 @@ func TestDashboardCreatePanels(t *testing.T) {
 			nil,
 		)
 
+		Convey("New dashboard should receive no errors", func() {
+			So(err, ShouldBeNil)
+		})
+
 		dashDataString := `[{"width":940,"height":258,"x":0,"y":0,"id":"12"},{"width":940,"height":258,"x":940,"y":0,"id":"26"},{"width":940,"height":258,"x":0,"y":0,"id":"27"}]`
 
 		var dashData []interface{}
-		err := json.Unmarshal([]byte(dashDataString), &dashData)
+		err = json.Unmarshal([]byte(dashDataString), &dashData)
 
 		Convey("setup dashboard data unmarshal", func() {
 			So(err, ShouldBeNil)

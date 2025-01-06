@@ -41,6 +41,7 @@ type Config struct {
 	MaxBrowserWorkers   int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"    json:"maxBrowserWorkers"`
 	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"     json:"maxRenderWorkers"`
 	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"      json:"remoteChromeUrl"`
+	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"        json:"nativeRenderer"`
 	IncludePanelIDs     []string
 	ExcludePanelIDs     []string
 	IncludePanelDataIDs []string
@@ -141,10 +142,12 @@ func (c *Config) String() string {
 		"Theme: %s; Orientation: %s; Layout: %s; Dashboard Mode: %s; "+
 			"Time Zone: %s; Time Format: %s; Encoded Logo: %s; "+
 			"Max Renderer Workers: %d; Max Browser Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
-			"TLS Skip verify: %v; Included Panel IDs: %s; Excluded Panel IDs: %s Included Data for Panel IDs: %s",
+			"TLS Skip verify: %v; Included Panel IDs: %s; Excluded Panel IDs: %s Included Data for Panel IDs: %s; "+
+			"Native Renderer: %v; Client Timeout: %d",
 		c.Theme, c.Orientation, c.Layout, c.DashboardMode, c.TimeZone, c.TimeFormat,
 		encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers, c.RemoteChromeURL, appURL,
-		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs, includeDataPanelIDs,
+		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs, includeDataPanelIDs, c.NativeRendering,
+		int(c.HTTPClientOptions.Timeouts.Timeout.Seconds()),
 	)
 }
 

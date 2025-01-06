@@ -1,0 +1,15 @@
+apiVersion: 1
+
+# A sample Prometheus datasource for testing purposes.
+datasources:
+  - access: proxy
+    isDefault: true
+    jsonData:
+      cacheLevel: Medium
+      incrementalQuerying: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.53.1
+      timeInterval: 10s
+    name: Prometheus
+    type: prometheus
+    url: https://prometheus.demo.do.prometheus.io
