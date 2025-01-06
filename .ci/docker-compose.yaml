@@ -8,12 +8,13 @@ services:
       context: ../.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.3.0}
+        grafana_version: ${GRAFANA_VERSION:-11.4.0}
     ports:
       - 3080:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
       - ../dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
       - ./dashboards:/etc/grafana/provisioning/dashboards
+      - ./datasources:/etc/grafana/provisioning/datasources
       # Dont set config in provisioning just to ensure that plugin works without any
       # extra config
       - ./config/plain:/etc/grafana/provisioning/plugins
@@ -31,7 +32,7 @@ services:
       # allow anonymous admin so we don't have to set up a password to start testing
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_AUTH_BASIC_ENABLED=true
-      #- GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      # - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       # skip login page
       # - GF_AUTH_DISABLE_LOGIN_FORM=true
       # We need to toggle external service accounts so that Grafana will get
@@ -77,12 +78,13 @@ services:
       context: ../.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.3.0}
+        grafana_version: ${GRAFANA_VERSION:-11.4.0}
     ports:
       - 3443:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
       - ../dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
       - ./dashboards:/etc/grafana/provisioning/dashboards
+      - ./datasources:/etc/grafana/provisioning/datasources
       - ./config/tls:/etc/grafana/provisioning/plugins
       - ./certs:/etc/grafana/tls
       - ./runtime/tls:/srv
