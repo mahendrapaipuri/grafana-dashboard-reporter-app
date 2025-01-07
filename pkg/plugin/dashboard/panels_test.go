@@ -50,20 +50,6 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 	}
 
 	Convey("When fetching a Dashboard", t, func() {
-		// Get CWD
-		cwd, err := os.Getwd()
-
-		Convey("getting CWD should not error", func() {
-			So(err, ShouldBeNil)
-		})
-
-		// Read sample HTML file
-		data, err := os.ReadFile(filepath.Join(cwd, "testdata/dashboard.html"))
-
-		Convey("setup a dashboard HTML page should not error", func() {
-			So(err, ShouldBeNil)
-		})
-
 		chromeInstance, err := chrome.NewLocalBrowserInstance(context.Background(), log.NewNullLogger(), true)
 		defer chromeInstance.Close(log.NewNullLogger()) //nolint:staticcheck
 
@@ -76,6 +62,22 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 		requestCookie := ""
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Get CWD
+			cwd, err := os.Getwd()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return
+			}
+
+			// Read sample HTML file
+			data, err := os.ReadFile(filepath.Join(cwd, "testdata/dashboard.html"))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return
+			}
+
 			muLock.Lock()
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
@@ -149,20 +151,6 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 	}
 
 	Convey("When fetching a Dashboard", t, func() {
-		// Get CWD
-		cwd, err := os.Getwd()
-
-		Convey("getting CWD should not error", func() {
-			So(err, ShouldBeNil)
-		})
-
-		// Read sample HTML file
-		data, err := os.ReadFile(filepath.Join(cwd, "testdata/dashboard.html"))
-
-		Convey("setup a dashboard HTML page should not error", func() {
-			So(err, ShouldBeNil)
-		})
-
 		chromeInstance, err := chrome.NewRemoteBrowserInstance(
 			context.Background(),
 			log.NewNullLogger(),
@@ -178,6 +166,22 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 		requestCookie := ""
 
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Get CWD
+			cwd, err := os.Getwd()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return
+			}
+
+			// Read sample HTML file
+			data, err := os.ReadFile(filepath.Join(cwd, "testdata/dashboard.html"))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+
+				return
+			}
+
 			muLock.Lock()
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
