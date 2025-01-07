@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"time"
 
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
@@ -15,7 +16,10 @@ import (
 )
 
 // Path to chrome executable.
-var chromeExec string
+var (
+	chromeExec    string
+	chromeHomeDir string
+)
 
 func init() {
 	// Get Grafana data path based on path of current executable
@@ -27,6 +31,12 @@ func init() {
 	// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
 	// Now we attempt to get install_dir directory which is Grafana data path
 	dataPath := filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
+
+	// Create a folder to use it as HOME for chrome process
+	homeDir := filepath.Join(dataPath, ".chrome")
+	if err := os.MkdirAll(homeDir, 0o750); err == nil {
+		chromeHomeDir = homeDir
+	}
 
 	// Walk through grafana-image-renderer plugin dir to find chrome executable
 	_ = filepath.Walk(filepath.Join(dataPath, "plugins", "grafana-image-renderer"),
@@ -43,7 +53,13 @@ func init() {
 				// even a "usable" chrome (for instance chromium installed using snap on Ubuntu)
 				// exists.
 				// So, test the chromium before using it
-				if _, err := exec.Command(path, "--help").Output(); err == nil {
+				//
+				// Use a timeout to avoid indefinite hanging
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				// This command should print an empty DOM and exit
+				if _, err := exec.CommandContext(ctx, path, "--headless", "--no-sandbox", "--disable-gpu", "--dump-dom").Output(); err == nil {
 					chromeExec = path
 				}
 
@@ -70,6 +86,12 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 		chromedp.NoSandbox,
 		chromedp.DisableGPU,
 	)
+
+	// If we managed to create a home for chrome in a "writable" location, set it to chrome options
+	if chromeHomeDir != "" {
+		logger.Debug("created home directory for chromium process", "home", chromeHomeDir)
+		chromeOptions = append(chromeOptions, chromedp.Env("XDG_CONFIG_HOME="+chromeHomeDir, "XDG_CACHE_HOME="+chromeHomeDir))
+	}
 
 	// If chromExec is not empty we found chrome binary shipped by grafana-image-renderer
 	if chromeExec != "" {
