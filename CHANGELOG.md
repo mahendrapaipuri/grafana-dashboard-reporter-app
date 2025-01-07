@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.2
+
+- Testing of chromium distributed by grafana-image-renderer [#227](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/227)
+- Support rendering panel PNGs natively [#224](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/224)
+- Bump dependencies [#220](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/220), [#221](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/221), [#222](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/222), [#225](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/158), [#159](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/225), [#226](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/160), [#161](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/226)
+
 ## 1.7.1
 
 - Document on how to configure HTTP client timeouts [#218](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/218)
