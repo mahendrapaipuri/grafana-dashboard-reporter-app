@@ -12,18 +12,16 @@ and [`grafana-image-renderer`](https://github.com/grafana/grafana-image-renderer
 
 ![Sample report](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/pngs/sample_report.png)
 
-This plugin is based on the original work
+## 🎯 Features
+
+This plugin has been inspired from the original work
 [grafana-reporter](https://github.com/IzakMarais/reporter).
-The core of the plugin is heavily inspired from the above stated work with some
-improvements and modernization.
 
-- The current plugin uses HTML templates and headless chromium to generate reports
-  instead of LaTeX. `grafana-image-renderer` is a prerequisite for both current and
-  original plugins.
+- The current plugin uses HTML templates and headless chromium to generate reports.
+  `grafana-image-renderer` is a prerequisite for generating panel PNGs.
 
-- The current plugin app exposes the reporter as a custom API end point of Grafana instance without
-  needing to run the [grafana-reporter](https://github.com/IzakMarais/reporter)
-  as a separate web service. The advantage of the plugin approach is the authenticated
+- The current plugin app exposes the reporter as a custom API end point of Grafana.
+  The advantage of the plugin approach is the authenticated
   access to the reporter app is guaranteed by Grafana auth.
 
 - The plugin is capable of including all the repeated rows and/or panels in the
@@ -35,6 +33,13 @@ improvements and modernization.
 - The plugin can be configured by Admins from [Configuration Page](./src/img/light.png)
   and users using query parameters to the report API.
 
-## Documentation
+## ⚡️ Documentation
 
 More documentation can be found in [README](./src/README.md)
+
+## ⭐️ Project assistance
+
+If you want to say **thank you** or/and support active development of plugin:
+
+- Add a [GitHub Star](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app) to the project.
+- Write articles about project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or personal blog.
