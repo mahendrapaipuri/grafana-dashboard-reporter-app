@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"time"
 
@@ -22,6 +23,14 @@ var (
 )
 
 func init() {
+	// Seems like on windows using headless chrome distributed by grafana-image-renderer
+	// produces a debug log of chrome in the same folder which violates the list of
+	// files distributed in the MANIFEST and hence, Grafana refuses to run grafana-image-renderer.
+	// So, skip this check on Windows.
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	// Get Grafana data path based on path of current executable
 	pluginExe, err := os.Executable()
 	if err != nil {
@@ -67,7 +76,8 @@ func init() {
 			}
 
 			return nil
-		})
+		},
+	)
 }
 
 // LocalInstance is a locally running browser instance.
