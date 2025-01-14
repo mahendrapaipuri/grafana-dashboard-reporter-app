@@ -15,8 +15,8 @@ import (
 	"github.com/mahendrapaipuri/authlib/authz"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/report"
-	"golang.org/x/mod/semver"
 )
 
 // GrafanaUserSignInTokenHeaderName the header name used for forwarding
@@ -33,7 +33,7 @@ const (
 // convertPanelIDs returns panel IDs based on Grafana version.
 func (app *App) convertPanelIDs(ids []string) []string {
 	// For Grafana < 11.3.0, we can use the IDs as such
-	if semverCompare(app.grafanaSemVer, "v11.3.0") == -1 {
+	if helpers.SemverCompare(app.grafanaSemVer, "v11.3.0") == -1 {
 		return ids
 	}
 
@@ -107,7 +107,7 @@ func (app *App) updateConfig(req *http.Request, conf *config.Config) {
 func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 	// If Grafana <= 10.4.3, we use cookies to make request. Moreover feature toggles are
 	// not available for these Grafana versions.
-	if semverCompare(app.grafanaSemVer, "v10.4.3") <= -1 {
+	if helpers.SemverCompare(app.grafanaSemVer, "v10.4.3") <= -1 {
 		return false
 	}
 
@@ -392,23 +392,4 @@ func (app *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 func (app *App) registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/report", app.handleReport)
 	mux.HandleFunc("/healthz", app.handleHealth)
-}
-
-// semverCompare compares the semantic version of Grafana versions.
-// Grafana uses "+" as post release suffix and "-" as pre-release
-// suffixes. We take that into account when calling upstream semver
-// package.
-func semverCompare(a, b string) int {
-	switch {
-	case strings.HasPrefix(a, b+"+"):
-		return 1
-	case strings.HasPrefix(b, a+"+"):
-		return -1
-	case strings.HasPrefix(a, b+"-"):
-		return -1
-	case strings.HasPrefix(b, a+"-"):
-		return 1
-	}
-
-	return semver.Compare(a, b)
 }

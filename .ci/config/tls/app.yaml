@@ -16,4 +16,3 @@ apps:
       logo: ''
       maxBrowserWorkers: 10
       maxRenderWorkers: 10
-      persistData: false
