@@ -74,6 +74,17 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 
 	app.ctxLogger.Info("starting plugin with initial config: " + app.conf.String())
 
+	// Get current Grafana version
+	app.grafanaSemVer = "v" + backend.UserAgentFromContext(ctx).GrafanaVersion()
+
+	if app.grafanaSemVer == "v0.0.0" && app.conf.AppVersion != "0.0.0" {
+		app.grafanaSemVer = "v" + app.conf.AppVersion
+
+		app.ctxLogger.Debug("got grafana version from plugin settings", "version", app.grafanaSemVer)
+	} else {
+		app.ctxLogger.Debug("got grafana version from backend user agent", "version", app.grafanaSemVer)
+	}
+
 	// Make a new HTTP client
 	if app.httpClient, err = httpclient.New(app.conf.HTTPClientOptions); err != nil {
 		return nil, fmt.Errorf("error in httpclient new: %w", err)
@@ -116,9 +127,6 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 		worker.Browser:  worker.New(context.Background(), app.conf.MaxBrowserWorkers),
 		worker.Renderer: worker.New(context.Background(), app.conf.MaxRenderWorkers),
 	}
-
-	// Get current Grafana version
-	app.grafanaSemVer = "v" + backend.UserAgentFromContext(ctx).GrafanaVersion()
 
 	return &app, nil
 }

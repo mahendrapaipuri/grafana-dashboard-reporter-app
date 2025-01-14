@@ -2,6 +2,9 @@
 // and panels are fully loaded on the current Grafana
 // dashboard
 
+// Fallback version string
+const fallbackVersion = '11.3.0'
+
 // Base backoff duration in ms
 const baseDelayMsecs = 10;
 
@@ -16,17 +19,31 @@ const panelData = selector => [...document.querySelectorAll('[' + selector + ']'
  * #see https://semver.org/
  * #see https://stackoverflow.com/a/65687141/456536
  * #see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator#options
+ * 
+ * Seems like Grafana uses "-" for pre-releases and "+" for post releases (bug fixes)
  */
 function semverCompare(a, b) {
+    // Pre-releases
     if (a.startsWith(b + "-")) {return -1}
     if (b.startsWith(a + "-")) {return 1}
+
+    // Post releases
+    if (a.startsWith(b + "+")) {return 1}
+    if (b.startsWith(a + "+")) {return -1}
     return a.localeCompare(b, undefined, { numeric: true, sensitivity: "case", caseFirst: "upper" })
 }
 
 // Wait for queries to finish and panels to load data
-const waitForQueriesAndVisualizations = async (version = '11.3.0', mode = 'default', timeout = 30000) => {
+const waitForQueriesAndVisualizations = async (version = `v${fallbackVersion}`, mode = 'default', timeout = 30000) => {
     // Remove v prefix from version
-    const ver = version.split('v')[1];
+    let ver = version.split('v')[1] || '0.0.0';
+
+    // Seems like Grafana is CAPABLE of sending zero version string
+    // on backend plugin. In that case attempt to get version from 
+    // frontend boot data
+    if (semverCompare(ver, '0.0.0') === 0) {
+        ver = grafanaBootData?.settings?.buildInfo?.version || fallbackVersion 
+    }
 
     // Set selector based on version
     let selector;
@@ -128,7 +145,7 @@ const checkFormatDataToggle = async () => {
 };
 
 // Waits for CSV data to be ready to download
-const waitForCSVData = async (version = '11.3.0', timeout = 30000) => {
+const waitForCSVData = async (version = `v${fallbackVersion}`, timeout = 30000) => {
     // First wait for panel to load data
     await waitForQueriesAndVisualizations(version, 'default', timeout);
 

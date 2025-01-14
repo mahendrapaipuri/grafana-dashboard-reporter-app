@@ -47,6 +47,14 @@ jobs:
             # snapshots-folder: remote-chrome
             name: remote-chrome-11.1.0-with-features
 
+          # Grafana v11.3.0+security-01 with local chrome when backend does not have Grafana
+          # version
+          - grafana-version: 11.3.0-security-01
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            native-rendering: false
+            # snapshots-folder: remote-chrome
+            name: remote-chrome-11.3.0-security-with-features
+
           # Latest Grafana with local chrome and grafana-image-renderer
           - grafana-version: 11.4.0
             remote-chrome-url: ws://localhost:9222
