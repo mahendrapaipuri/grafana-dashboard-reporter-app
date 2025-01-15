@@ -7,6 +7,4 @@ apps:
     disabled: false
 
     jsonData:
-      maxBrowserWorkers: 10
-      maxRenderWorkers: 10
       timeout: 60
