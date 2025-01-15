@@ -10,7 +10,7 @@ import (
 	"github.com/mahendrapaipuri/authlib/authn"
 	"github.com/mahendrapaipuri/authlib/authz"
 	"github.com/mahendrapaipuri/authlib/cache"
-	"golang.org/x/mod/semver"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 // HasAccess verifies if the current request context has access to certain action.
@@ -77,7 +77,7 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 	// So this check will fail for Grafana < 11.1.0
 	// Set VerifierConfig{DisableTypHeaderCheck: true} for those cases
 	disableTypHeaderCheck := false
-	if semver.Compare(app.grafanaSemVer, "v11.1.0") == -1 {
+	if helpers.SemverCompare(app.grafanaSemVer, "v11.1.0") == -1 {
 		disableTypHeaderCheck = true
 	}
 

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"time"
 
@@ -22,6 +23,13 @@ var (
 )
 
 func init() {
+	// Seems like using the same headless chrome distibution from grafana-image-renderer
+	// does not work on Windows. Until we ship our own distribution of headless chrome,
+	// skip this part.
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	// Get Grafana data path based on path of current executable
 	pluginExe, err := os.Executable()
 	if err != nil {
@@ -47,7 +55,7 @@ func init() {
 			}
 
 			// In recent releases of grafana-image-renderer, the binary is called chrome-headless-shell
-			validChromeBins := []string{"chrome", "chrome-headless-shell"}
+			validChromeBins := []string{"chrome", "chrome.exe", "chrome-headless-shell", "chrome-headless-shell.exe"}
 			if !info.IsDir() && slices.Contains(validChromeBins, info.Name()) {
 				// If the chrome shipped is not "usable", plugin cannot be used
 				// even a "usable" chrome (for instance chromium installed using snap on Ubuntu)
@@ -59,7 +67,10 @@ func init() {
 				defer cancel()
 
 				// This command should print an empty DOM and exit
-				if _, err := exec.CommandContext(ctx, path, "--headless", "--no-sandbox", "--disable-gpu", "--dump-dom").Output(); err == nil {
+				if _, err := exec.CommandContext(
+					ctx, path, "--headless", "--no-sandbox", "--disable-gpu",
+					"--disable-logging ", "--dump-dom",
+				).Output(); err == nil {
 					chromeExec = path
 				}
 
@@ -67,7 +78,8 @@ func init() {
 			}
 
 			return nil
-		})
+		},
+	)
 }
 
 // LocalInstance is a locally running browser instance.
@@ -90,13 +102,24 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	// If we managed to create a home for chrome in a "writable" location, set it to chrome options
 	if chromeHomeDir != "" {
 		logger.Debug("created home directory for chromium process", "home", chromeHomeDir)
-		chromeOptions = append(chromeOptions, chromedp.Env("XDG_CONFIG_HOME="+chromeHomeDir, "XDG_CACHE_HOME="+chromeHomeDir))
-	}
 
-	// If chromExec is not empty we found chrome binary shipped by grafana-image-renderer
-	if chromeExec != "" {
-		logger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
-		chromeOptions = append(chromeOptions, chromedp.ExecPath(chromeExec))
+		// Seems like on windows using headless chrome distributed by grafana-image-renderer
+		// produces a debug log of chrome in the same folder which violates the list of
+		// files distributed in the MANIFEST and hence, Grafana refuses to run grafana-image-renderer.
+		// So, override default chrome's --log-file location to the new home that we created for
+		// chrome.
+		chromeOptions = append(
+			chromeOptions, chromedp.Env(
+				"XDG_CONFIG_HOME="+chromeHomeDir, "XDG_CACHE_HOME="+chromeHomeDir,
+				"CHROME_LOG_FILE="+filepath.Join(chromeHomeDir, "debug.log"),
+			),
+		)
+
+		// If we managed to make chrome home dir and find chrom exec from `grafana-image-renderer` use it.
+		if chromeExec != "" {
+			logger.Info("chrome executable provided by grafana-image-renderer will be used", "chrome", chromeExec)
+			chromeOptions = append(chromeOptions, chromedp.ExecPath(chromeExec))
+		}
 	}
 
 	if insecureSkipVerify {

@@ -16,15 +16,21 @@ test("should be possible to generate report", async ({ request }, testInfo) => {
   );
 
   // TLS case will attempt to create a report by a user without View permission
-  // on dashboard except for the case where Grafana 10.4.7 and not using appropriate
-  // feature toogles. In the exceptional case, the test should pass
-  if (
-    testInfo.project.name === "tlsViewerUser" &&
-    process.env.GRAFANA_VERSION !== "10.4.7" &&
-    process.env.GF_FEATURE_TOGGLES_ENABLE !== "externalServiceAccounts"
-  ) {
-    expect(report.ok()).toBeFalsy();
+  // on dashboard which should fail to create report. Exceptional cases are:
+  // - Grafana 10.4.7 and not using appropriate feature toogles. 
+  // - Grafana 11.3.0+security-01 when Grafana version is not available.
+  // In these exceptional cases, the test should pass
+  if (testInfo.project.name === "tlsViewerUser") {
+    if (
+      (process.env.GRAFANA_VERSION === "10.4.7" && process.env.GF_FEATURE_TOGGLES_ENABLE === "externalServiceAccounts") || 
+      process.env.GRAFANA_VERSION === "11.3.0-security-01"
+    ) {
+      expect(report.ok()).toBeTruthy();
+    } else {
+      expect(report.ok()).toBeFalsy();
+    }
   } else {
+    // plain case should always pass
     expect(report.ok()).toBeTruthy();
   }
 });

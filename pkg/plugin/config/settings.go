@@ -42,6 +42,7 @@ type Config struct {
 	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"     json:"maxRenderWorkers"`
 	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"      json:"remoteChromeUrl"`
 	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"        json:"nativeRenderer"`
+	AppVersion          string `json:"appVersion"`
 	IncludePanelIDs     []string
 	ExcludePanelIDs     []string
 	IncludePanelDataIDs []string
@@ -103,6 +104,11 @@ func (c *Config) Validate() error {
 				return errors.New("remote chrome url is invalid")
 			}
 		}
+	}
+
+	// If AppVersion is empty, set it to 0.0.0
+	if c.AppVersion == "" {
+		c.AppVersion = "0.0.0"
 	}
 
 	return nil

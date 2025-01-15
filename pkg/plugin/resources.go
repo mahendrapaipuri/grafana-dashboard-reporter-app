@@ -15,8 +15,8 @@ import (
 	"github.com/mahendrapaipuri/authlib/authz"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
+	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/report"
-	"golang.org/x/mod/semver"
 )
 
 // GrafanaUserSignInTokenHeaderName the header name used for forwarding
@@ -33,7 +33,7 @@ const (
 // convertPanelIDs returns panel IDs based on Grafana version.
 func (app *App) convertPanelIDs(ids []string) []string {
 	// For Grafana < 11.3.0, we can use the IDs as such
-	if semver.Compare(app.grafanaSemVer, "v11.3.0") == -1 {
+	if helpers.SemverCompare(app.grafanaSemVer, "v11.3.0") == -1 {
 		return ids
 	}
 
@@ -107,7 +107,7 @@ func (app *App) updateConfig(req *http.Request, conf *config.Config) {
 func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 	// If Grafana <= 10.4.3, we use cookies to make request. Moreover feature toggles are
 	// not available for these Grafana versions.
-	if semver.Compare(app.grafanaSemVer, "v10.4.3") <= -1 {
+	if helpers.SemverCompare(app.grafanaSemVer, "v10.4.3") <= -1 {
 		return false
 	}
 

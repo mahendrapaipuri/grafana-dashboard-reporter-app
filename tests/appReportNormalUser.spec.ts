@@ -18,8 +18,9 @@ test("should not be possible to generate report by a normal user without permiss
   // report generation should pass. In rest of the cases, it should fail
   // due to access control
   if (
-    process.env.GRAFANA_VERSION === "10.4.7" &&
-    process.env.GF_FEATURE_TOGGLES_ENABLE === "externalServiceAccounts"
+    (process.env.GRAFANA_VERSION === "10.4.7" &&
+    process.env.GF_FEATURE_TOGGLES_ENABLE === "externalServiceAccounts") ||
+    process.env.GRAFANA_VERSION === "11.3.0-security-01"
   ) {
     expect(report.ok()).toBeTruthy();
   } else {

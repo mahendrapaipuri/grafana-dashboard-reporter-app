@@ -24,6 +24,7 @@ import { testIds } from "../testIds";
 
 export type JsonData = {
   appUrl?: string;
+  appVersion?: string;
   skipTlsCheck?: boolean;
   theme?: string;
   orientation?: string;
@@ -46,6 +47,8 @@ type State = {
   appUrlChanged: boolean;
   // Skip TLS verification to grafana
   skipTlsCheck: boolean;
+  // Grafana version
+  appVersion: string;
   // If skipTlsCheck has changed
   skipTlsCheckChanged: boolean;
   // Theme of panels (light or dark)
@@ -114,6 +117,7 @@ export const AppConfig = ({ plugin }: Props) => {
   const [state, setState] = useState<State>({
     appUrl: jsonData?.appUrl || "",
     appUrlChanged: false,
+    appVersion: window?.grafanaBootData?.settings?.buildInfo?.version || "0.0.0", 
     skipTlsCheck: jsonData?.skipTlsCheck || false,
     skipTlsCheckChanged: false,
     theme: jsonData?.theme || "light",
@@ -310,6 +314,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: true,
                   jsonData: {
                     appUrl: state.appUrl,
+                    appVersion: state.appVersion,
                     skipTlsCheck: state.skipTlsCheck,
                     theme: state.theme,
                     orientation: state.orientation,
@@ -352,6 +357,7 @@ export const AppConfig = ({ plugin }: Props) => {
                   pinned: false,
                   jsonData: {
                     appUrl: state.appUrl,
+                    appVersion: state.appVersion,
                     skipTlsCheck: state.skipTlsCheck,
                     theme: state.theme,
                     orientation: state.orientation,
@@ -665,6 +671,7 @@ export const AppConfig = ({ plugin }: Props) => {
               pinned,
               jsonData: {
                 appUrl: state.appUrl,
+                appVersion: state.appVersion,
                 skipTlsCheck: state.skipTlsCheck,
                 theme: state.theme,
                 orientation: state.orientation,
