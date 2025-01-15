@@ -10,12 +10,12 @@ VARIANT="$1"
 if [[ "$VARIANT" == "plain" ]]; then
     GRAFANA_PROTOCOL="http"
     GRAFANA_PORT="3080"
-    QUERY_PARAMS='from=now-60d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=simple&orientation=portrait&dashboardMode=default'
+    QUERY_PARAMS='from=now-15d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=simple&orientation=portrait&dashboardMode=default'
     REPORT_NAME="default"
 else
     GRAFANA_PROTOCOL="https"
     GRAFANA_PORT="3443"
-    QUERY_PARAMS='from=now-60d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=grid&orientation=landscape&dashboardMode=full'
+    QUERY_PARAMS='from=now-15d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=grid&orientation=landscape&dashboardMode=full'
     REPORT_NAME="alternative"
 fi
 
