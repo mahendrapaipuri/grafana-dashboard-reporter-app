@@ -7,15 +7,18 @@ DASH_UID="b3228ada-fd89-4aed-8605-d5f7b95aa237"
 # CLI ARGS
 VARIANT="$1"
 
+# Panels to render
+PANELS="includePanelID=1&includePanelID=5&includePanelDataID=4"
+
 if [[ "$VARIANT" == "plain" ]]; then
     GRAFANA_PROTOCOL="http"
     GRAFANA_PORT="3080"
-    QUERY_PARAMS='from=now-15d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=simple&orientation=portrait&dashboardMode=default'
+    QUERY_PARAMS="from=now-15d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=simple&orientation=portrait&dashboardMode=default&$PANELS"
     REPORT_NAME="default"
 else
     GRAFANA_PROTOCOL="https"
     GRAFANA_PORT="3443"
-    QUERY_PARAMS='from=now-15d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=grid&orientation=landscape&dashboardMode=full'
+    QUERY_PARAMS="from=now-15d&to=now&var-job=$__all&var-instance=$__all&var-interval=1h&var-ds=PBFA97CFB590B2093&layout=grid&orientation=landscape&dashboardMode=full&$PANELS"
     REPORT_NAME="alternative"
 fi
 
