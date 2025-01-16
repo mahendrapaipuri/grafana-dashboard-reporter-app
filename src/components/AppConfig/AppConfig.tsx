@@ -38,6 +38,14 @@ export type JsonData = {
   maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
   remoteChromeUrl?: string;
+  timeout?: number;
+  dialTimeout?: number;
+  httpKeepAlive?: number;
+  httpTLSHandshakeTimeout?: number;
+  httpIdleConnTimeout?: number;
+  httpMaxConnsPerHost?: number;
+  httpMaxIdleConns?: number;
+  httpMaxIdleConnsPerHost?: number;
 };
 
 type State = {
@@ -107,6 +115,15 @@ type State = {
   saToken: string;
   // If the service has been reset
   isSaTokenReset: boolean;
+  // Timemouts
+  timeout: number;
+  dialTimeout: number;
+  httpKeepAlive: number;
+  httpTLSHandshakeTimeout: number;
+  httpIdleConnTimeout: number;
+  httpMaxConnsPerHost: number;
+  httpMaxIdleConns: number;
+  httpMaxIdleConnsPerHost: number;
 };
 
 interface Props extends PluginConfigPageProps<AppPluginMeta<JsonData>> {}
@@ -147,6 +164,14 @@ export const AppConfig = ({ plugin }: Props) => {
     saToken: "",
     isSaTokenSet: Boolean(secureJsonFields?.saToken),
     isSaTokenReset: false,
+    timeout: jsonData?.timeout || 30,
+    dialTimeout: jsonData?.dialTimeout || 10,
+    httpKeepAlive: jsonData?.httpKeepAlive || 30,
+    httpTLSHandshakeTimeout: jsonData?.httpTLSHandshakeTimeout || 10,
+    httpIdleConnTimeout: jsonData?.httpIdleConnTimeout || 90,
+    httpMaxConnsPerHost: jsonData?.httpMaxConnsPerHost || 0,
+    httpMaxIdleConns: jsonData?.httpMaxIdleConns || 100,
+    httpMaxIdleConnsPerHost: jsonData?.httpMaxIdleConnsPerHost || 100,
   });
 
   const themeOptions = [
@@ -328,6 +353,14 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
+                    timeout: state.timeout,
+                    dialTimeout: state.dialTimeout,
+                    httpKeepAlive: state.httpKeepAlive,
+                    httpTLSHandshakeTimeout: state.httpTLSHandshakeTimeout,
+                    httpIdleConnTimeout: state.httpIdleConnTimeout,
+                    httpMaxConnsPerHost: state.httpMaxConnsPerHost,
+                    httpMaxIdleConns: state.httpMaxIdleConns,
+                    httpMaxIdleConnsPerHost: state.httpMaxIdleConnsPerHost,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -371,6 +404,14 @@ export const AppConfig = ({ plugin }: Props) => {
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
+                    timeout: state.timeout,
+                    dialTimeout: state.dialTimeout,
+                    httpKeepAlive: state.httpKeepAlive,
+                    httpTLSHandshakeTimeout: state.httpTLSHandshakeTimeout,
+                    httpIdleConnTimeout: state.httpIdleConnTimeout,
+                    httpMaxConnsPerHost: state.httpMaxConnsPerHost,
+                    httpMaxIdleConns: state.httpMaxIdleConns,
+                    httpMaxIdleConnsPerHost: state.httpMaxIdleConnsPerHost,
                   },
                   // This cannot be queried later by the frontend.
                   // We don't want to override it in case it was set previously and left untouched now.
@@ -685,6 +726,14 @@ export const AppConfig = ({ plugin }: Props) => {
                 maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
                 remoteChromeUrl: state.remoteChromeUrl,
+                timeout: state.timeout,
+                dialTimeout: state.dialTimeout,
+                httpKeepAlive: state.httpKeepAlive,
+                httpTLSHandshakeTimeout: state.httpTLSHandshakeTimeout,
+                httpIdleConnTimeout: state.httpIdleConnTimeout,
+                httpMaxConnsPerHost: state.httpMaxConnsPerHost,
+                httpMaxIdleConns: state.httpMaxIdleConns,
+                httpMaxIdleConnsPerHost: state.httpMaxIdleConnsPerHost,
               },
               // This cannot be queried later by the frontend.
               // We don't want to override it in case it was set previously and left untouched now.
