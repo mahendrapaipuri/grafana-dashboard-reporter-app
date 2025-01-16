@@ -8,7 +8,7 @@ DASH_UID="b3228ada-fd89-4aed-8605-d5f7b95aa237"
 VARIANT="$1"
 
 # Panels to render
-PANELS="includePanelID=1&includePanelID=5&includePanelDataID=4"
+PANELS="includePanelID=1&includePanelID=5"
 
 if [[ "$VARIANT" == "plain" ]]; then
     GRAFANA_PROTOCOL="http"

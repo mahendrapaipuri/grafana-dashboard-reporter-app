@@ -16,4 +16,4 @@ apps:
       logo: ''
       maxBrowserWorkers: 10
       maxRenderWorkers: 10
-      timeout: 300
+      timeout: 60
