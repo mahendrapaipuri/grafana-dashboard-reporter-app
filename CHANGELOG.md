@@ -1,10 +1,16 @@
 # Changelog
 
+## 1.7.3
+
+- Handle timeouts in frontend config [#238](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/238)
+- Handle cases when backend context does not have Grafana version [#236](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/236)
+- Bump dependencies [#229](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/229), [#230](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/230), [#234](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/234), [#235](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/235), [#239](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/239), [#240](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/240)
+
 ## 1.7.2
 
 - Testing of chromium distributed by grafana-image-renderer [#227](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/227)
 - Support rendering panel PNGs natively [#224](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/224)
-- Bump dependencies [#220](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/220), [#221](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/221), [#222](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/222), [#225](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/158), [#159](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/225), [#226](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/160), [#161](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/226)
+- Bump dependencies [#220](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/220), [#221](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/221), [#222](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/222), [#225](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/158), [#225](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/225), [#226](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/160), [#226](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/226)
 
 ## 1.7.1
 
