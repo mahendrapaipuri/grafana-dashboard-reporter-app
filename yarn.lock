@@ -651,10 +651,10 @@
     uuid "^11.0.2"
     yaml "^2.3.4"
 
-"@grafana/plugin-meta-extractor@^0.0.10":
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/@grafana/plugin-meta-extractor/-/plugin-meta-extractor-0.0.10.tgz#25c909a8cf647bf79e96821be4c224e56fdcb751"
-  integrity sha512-evN/YIBprfwkloUkHBAZLpH1c+vk3/Hgviya/RbYM233SyIFk3Duw5r7r2aCKKMwPkVHY/yp+i0v70CKXgDzEA==
+"@grafana/plugin-meta-extractor@^0.0.12":
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/@grafana/plugin-meta-extractor/-/plugin-meta-extractor-0.0.12.tgz#513af1e04b80a4f512fde0f6f7f956f1c235aee4"
+  integrity sha512-g6y4WhzrGKsDgw+GZLvyCE+lQOUXllTuMo124eMnahjDvOnaVo+7rv6cPjITGIFmFTCMdhqfuKxVsdoak8/P1w==
   dependencies:
     debug "^4.3.4"
     typescript "^5.4.5"
