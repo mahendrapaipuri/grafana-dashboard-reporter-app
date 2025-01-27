@@ -5,8 +5,8 @@ go 1.23
 toolchain go1.23.2
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20241022234722-4d5d5faf59fb
-	github.com/chromedp/chromedp v0.11.2
+	github.com/chromedp/cdproto v0.0.0-20250120090109-d38428e4d9c8
+	github.com/chromedp/chromedp v0.12.1
 	github.com/grafana/grafana-plugin-sdk-go v0.263.0
 	github.com/magefile/mage v1.15.0
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
@@ -62,7 +62,7 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/mattetti/filebuffer v1.0.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
