@@ -37,7 +37,7 @@
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@grafana/eslint-config": "^7.0.0",
-    "@grafana/plugin-e2e": "^1.17.1",
+    "@grafana/plugin-e2e": "^1.18.0",
     "@grafana/tsconfig": "2.0.0",
     "@grafana/plugin-meta-extractor": "^0.2.0",
     "@playwright/test": "^1.50.1",
