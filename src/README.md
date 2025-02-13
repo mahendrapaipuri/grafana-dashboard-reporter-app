@@ -263,8 +263,8 @@ of the report using custom HTML templates.
 Templates must conform to [Go's template](https://pkg.go.dev/text/template) style
 using `{{ }}` as delimiters. The following variables are available in the templates:
 
-- `.Dashboard.Title`: Dashboard title
-- `.Dashboard.VariableValues`: Comma seperated list of dashboard variable values
+- `.Title`: Dashboard title
+- `.VariableValues`: Comma separated list of dashboard variable values
 - `.From`: Dashboard's `from` time
 - `.To`: Dashboard's `to` time
 - `.Date`: Current date time.
