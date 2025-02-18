@@ -145,7 +145,11 @@ func (d *Dashboard) createPanels(dashData []interface{}) ([]Panel, error) {
 	// Max Width = Max X + Width for that element
 	// We divide this maxWidth in 24 columns as done in Grafana to calculate Panel
 	// coordinates
-	var maxWidth float64
+	//
+	// Start off with maxWidth as viewportWidth. If not for dashboards that do not
+	// occupy full width, our internal positioning method will "strech" these dashboards
+	// to full width.
+	var maxWidth = float64(viewportWidth)
 
 	// Iterate over the slice of interfaces and build each panel
 	for _, panelData := range dashData {

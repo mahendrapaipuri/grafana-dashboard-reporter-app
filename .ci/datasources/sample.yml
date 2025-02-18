@@ -12,4 +12,6 @@ datasources:
       timeInterval: 10s
     name: Prometheus
     type: prometheus
-    url: https://prometheus.demo.do.prometheus.io
+    # Seems like Prometheus demo can go down. So we are
+    # using our own instance
+    url: http://ceems-demo.myaddr.tools:9090
