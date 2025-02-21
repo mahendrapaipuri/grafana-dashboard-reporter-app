@@ -140,7 +140,7 @@ func TestFetchPanelPNG(t *testing.T) {
 		})
 
 		Convey("The httpClient should request singlestat panels at grid layout size", func() {
-			So(requestURI, ShouldContainSubstring, "width=2400")
+			So(requestURI, ShouldContainSubstring, "width=1536")
 			So(requestURI, ShouldContainSubstring, "height=216")
 		})
 	})

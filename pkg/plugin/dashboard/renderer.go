@@ -192,15 +192,21 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) *url.URL {
 
 // panelDims returns width and height of panel based on layout.
 func (d *Dashboard) panelDims(p Panel) (int64, int64) {
-	// If using a grid layout we use 100px for width and 36px for height scalind.
-	// Grafana panels are fitted into 24 units width and height units are said to
-	// 30px in docs but 36px seems to be better.
+	// According to Grafana docs, width scaling is ~80px and height
+	// scaling is ~36px. However, on grid layout these scales render
+	// panels that are too small to read. With some trial and error
+	// we figured out that using 64px for width renders decent result
+	// without too much distortion.
+	//
+	// From rudimentary tests, seems like Grafana cloud offering using
+	// even smaller width scaling which is evident in distored aspect
+	// ratios of some panels when grid layout is chosen.
 	//
 	// In simple layout we create panels with 1000x500 resolution always and include
 	// them one in each page of report
 	var width, height int64
 	if d.conf.Layout == "grid" {
-		width = int64(p.GridPos.W * 100)
+		width = int64(p.GridPos.W * 64)
 		height = int64(p.GridPos.H * 36)
 	} else {
 		width = 1000

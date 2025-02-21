@@ -138,27 +138,27 @@ func (p *Panel) UnmarshalJSON(b []byte) error {
 }
 
 // IsSingleStat returns true if panel is of type SingleStat.
-func (p Panel) IsSingleStat() bool {
+func (p *Panel) IsSingleStat() bool {
 	return p.Is(SingleStat)
 }
 
 // IsPartialWidth If panel has width less than total allowable width.
-func (p Panel) IsPartialWidth() bool {
+func (p *Panel) IsPartialWidth() bool {
 	return (p.GridPos.W < 24)
 }
 
 // Width returns the width of the panel.
-func (p Panel) Width() float64 {
+func (p *Panel) Width() float64 {
 	return float64(p.GridPos.W) * 0.04
 }
 
 // Height returns the height of the panel.
-func (p Panel) Height() float64 {
+func (p *Panel) Height() float64 {
 	return float64(p.GridPos.H) * 0.04
 }
 
 // Is returns true if panel is of type t.
-func (p Panel) Is(t PanelType) bool {
+func (p *Panel) Is(t PanelType) bool {
 	return p.Type == t.string()
 }
 
