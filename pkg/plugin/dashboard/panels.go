@@ -152,6 +152,7 @@ func (d *Dashboard) createPanels(dashData []interface{}) ([]Panel, error) {
 	maxWidth := float64(viewportWidth)
 
 	// Iterate over the slice of interfaces and build each panel
+	// Playground: https://goplay.tools/snippet/-cAljARG2Gj
 	for _, panelData := range dashData {
 		var p Panel
 

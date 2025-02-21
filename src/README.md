@@ -213,13 +213,14 @@ This config section allows to configure report related settings.
 - `file:theme; env:GF_REPORTER_PLUGIN_REPORT_THEME; ui:Theme`: Theme of the panels in
   the report.
 
+- `file:orientation; env:GF_REPORTER_PLUGIN_REPORT_ORIENTATION; ui:Orientation`: Orientation
+  of the report. Available options: `portrait` and `landscape`.
+
 - `file:layout; env:GF_REPORTER_PLUGIN_REPORT_LAYOUT; ui:Layout`: Layout of the report.
   Using grid layout renders the report as it is rendered in the browser. A simple
   layout will render the report with one panel per row. Available options: `simple`
-  and `grid`.
-
-- `file:orientation; env:GF_REPORTER_PLUGIN_REPORT_ORIENTATION; ui:Orientation`: Orientation
-  of the report. Available options: `portrait` and `landscape`.
+  and `grid`. When using `grid` layout, we recommend to use `landscape` orientation
+  for better readability.
 
 - `file:dashboardMode; env:GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE; ui:Dashboard Mode`:
   Whether to render default dashboard or full dashboard. In default mode, collapsed rows
