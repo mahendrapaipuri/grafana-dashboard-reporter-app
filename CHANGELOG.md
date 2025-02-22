@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.4
+
+- Ensure to respect the panel width in grid layout [#281](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/281)
+
 ## 1.7.3
 
 - Handle timeouts in frontend config [#238](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/238)
