@@ -73,3 +73,8 @@ func (t templateData) Title() string {
 func (t templateData) VariableValues() string {
 	return t.Dashboard.Variables
 }
+
+// Theme returns dashboard's theme.
+func (t templateData) Theme() string {
+	return t.Conf.Theme
+}

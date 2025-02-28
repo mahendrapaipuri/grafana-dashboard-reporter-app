@@ -144,6 +144,8 @@ func (t *Tab) PrintToPDF(options PDFOptions, writer io.Writer) error {
 				pageParams = pageParams.WithLandscape(true)
 			}
 
+			pageParams = pageParams.WithPrintBackground(true)
+
 			// Finally execute and get PDF buffer
 			_, stream, err := pageParams.Do(ctx)
 			if err != nil {

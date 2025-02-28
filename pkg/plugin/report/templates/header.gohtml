@@ -1,13 +1,29 @@
-<html>
+<html lang="en">
     <style type="text/css">
+        html { 
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        [data-theme="light"] {
+            --color-bg: #ffffff;
+            --color-fg: #000000;
+            --color-margin: lightgray;
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #181b1f;
+            --color-fg: #ffffff;
+            --color-margin: #ffffff;
+        }
+
         .content-header {
             width: 100%;
+            background-color: var(--color-bg);
+            color: var(--color-fg);
             display: flex;
             flex-wrap: wrap;
-            background-color: white;
-            color: black;
             padding: 5px;
-            -webkit-print-color-adjust: exact;
             vertical-align: middle;
             font-weight: bold;
             font-size: 20px;
@@ -15,7 +31,7 @@
             margin-right: 20px;
             display: inline-block;
             text-align: start;
-            border-bottom: 1px solid lightgray;
+            border-bottom: 1px solid var(--color-margin);
         }
 
         .content-header-left {
@@ -31,14 +47,14 @@
         }
     </style>
     <body>
-        <div class="content-header">
-            <div class="content-header-left">generated on {{.Date}}</div>
-            <div class="content-header-right">Datetime range: {{.From}} to {{.To}}</div>
+        <div class="content-header" data-theme="{{.Theme}}">
+            <div class="content-header-left" data-theme="{{.Theme}}">generated on {{.Date}}</div>
+            <div class="content-header-right" data-theme="{{.Theme}}">Datetime range: {{.From}} to {{.To}}</div>
             <br />
             {{ .Title }} <span class="pageNumber"></span>/<span class="totalPages"></span>
             {{- if .VariableValues}}
             <br />
-            <div class="content-header-left">{{ .VariableValues }}</div>
+            <div class="content-header-left" data-theme="{{.Theme}}">{{ .VariableValues }}</div>
             {{- end}}
         </div>
     </body>

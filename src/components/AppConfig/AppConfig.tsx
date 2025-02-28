@@ -465,7 +465,7 @@ export const AppConfig = ({ plugin }: Props) => {
         {/* Report Panels Theme  */}
         <Field
           label="Theme"
-          description="Panels theme to be used in the report."
+          description="Report theme."
           data-testid={testIds.appConfig.theme}
           className={s.marginTop}
         >

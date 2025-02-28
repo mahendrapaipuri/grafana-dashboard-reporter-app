@@ -210,8 +210,8 @@ a new service token can be generated and configured with the plugin.
 
 This config section allows to configure report related settings.
 
-- `file:theme; env:GF_REPORTER_PLUGIN_REPORT_THEME; ui:Theme`: Theme of the panels in
-  the report.
+- `file:theme; env:GF_REPORTER_PLUGIN_REPORT_THEME; ui:Theme`: The report and the panels in
+  the report will be generated using the chosen theme.
 
 - `file:orientation; env:GF_REPORTER_PLUGIN_REPORT_ORIENTATION; ui:Orientation`: Orientation
   of the report. Available options: `portrait` and `landscape`.

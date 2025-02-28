@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{.Theme}}">
 <style>
     *,
     *::after,
@@ -9,8 +9,19 @@
         box-sizing: inherit;
     }
 
+    [data-theme="light"] {
+        --color-bg: #ffffff;
+        --color-fg: #000000;
+    }
+
+    [data-theme="dark"] {
+        --color-bg: #181b1f;
+        --color-fg: #ffffff;
+    }
+
     @page { 
-        margin: 3cm 2px 1cm; 
+        margin: 3cm 0cm 0cm 0cm;
+        background-color: var(--color-bg);
     }
 
     html {
@@ -20,9 +31,20 @@
 
     body {
         font-family: "Nunito", sans-serif;
-        color: #333;
         font-weight: 300;
         line-height: 1.6;
+    }
+
+    @media print { 
+        body { 
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        } 
+    }
+
+    body {
+        background-color: var(--color-bg);
+        color: var(--color-fg);
     }
 
     .container {
