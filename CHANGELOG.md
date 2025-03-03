@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.5
+
+- feat: Support for dark themed report [#292](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/292)
+
 ## 1.7.4
 
 - Ensure to respect the panel width in grid layout [#281](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/281)
