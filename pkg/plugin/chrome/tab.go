@@ -49,7 +49,7 @@ func (t *Tab) Close(logger log.Logger) {
 func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string) error {
 	if err := t.Run(
 		// block some URLs to avoid unnecessary requests
-		network.SetBlockedURLS([]string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}),
+		network.SetBlockedURLs([]string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}),
 		enableLifeCycleEvents(),
 	); err != nil {
 		return fmt.Errorf("error enable lifecycle events: %w", err)
