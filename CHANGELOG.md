@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.6
+
+- Add a margin to bottom of report to avoid overlapping with footer [#312](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/312)
+
 ## 1.7.5
 
 - feat: Support for dark themed report [#292](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/292)
