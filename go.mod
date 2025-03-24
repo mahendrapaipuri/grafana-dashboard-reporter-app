@@ -5,9 +5,9 @@ go 1.23.5
 toolchain go1.23.6
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250221214400-5cdcd25b55f6
-	github.com/chromedp/chromedp v0.12.1
-	github.com/grafana/grafana-plugin-sdk-go v0.270.0
+	github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8
+	github.com/chromedp/chromedp v0.13.3
+	github.com/grafana/grafana-plugin-sdk-go v0.274.0
 	github.com/magefile/mage v1.15.0
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.1.1
@@ -31,6 +31,7 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/getkin/kin-openapi v0.129.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250211171154-1ae217ad3535 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
