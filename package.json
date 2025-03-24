@@ -24,7 +24,7 @@
     "e2e:report:update:tls": "curl -k -f -o .ci/reports/alternative.pdf $npm_package_config_tlsUrl",
     "e2e:report:update": "yarn e2e:report:update:plain && yarn e2e:report:update:tls",
     "lint:fix": "yarn run lint --fix",
-    "lint": "eslint --cache --ignore-path ./.gitignore --ext .js,.jsx,.ts,.tsx .",
+    "lint": "eslint --cache --ext .js,.jsx,.ts,.tsx .",
     "server": "docker compose up --build",
     "server:podman": "podman-compose up --build",
     "sign": "npx --yes @grafana/sign-plugin@latest",
@@ -97,7 +97,7 @@
     "@grafana/schema": "11.5.2",
     "react": "~19.0.0",
     "react-dom": "~19.0.0",
-    "react-router-dom": "~7.3.0",
+    "react-router-dom": "5.3.4",
     "rxjs": "~7.8.1",
     "tslib": "2.8.1"
   },

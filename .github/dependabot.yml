@@ -22,3 +22,7 @@ updates:
       npm-dependencies:
         patterns:
           - "*"
+      # Define patterns to exclude dependencies from the group (based on
+      # dependency name)
+      exclude-patterns:
+        - "react-router-dom"
