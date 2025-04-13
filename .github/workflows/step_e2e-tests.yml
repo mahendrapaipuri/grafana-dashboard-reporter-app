@@ -56,20 +56,20 @@ jobs:
             name: remote-chrome-11.3.0-security-with-features
 
           # Latest Grafana with local chrome and grafana-image-renderer
-          - grafana-version: 11.4.0
+          - grafana-version: 11.6.0
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             native-rendering: false
             # snapshots-folder: remote-chrome
-            name: local-chrome-11.4.0-with-features
+            name: local-chrome-11.6.0-with-features
 
           # Latest Grafana with local chrome and native-renderer
-          - grafana-version: 11.4.0
+          - grafana-version: 11.6.0
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             native-rendering: true
             # snapshots-folder: remote-chrome
-            name: local-chrome-11.4.0-with-features-native-renderer
+            name: local-chrome-11.6.0-with-features-native-renderer
 
     steps:
       - uses: actions/checkout@v4
