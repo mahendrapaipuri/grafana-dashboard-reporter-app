@@ -128,16 +128,31 @@ const waitForCSVDownloadButton = async () => {
     return;
 };
 
+// Expands data options tab
+const expandDataOptionsTab = async () => {
+    // Get data options tab node
+    let tabs = document.querySelectorAll('div[role="dialog"] button[aria-expanded=false]');
+
+    // Ensure data options tab is expanded
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].click();
+    }
+
+    return;
+};
+
 // Ensures format data toggle is checked to apply all transformations
 const checkFormatDataToggle = async () => {
-    // Get all toggles on inspect panel
-    let toggles = document.querySelectorAll('div[data-testid="dataOptions"] input#formatted-data-toggle');
+    // Expand data options tab
+    await expandDataOptionsTab();
 
-    // Ensure format data toggle is checked
+    // Get all toggles on inspect panel
+    let toggles = document.querySelectorAll('div[data-testid="dataOptions"] input:not(#excel-toggle)');
+
+    // Ensure all data format toggles are checked
     for (let i = 0; i < toggles.length; i++) {
         if (!toggles[i].checked) {
             toggles[i].click();
-            return;
         }
     }
 

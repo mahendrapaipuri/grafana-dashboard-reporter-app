@@ -18,6 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": 2,
   "links": [
     {
       "asDropdown": false,
@@ -32,7 +33,6 @@
       "url": "/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=e472bbf0-140c-4852-a74b-1a4c32202659"
     }
   ],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
@@ -57,7 +57,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -71,7 +71,9 @@
         },
         "pieType": "pie",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -82,6 +84,11 @@
       },
       "repeat": "testvar0",
       "repeatDirection": "h",
+      "targets": [
+        {
+          "refId": "A"
+        }
+      ],
       "title": "Panel 11 Var ${testvar0}",
       "type": "piechart"
     },
@@ -124,7 +131,9 @@
         "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -132,7 +141,12 @@
         "showThresholdMarkers": true,
         "sizing": "auto"
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.5.0",
+      "targets": [
+        {
+          "refId": "A"
+        }
+      ],
       "title": "Panel 12",
       "type": "gauge"
     },
@@ -175,8 +189,11 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -184,7 +201,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.5.0",
+      "targets": [
+        {
+          "refId": "A"
+        }
+      ],
       "title": "Panel 13",
       "type": "stat"
     },
@@ -205,6 +227,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -262,10 +285,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "11.5.0",
+      "targets": [
+        {
+          "refId": "A"
+        }
+      ],
       "title": "Panel 14 ${testvar2}",
       "type": "timeseries"
     },
@@ -286,6 +316,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
@@ -343,10 +374,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "11.5.0",
+      "targets": [
+        {
+          "refId": "A"
+        }
+      ],
       "title": "Panel 21 ${testvar1}",
       "type": "timeseries"
     },
@@ -435,6 +473,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 111",
           "type": "timeseries"
         },
@@ -513,6 +556,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 112",
           "type": "timeseries"
         },
@@ -591,6 +639,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 121",
           "type": "timeseries"
         },
@@ -669,6 +722,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 122",
           "type": "timeseries"
         },
@@ -747,6 +805,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 123",
           "type": "timeseries"
         },
@@ -795,7 +858,9 @@
             "footer": {
               "countRows": false,
               "fields": "",
-              "reducer": ["sum"],
+              "reducer": [
+                "sum"
+              ],
               "show": false
             },
             "showHeader": true
@@ -904,6 +969,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 211",
           "type": "timeseries"
         },
@@ -982,6 +1052,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 212",
           "type": "timeseries"
         },
@@ -1060,6 +1135,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 223",
           "type": "timeseries"
         },
@@ -1138,6 +1218,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 221",
           "type": "timeseries"
         },
@@ -1216,6 +1301,11 @@
               "sort": "none"
             }
           },
+          "targets": [
+            {
+              "refId": "A"
+            }
+          ],
           "title": "Row Panel 222",
           "type": "timeseries"
         },
@@ -1241,7 +1331,8 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1264,12 +1355,14 @@
             "footer": {
               "countRows": false,
               "fields": "",
-              "reducer": ["sum"],
+              "reducer": [
+                "sum"
+              ],
               "show": false
             },
             "showHeader": true
           },
-          "pluginVersion": "10.0.3",
+          "pluginVersion": "11.5.0",
           "targets": [
             {
               "datasource": {
@@ -1282,6 +1375,15 @@
             }
           ],
           "title": "Row Panel 231",
+          "transformations": [
+            {
+              "id": "formatString",
+              "options": {
+                "outputFormat": "Upper Case",
+                "stringField": "name"
+              }
+            }
+          ],
           "type": "table"
         }
       ],
@@ -1289,18 +1391,21 @@
       "type": "row"
     }
   ],
+  "preload": false,
   "refresh": "",
-  "schemaVersion": 39,
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
-        "hide": 0,
         "includeAll": true,
         "label": "Test Var 0",
         "multi": true,
@@ -1333,20 +1438,15 @@
           }
         ],
         "query": "0,1,2,3",
-        "queryValue": "",
-        "skipUrlSync": false,
         "type": "custom"
       },
       {
         "current": {
-          "selected": false,
           "text": "foo",
           "value": "foo"
         },
-        "hide": 0,
         "includeAll": false,
         "label": "Test Var 1",
-        "multi": false,
         "name": "testvar1",
         "options": [
           {
@@ -1361,19 +1461,15 @@
           }
         ],
         "query": "foo,bar",
-        "skipUrlSync": false,
         "type": "custom"
       },
       {
         "current": {
-          "selected": false,
           "text": "1",
           "value": "1"
         },
-        "hide": 0,
         "includeAll": false,
         "label": "Test Var 2",
-        "multi": false,
         "name": "testvar2",
         "options": [
           {
@@ -1393,7 +1489,6 @@
           }
         ],
         "query": "1,foo2,3.5",
-        "skipUrlSync": false,
         "type": "custom"
       }
     ]
