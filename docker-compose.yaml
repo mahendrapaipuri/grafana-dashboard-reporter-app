@@ -6,7 +6,7 @@ services:
       context: ./.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.5.0}
+        grafana_version: ${GRAFANA_VERSION:-11.6.0}
         development: ${DEVELOPMENT:-false}
         go_version: ${GOVERSION:-1.23.2}
     cap_add:
