@@ -1,7 +1,6 @@
 package worker_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
@@ -11,7 +10,7 @@ import (
 func TestPool(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	pool := worker.New(ctx, 1)
 

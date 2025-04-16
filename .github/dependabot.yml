@@ -13,6 +13,14 @@ updates:
       go-dependencies:
         patterns:
           - "*"
+        # Define patterns to exclude dependencies from the group (based on
+        # dependency name)
+        # There are incompatibility beteween cdproto for chromedp
+        # and golang-plugin-sdk. We prefer to bump sdk rather than
+        # chromedp
+        exclude-patterns:
+          - "github.com/chromedp/chromedp"
+          - "github.com/chromedp/cdproto"
       
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests

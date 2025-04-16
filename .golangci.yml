@@ -1,66 +1,72 @@
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    - cyclop
     - containedctx
     - contextcheck
+    - cyclop
     - depguard
     - dupl
     - dupword
-    - exhaustruct
-    - exportloopref
-    - gocognit
-    - gocyclo
-    - gocritic
-    - gochecknoinits
-    - funlen
-    - ireturn
     - err113
+    - exhaustruct
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - gocritic
+    - gocyclo
+    - gosmopolitan
+    - ireturn
+    - lll
+    - maintidx
     - mnd
     - nestif
-    - testpackage
     - paralleltest
     - prealloc
-    - maintidx
-    - gochecknoglobals
-    - gosmopolitan
-    - varnamelen
     - tagliatelle
-    - lll
+    - testpackage
+    - varnamelen
     - wrapcheck
-
-issues:
-  exclude-rules:
-    - path: _test.go
-      linters:
-        - errcheck
-
-linters-settings:
-  lll:
-    line-length: 160
-  errcheck:
-    exclude-functions:
-      # Used in HTTP handlers, any error is handled by the server itself.
-      - (net/http.ResponseWriter).Write
-  revive:
+  settings:
+    errcheck:
+      exclude-functions:
+        - (net/http.ResponseWriter).Write
+    lll:
+      line-length: 160
+    recvcheck:
+      disable-builtin: true
+      exclusions:
+        - '*.String'
+    revive:
+      rules:
+        - name: unused-parameter
+          severity: warning
+          disabled: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#unused-parameter
-      - name: unused-parameter
-        severity: warning
-        disabled: true
-  recvcheck:
-    # Disables the built-in method exclusions:
-    # - `MarshalText`
-    # - `MarshalJSON`
-    # - `MarshalYAML`
-    # - `MarshalXML`
-    # - `MarshalBinary`
-    # - `GobEncode`
-    # Default: false
-    disable-builtin: true
-    # User-defined method exclusions.
-    # The format is `struct_name.method_name` (ex: `Foo.MethodName`).
-    # A wildcard `*` can use as a struct name (ex: `*.MethodName`).
-    # Default: []
-    exclusions:
-      - "*.String"
+      - linters:
+          - errcheck
+        path: _test.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -65,3 +65,6 @@ plugin-validator
 
 # Ignore debugging screenshots
 *.png
+
+# Ignore legacy golanglint ci config file
+.golangci.bck.yml
