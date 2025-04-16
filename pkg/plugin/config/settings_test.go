@@ -1,7 +1,6 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -13,7 +12,7 @@ func TestSettings(t *testing.T) {
 	Convey("When creating a new config from minimum JSONData", t, func() {
 		const configJSON = `{}`
 		configData := json.RawMessage(configJSON)
-		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
 		Convey("Config should contain default config", func() {
 			So(err, ShouldBeNil)
@@ -27,7 +26,7 @@ func TestSettings(t *testing.T) {
 	Convey("When creating a new config from provisioned JSONData", t, func() {
 		const configJSON = `{"layout": "grid"}`
 		configData := json.RawMessage(configJSON)
-		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
 		Convey("Config should contain default config", func() {
 			So(err, ShouldBeNil)
@@ -45,7 +44,7 @@ func TestSettings(t *testing.T) {
 			"saToken": "supersecrettoken",
 		}
 		config, err := Load(
-			context.Background(),
+			t.Context(),
 			backend.AppInstanceSettings{JSONData: configData, DecryptedSecureJSONData: secretsMap},
 		)
 
@@ -75,7 +74,7 @@ func TestSettingsUsingEnvVars(t *testing.T) {
 	Convey("When creating a new config from only env vars", t, func() {
 		const configJSON = `{}`
 		configData := json.RawMessage(configJSON)
-		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
 		Convey("Config should contain config from env vars", func() {
 			So(err, ShouldBeNil)
@@ -107,7 +106,7 @@ func TestSettingsUsingConfigAndEnvVars(t *testing.T) {
 	Convey("When creating a new config from file and env vars", t, func() {
 		const configJSON = `{"appUrl": "https://localhost:3000","dashboardMode": "full"}`
 		configData := json.RawMessage(configJSON)
-		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
 		Convey("Config should contain config from file and env vars", func() {
 			So(err, ShouldBeNil)
@@ -140,7 +139,7 @@ func TestSettingsUsingConfigAndOverridingEnvVars(t *testing.T) {
 	Convey("When creating a new config from file and overriding them from env vars", t, func() {
 		const configJSON = `{"appUrl": "https://localhost:3000","theme": "dark", "dashboardMode": "full"}`
 		configData := json.RawMessage(configJSON)
-		config, err := Load(context.Background(), backend.AppInstanceSettings{JSONData: configData})
+		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
 		Convey("Config should contain config overridden from env vars", func() {
 			So(err, ShouldBeNil)

@@ -76,7 +76,7 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 	// Header "typ" has been added only in Grafana 11.1.0 (https://github.com/grafana/grafana/pull/87430)
 	// So this check will fail for Grafana < 11.1.0
 	// Set VerifierConfig{DisableTypHeaderCheck: true} for those cases
-	disableTypHeaderCheck := false
+	var disableTypHeaderCheck bool
 	if helpers.SemverCompare(app.grafanaSemVer, "v11.1.0") == -1 {
 		disableTypHeaderCheck = true
 	}

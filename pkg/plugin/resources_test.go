@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
@@ -55,7 +54,7 @@ func TestReportResource(t *testing.T) {
 	}
 
 	// Initialize app
-	inst, err := NewDashboardReporterApp(context.Background(), backend.AppInstanceSettings{
+	inst, err := NewDashboardReporterApp(t.Context(), backend.AppInstanceSettings{
 		DecryptedSecureJSONData: map[string]string{
 			config.SaToken: "token",
 		},
@@ -91,7 +90,7 @@ func TestReportResource(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			ctx := backend.WithGrafanaConfig(context.Background(), backend.NewGrafanaCfg(map[string]string{
+			ctx := backend.WithGrafanaConfig(t.Context(), backend.NewGrafanaCfg(map[string]string{
 				backend.AppURL: ts.URL,
 			}))
 

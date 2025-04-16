@@ -18,7 +18,7 @@ var logger = log.NewNullLogger()
 
 func TestReport(t *testing.T) {
 	Convey("When generating a PDF", t, func() {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(t.Context())
 		defer cancel()
 
 		workerPools := worker.Pools{

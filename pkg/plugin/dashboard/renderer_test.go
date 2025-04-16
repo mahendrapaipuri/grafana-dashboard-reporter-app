@@ -1,7 +1,6 @@
 package dashboard
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -69,7 +68,7 @@ func TestFetchPanelPNG(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		_, err = dash.PanelPNG(context.Background(), Panel{ID: "44", Type: "singlestat", Title: "title", GridPos: GridPos{}})
+		_, err = dash.PanelPNG(t.Context(), Panel{ID: "44", Type: "singlestat", Title: "title", GridPos: GridPos{}})
 
 		Convey("It should receives no errors", func() {
 			So(err, ShouldBeNil)
@@ -133,7 +132,7 @@ func TestFetchPanelPNG(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		_, err = dash.PanelPNG(context.Background(), Panel{ID: "44", Type: "graph", Title: "title", GridPos: GridPos{H: 6, W: 24}})
+		_, err = dash.PanelPNG(t.Context(), Panel{ID: "44", Type: "graph", Title: "title", GridPos: GridPos{H: 6, W: 24}})
 
 		Convey("It should receives no errors using grid layout", func() {
 			So(err, ShouldBeNil)

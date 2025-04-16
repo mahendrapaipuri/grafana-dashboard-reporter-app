@@ -1,7 +1,6 @@
 package dashboard
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -50,7 +49,7 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 	}
 
 	Convey("When fetching a Dashboard", t, func() {
-		chromeInstance, err := chrome.NewLocalBrowserInstance(context.Background(), log.NewNullLogger(), true)
+		chromeInstance, err := chrome.NewLocalBrowserInstance(t.Context(), log.NewNullLogger(), true)
 		defer chromeInstance.Close(log.NewNullLogger()) //nolint:staticcheck
 
 		Convey("setup a chrome browser should not error", func() {
@@ -125,7 +124,7 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 
-			d, err := dash.panelMetaData(context.Background())
+			d, err := dash.panelMetaData(t.Context())
 
 			Convey("It should receive no errors", func() {
 				So(err, ShouldBeNil)
@@ -152,7 +151,7 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 
 	Convey("When fetching a Dashboard", t, func() {
 		chromeInstance, err := chrome.NewRemoteBrowserInstance(
-			context.Background(),
+			t.Context(),
 			log.NewNullLogger(),
 			chromeRemoteAddr,
 		)
@@ -229,7 +228,7 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 
-			d, err := dash.panelMetaData(context.Background())
+			d, err := dash.panelMetaData(t.Context())
 
 			Convey("It should receive no errors", func() {
 				So(err, ShouldBeNil)
