@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.7
+
+- Apply data transformations to tabular data in report  [#323](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/323)
+
 ## 1.7.6
 
 - Add a margin to bottom of report to avoid overlapping with footer [#312](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/312)
