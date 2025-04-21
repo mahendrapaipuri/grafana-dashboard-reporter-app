@@ -7,7 +7,7 @@ toolchain go1.24.2
 require (
 	github.com/chromedp/cdproto v0.0.0-20250221214400-5cdcd25b55f6
 	github.com/chromedp/chromedp v0.12.1
-	github.com/grafana/grafana-plugin-sdk-go v0.276.0
+	github.com/grafana/grafana-plugin-sdk-go v0.277.0
 	github.com/magefile/mage v1.15.0
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.2.0
