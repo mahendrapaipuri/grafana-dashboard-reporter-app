@@ -5,16 +5,16 @@ go 1.24.1
 toolchain go1.24.2
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250221214400-5cdcd25b55f6
-	github.com/chromedp/chromedp v0.12.1
-	github.com/grafana/grafana-plugin-sdk-go v0.277.0
+	github.com/chromedp/cdproto v0.0.0-20250509201441-70372ae9ef75
+	github.com/chromedp/chromedp v0.13.6
+	github.com/grafana/grafana-plugin-sdk-go v0.277.1
 	github.com/magefile/mage v1.15.0
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/mod v0.24.0
-	golang.org/x/net v0.39.0
+	golang.org/x/net v0.40.0
 )
 
 require (
@@ -29,8 +29,9 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elazarl/goproxy v1.7.2 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/getkin/kin-openapi v0.131.0 // indirect
+	github.com/getkin/kin-openapi v0.132.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
@@ -51,7 +52,7 @@ require (
 	github.com/grafana/otel-profiling-go v0.5.1 // indirect
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.8 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.1 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.1 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.1 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-plugin v1.6.3 // indirect
@@ -102,11 +103,11 @@ require (
 	go.opentelemetry.io/otel/sdk v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a // indirect
