@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 )
 
 // remove removes a element by value in slice and returns a new slice.

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 // Regex for parsing X and Y co-ordinates from CSS

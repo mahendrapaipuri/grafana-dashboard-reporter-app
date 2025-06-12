@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/asanluis/authlib/authz"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
-	"github.com/mahendrapaipuri/authlib/authz"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
 )
 
 const Name = "mahendrapaipuri-dashboardreporter-app"

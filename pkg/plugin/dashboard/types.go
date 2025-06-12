@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 )
 
 // Dashboard represents a Grafana dashboard resource.

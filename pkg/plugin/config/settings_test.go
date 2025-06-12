@@ -59,6 +59,34 @@ func TestSettings(t *testing.T) {
 	})
 }
 
+func TestSettingsWithCustomHeaders(t *testing.T) {
+	Convey("When creating a new config with custom HTTP headers", t, func() {
+		const configJSON = `{"customHttpHeaders": {"X-Custom-Header": "test-value", "Authorization": "Bearer token123"}}`
+		configData := json.RawMessage(configJSON)
+		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
+
+		Convey("Config should contain custom HTTP headers", func() {
+			So(err, ShouldBeNil)
+			So(config.CustomHttpHeaders, ShouldNotBeNil)
+			So(len(config.CustomHttpHeaders), ShouldEqual, 2)
+			So(config.CustomHttpHeaders["X-Custom-Header"], ShouldEqual, "test-value")
+			So(config.CustomHttpHeaders["Authorization"], ShouldEqual, "Bearer token123")
+		})
+	})
+
+	Convey("When creating a new config with empty custom HTTP headers", t, func() {
+		const configJSON = `{}`
+		configData := json.RawMessage(configJSON)
+		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
+
+		Convey("Config should have empty custom HTTP headers map", func() {
+			So(err, ShouldBeNil)
+			So(config.CustomHttpHeaders, ShouldNotBeNil)
+			So(len(config.CustomHttpHeaders), ShouldEqual, 0)
+		})
+	})
+}
+
 func TestSettingsUsingEnvVars(t *testing.T) {
 	// Setup env vars
 	t.Setenv("GF_REPORTER_PLUGIN_APP_URL", "https://localhost:3000")

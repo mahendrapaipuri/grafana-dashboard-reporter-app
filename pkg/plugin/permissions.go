@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/asanluis/authlib/authn"
+	"github.com/asanluis/authlib/authz"
+	"github.com/asanluis/authlib/cache"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/authlib/authn"
-	"github.com/mahendrapaipuri/authlib/authz"
-	"github.com/mahendrapaipuri/authlib/cache"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 // HasAccess verifies if the current request context has access to certain action.

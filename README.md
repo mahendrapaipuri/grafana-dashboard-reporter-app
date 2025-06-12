@@ -2,15 +2,15 @@
 
 |         |                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CI/CD   | [![ci](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/actions/workflows/ci.yml?query=branch%3Amain)                                                |
-| Docs    | [![docs](https://img.shields.io/badge/docs-passing-green?style=flat&link=https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/src/README.md)](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/src/README.md)                                                                                                                                                                                                                               |
-| Package | [![Release](https://img.shields.io/github/v/release/mahendrapaipuri/grafana-dashboard-reporter-app.svg?include_prereleases)](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/latest)                                                                                                                                                                     |
-| Meta    | [![GitHub License](https://img.shields.io/github/license/mahendrapaipuri/grafana-dashboard-reporter-app)](https://gitlab.com/mahendrapaipuri/grafana-dashboard-reporter-app) [![Go Report Card](https://goreportcard.com/badge/github.com/mahendrapaipuri/grafana-dashboard-reporter-app)](https://goreportcard.com/report/github.com/mahendrapaipuri/grafana-dashboard-reporter-app) [![code style](https://img.shields.io/badge/code%20style-gofmt-blue.svg)](https://pkg.go.dev/cmd/gofmt) |
+| CI/CD   | [![ci](https://github.com/asanluis/grafana-dashboard-reporter-app/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/asanluis/grafana-dashboard-reporter-app/actions/workflows/ci.yml?query=branch%3Amain)                                                |
+| Docs    | [![docs](https://img.shields.io/badge/docs-passing-green?style=flat&link=https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/src/README.md)](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/src/README.md)                                                                                                                                                                                                                               |
+| Package | [![Release](https://img.shields.io/github/v/release/mahendrapaipuri/grafana-dashboard-reporter-app.svg?include_prereleases)](https://github.com/asanluis/grafana-dashboard-reporter-app/releases/latest)                                                                                                                                                                     |
+| Meta    | [![GitHub License](https://img.shields.io/github/license/mahendrapaipuri/grafana-dashboard-reporter-app)](https://gitlab.com/mahendrapaipuri/grafana-dashboard-reporter-app) [![Go Report Card](https://goreportcard.com/badge/github.com/asanluis/grafana-dashboard-reporter-app)](https://goreportcard.com/report/github.com/asanluis/grafana-dashboard-reporter-app) [![code style](https://img.shields.io/badge/code%20style-gofmt-blue.svg)](https://pkg.go.dev/cmd/gofmt) |
 
 This Grafana plugin app can create PDF reports of a given dashboard using headless `chromium`
 and [`grafana-image-renderer`](https://github.com/grafana/grafana-image-renderer).
 
-![Sample report](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/pngs/sample_report.png)
+![Sample report](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/docs/pngs/sample_report.png)
 
 ## 🎯 Features
 
@@ -41,5 +41,5 @@ More documentation can be found in [README](./src/README.md)
 
 If you want to say **thank you** or/and support active development of plugin:
 
-- Add a [GitHub Star](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app) to the project.
+- Add a [GitHub Star](https://github.com/asanluis/grafana-dashboard-reporter-app) to the project.
 - Write articles about project on [Dev.to](https://dev.to/), [Medium](https://medium.com/) or personal blog.

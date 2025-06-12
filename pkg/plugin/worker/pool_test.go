@@ -3,7 +3,7 @@ package worker_test
 import (
 	"testing"
 
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	"github.com/stretchr/testify/assert"
 )
 

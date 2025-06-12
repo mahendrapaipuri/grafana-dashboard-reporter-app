@@ -172,3 +172,19 @@ apps:
       # THIS IS HIGHLY EXPERIMENTAL FEATURE.
       #
       nativeRenderer: false
+
+      # Custom HTTP headers to send to the render plugin.
+      #
+      # These headers will be added to both the grafana-image-renderer requests
+      # and the native renderer requests when rendering panels for reports.
+      # Useful for adding authentication headers, custom API keys, or other
+      # headers required by your rendering infrastructure.
+      #
+      # Format: JSON object with header name as key and header value as value
+      # Example:
+      # customHttpHeaders:
+      #   X-Custom-Header: "custom-value"
+      #   Authorization: "Bearer your-token-here"
+      #   X-API-Key: "your-api-key"
+      #
+      customHttpHeaders: {}

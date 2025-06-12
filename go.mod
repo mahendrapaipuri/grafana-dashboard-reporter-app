@@ -1,4 +1,4 @@
-module github.com/mahendrapaipuri/grafana-dashboard-reporter-app
+module github.com/asanluis/grafana-dashboard-reporter-app
 
 go 1.24.1
 

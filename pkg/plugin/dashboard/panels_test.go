@@ -11,11 +11,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

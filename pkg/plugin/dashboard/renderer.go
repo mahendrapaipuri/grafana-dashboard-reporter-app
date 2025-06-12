@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 var getPanelRetrySleepTime = time.Duration(10) * time.Second
@@ -46,6 +46,11 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 		for _, value := range values {
 			headers[name] = value
 		}
+	}
+
+	// Add custom HTTP headers
+	for name, value := range d.conf.CustomHttpHeaders {
+		headers[name] = value
 	}
 
 	err := tab.NavigateAndWaitFor(panelURL.String(), headers, "networkIdle")
@@ -107,6 +112,11 @@ func (d *Dashboard) panelPNGImageRenderer(ctx context.Context, p Panel) (PanelIm
 		for _, value := range values {
 			req.Header.Add(name, value)
 		}
+	}
+
+	// Add custom HTTP headers
+	for name, value := range d.conf.CustomHttpHeaders {
+		req.Header.Add(name, value)
 	}
 
 	// Make request

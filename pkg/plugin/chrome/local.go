@@ -10,9 +10,9 @@ import (
 	"slices"
 	"time"
 
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"golang.org/x/net/context"
 )
 

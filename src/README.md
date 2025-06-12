@@ -46,17 +46,17 @@ PDF report of a given dashboard. If users needs more advanced functionalities li
 generating and sending reports automatically, they should look into official plugin.
 
 However, it is still possible to install this plugin using `grafana-cli` by overriding
-`pluginUrl` by using URL from [releases](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases).
+`pluginUrl` by using URL from [releases](https://github.com/asanluis/grafana-dashboard-reporter-app/releases).
 For example following command will install plugin version `1.7.1`
 
 ```bash
-VERSION=1.7.1; grafana-cli --pluginUrl "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
+VERSION=1.7.1; grafana-cli --pluginUrl "https://github.com/asanluis/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
 ```
 
 Similarly, `nightly` version can be installed suing
 
 ```bash
-grafana-cli --pluginUrl  https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/nightly/mahendrapaipuri-dashboardreporter-app-nightly.zip plugins install mahendrapaipuri-dashboardreporter-app
+grafana-cli --pluginUrl  https://github.com/asanluis/grafana-dashboard-reporter-app/releases/download/nightly/mahendrapaipuri-dashboardreporter-app-nightly.zip plugins install mahendrapaipuri-dashboardreporter-app
 ```
 
 > [!TIP]
@@ -155,7 +155,7 @@ After successful installation of the plugin, it will be, by default, disabled. W
 enable it in different ways.
 
 - From Grafana UI, navigating to `Apps > Dashboard Reporter App > Configuration` will
-show [this page](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/src/img/light.png)
+show [this page](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/src/img/light.png)
 and plugin can be enabled there. The configuration page can also be
 accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`.
 
@@ -164,7 +164,7 @@ accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`.
 that plugin has not been signed by Grafana Labs.
 
 - By using [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/).
-An example provision config is provided in the [repo](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
+An example provision config is provided in the [repo](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
 and it can be installed at `/etc/grafana/provisioning/plugins/reporter.yml`. After installing
 this YAML file, by restarting Grafana server, the plugin will be enabled with config
 settings used in the `reporter.yml` file.
@@ -270,7 +270,7 @@ using `{{ }}` as delimiters. The following variables are available in the templa
 - `.To`: Dashboard's `to` time
 - `.Date`: Current date time.
 
-Default [header](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml) and [footer](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml) templates can be used as a base to further
+Default [header](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml) and [footer](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml) templates can be used as a base to further
 customize the reports using custom templates.
 
 ### Additional settings
@@ -288,7 +288,7 @@ The following configuration settings allow more control over plugin's functional
 - `file:remoteChromeUrl; env: GF_REPORTER_PLUGIN_REMOTE_CHROME_URL; ui: Remote Chrome URL`:
   A URL of a running remote chrome instance which will be used in report generation. Grafana
   running on k8s can opt to use this option when installing `chromium` inside Grafana
-  container is not desired. An example [docker-compose file](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docker-compose.yaml) shows how to run `chromium` in an `init` container. When remote chrome instance is being used, ensure
+  container is not desired. An example [docker-compose file](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/docker-compose.yaml) shows how to run `chromium` in an `init` container. When remote chrome instance is being used, ensure
   that `appUrl` is accessible to remote chrome.
 
 - `file:maxBrowserWorkers; env: GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS; ui: Maximum Browser Workers`:
@@ -492,7 +492,7 @@ to a version `> 1.5.0` ASAP. -->
 
 Here are the example reports that are generated out of the test dashboards
 
-- [Report with portrait orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full.pdf)
+- [Report with portrait orientation, simple layout and full dashboard mode](https://github.com/asanluis/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full.pdf)
 - [Report with portrait orientation, simple layout, full dashboard mode and tabular data](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full_table.pdf)
 - [Report with landscape orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_simple_full.pdf)
 - [Report with portrait orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_full.pdf)

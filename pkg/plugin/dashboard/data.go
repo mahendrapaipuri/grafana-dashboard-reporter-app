@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 // PanelCSV returns CSV data of a given panel.

@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
   - name: General Questions?
-    url: https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/discussions/new?category=q-a
+    url: https://github.com/asanluis/grafana-dashboard-reporter-app/discussions/new?category=q-a
     about: Use our Q&A Section in our docs to get answers for your questions
   - name: Feature Request?
-    url: https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/discussions/new?category=ideas
+    url: https://github.com/asanluis/grafana-dashboard-reporter-app/discussions/new?category=ideas
     about: Have an interesting idea to improve the plugin? Or see any killing feature is missing?
   - name: Docs
-    url: https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/tree/main/src#readme
+    url: https://github.com/asanluis/grafana-dashboard-reporter-app/tree/main/src#readme
     about: Docs
