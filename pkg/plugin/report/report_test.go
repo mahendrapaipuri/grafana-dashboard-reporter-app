@@ -11,8 +11,6 @@ import (
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 var logger = log.NewNullLogger()
