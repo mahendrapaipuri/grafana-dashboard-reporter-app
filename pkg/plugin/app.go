@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/asanluis/authlib/authz"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/worker"
@@ -15,6 +14,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/mahendrapaipuri/authlib/authz"
 )
 
 const Name = "mahendrapaipuri-dashboardreporter-app"

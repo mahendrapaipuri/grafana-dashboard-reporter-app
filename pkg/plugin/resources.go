@@ -10,13 +10,13 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/asanluis/authlib/authz"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/report"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/mahendrapaipuri/authlib/authz"
 )
 
 // GrafanaUserSignInTokenHeaderName the header name used for forwarding
