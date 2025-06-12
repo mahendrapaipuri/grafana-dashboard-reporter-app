@@ -11,7 +11,6 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
-	"github.com/sethvargo/go-envconfig"
 	"golang.org/x/net/context"
 )
 
@@ -43,7 +42,7 @@ type Config struct {
 	RemoteChromeURL     string            `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"      json:"remoteChromeUrl"`
 	NativeRendering     bool              `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"        json:"nativeRenderer"`
 	CustomHttpHeaders   map[string]string `env:"GF_REPORTER_PLUGIN_CUSTOM_HTTP_HEADERS, overwrite"    json:"customHttpHeaders"`
-	AppVersion          string `json:"appVersion"`
+	AppVersion          string            `json:"appVersion"`
 	IncludePanelIDs     []string
 	ExcludePanelIDs     []string
 	IncludePanelDataIDs []string
