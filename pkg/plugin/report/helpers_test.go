@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/asanluis/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestPanelSelector(t *testing.T) {

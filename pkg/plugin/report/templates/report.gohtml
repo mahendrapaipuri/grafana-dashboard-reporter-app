@@ -19,7 +19,7 @@
         --color-fg: #ffffff;
     }
 
-    @page { 
+    @page {
         margin: 3cm 0cm 1cm 0cm;
         background-color: var(--color-bg);
     }
@@ -35,11 +35,11 @@
         line-height: 1.6;
     }
 
-    @media print { 
-        body { 
+    @media print {
+        body {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
-        } 
+        }
     }
 
     body {
@@ -57,9 +57,9 @@
         border-collapse: collapse;
     }
 
-    table td,  table th {
-       border: 1px solid #CCC;
-       text-align: center;
+    table td, table th {
+        border: 1px solid #CCC;
+        text-align: center;
     }
 
     .grid {
@@ -72,32 +72,32 @@
 
     .grid-image {
         width: 100%;
-        {{/* height: 100%; */}}
-        object-fit: cover;
+    {{/* height: 100%; */}} object-fit: cover;
         display: block;
     }
 
-    {{- if .IsGridLayout}} 
-        {{- range $i, $v := .Panels}} 
+    {{- if .IsGridLayout}}
+    {{- range $i, $v := .Panels}}
     .grid-image-{{$i}} {
-        grid-column: {{add $v.GridPos.X}} / span {{$v.GridPos.W}};
-        grid-row: {{add $v.GridPos.Y}} / span {{$v.GridPos.H}};
+        grid-column: {{add $v.GridPos.X}} / span{{$v.GridPos.W}};
+        grid-row: {{add $v.GridPos.Y}} / span{{$v.GridPos.H}};
     }
 
-        {{end}}
+    {{end}}
 
     {{else}}
-        {{$p := 0}}
-        {{- range $i, $v := .Panels}}
-            {{- if $v.EncodedImage.Image }}
+    {{$p := 0}}
+    {{- range $i, $v := .Panels}}
+    {{- if $v.EncodedImage.Image }}
     .grid-image-{{$i}} {
         grid-column: 1 / span 24;
         grid-row: {{mult $p}} / span 30;
     }
-            {{$p = inc $p}}
-            {{- end }}
 
-        {{- end}}
+    {{$p = inc $p}}
+    {{- end }}
+
+    {{- end}}
 
     {{- end}}
 </style>
@@ -108,44 +108,45 @@
 </head>
 
 <body>
-    <div class="container">
-        <div class="grid">
-            {{- range $i, $v := .Panels}}
+<div class="container">
+    <div class="grid">
+        {{- range $i, $v := .Panels}}
             {{- if $v.EncodedImage.Image }}
-            <figure class="grid-image grid-image-{{$i}}">
-                <img src="{{ print $v.EncodedImage | url }}" id="image{{$v.ID}}" alt="{{$v.Title}}" class="grid-image">
-            </figure>
+                <figure class="grid-image grid-image-{{$i}}">
+                    <img src="{{ print $v.EncodedImage | url }}" id="image{{$v.ID}}" alt="{{$v.Title}}"
+                         class="grid-image">
+                </figure>
             {{- end }}
-            {{- end }}
-        </div>
+        {{- end }}
     </div>
-    {{- range $i, $v := .Panels }}
+</div>
+{{- range $i, $v := .Panels }}
     {{- if $v.CSVData }}
-    <div style="break-after:page"></div>
+        <div style="break-after:page"></div>
 
-    <div class="container">
-        <h2>{{$v.Title}}</h2>
+        <div class="container">
+            <h2>{{$v.Title}}</h2>
             <table>
                 <thead>
-                    <tr>
-                        {{- range $j, $w := index $v.CSVData 0}}
+                <tr>
+                    {{- range $j, $w := index $v.CSVData 0}}
                         <th>{{$w}}</th>
-                        {{- end }}
-                    </tr>
+                    {{- end }}
+                </tr>
                 </thead>
                 <tbody>
-                    {{- range $j, $w := slice $v.CSVData 1}}
+                {{- range $j, $w := slice $v.CSVData 1}}
                     <tr>
                         {{- range $k, $x := $w}}
-                        <td>{{$x}}</td>
+                            <td>{{$x}}</td>
                         {{- end }}
                     </tr>
-                    {{- end }}
+                {{- end }}
                 </tbody>
             </table>
         </div>
-        {{- end }}
     {{- end }}
+{{- end }}
 </body>
 
 </html> 

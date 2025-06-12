@@ -12,25 +12,40 @@ const baseDelayMsecs = 10;
 const timer = ms => new Promise(res => setTimeout(res, ms));
 
 // Panel data
-const panelData = selector => [...document.querySelectorAll('[' + selector + ']')].map((e) => ({ "x": e.getBoundingClientRect().x, "y": e.getBoundingClientRect().y, "width": e.getBoundingClientRect().width, "height": e.getBoundingClientRect().height, "title": e.innerText.split('\n')[0], "id": e.getAttribute(selector) }))
+const panelData = selector => [...document.querySelectorAll('[' + selector + ']')].map((e) => ({
+    "x": e.getBoundingClientRect().x,
+    "y": e.getBoundingClientRect().y,
+    "width": e.getBoundingClientRect().width,
+    "height": e.getBoundingClientRect().height,
+    "title": e.innerText.split('\n')[0],
+    "id": e.getAttribute(selector)
+}))
 
 /**
  * Semantic Versioning Comparing
  * #see https://semver.org/
  * #see https://stackoverflow.com/a/65687141/456536
  * #see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator#options
- * 
+ *
  * Seems like Grafana uses "-" for pre-releases and "+" for post releases (bug fixes)
  */
 function semverCompare(a, b) {
     // Pre-releases
-    if (a.startsWith(b + "-")) {return -1}
-    if (b.startsWith(a + "-")) {return 1}
+    if (a.startsWith(b + "-")) {
+        return -1
+    }
+    if (b.startsWith(a + "-")) {
+        return 1
+    }
 
     // Post releases
-    if (a.startsWith(b + "+")) {return 1}
-    if (b.startsWith(a + "+")) {return -1}
-    return a.localeCompare(b, undefined, { numeric: true, sensitivity: "case", caseFirst: "upper" })
+    if (a.startsWith(b + "+")) {
+        return 1
+    }
+    if (b.startsWith(a + "+")) {
+        return -1
+    }
+    return a.localeCompare(b, undefined, {numeric: true, sensitivity: "case", caseFirst: "upper"})
 }
 
 // Wait for queries to finish and panels to load data
@@ -42,7 +57,7 @@ const waitForQueriesAndVisualizations = async (version = `v${fallbackVersion}`, 
     // on backend plugin. In that case attempt to get version from 
     // frontend boot data
     if (semverCompare(ver, '0.0.0') === 0) {
-        ver = grafanaBootData?.settings?.buildInfo?.version || fallbackVersion 
+        ver = grafanaBootData?.settings?.buildInfo?.version || fallbackVersion
     }
 
     // Set selector based on version
@@ -125,7 +140,7 @@ const waitForCSVDownloadButton = async () => {
         checkCounts++;
     }
 
-    return;
+
 };
 
 // Expands data options tab
@@ -138,7 +153,7 @@ const expandDataOptionsTab = async () => {
         tabs[i].click();
     }
 
-    return;
+
 };
 
 // Ensures format data toggle is checked to apply all transformations
@@ -156,7 +171,7 @@ const checkFormatDataToggle = async () => {
         }
     }
 
-    return;
+
 };
 
 // Waits for CSV data to be ready to download
@@ -170,5 +185,5 @@ const waitForCSVData = async (version = `v${fallbackVersion}`, timeout = 30000) 
     // Wait for CSV download button and click it
     await waitForCSVDownloadButton();
 
-    return;
+
 };

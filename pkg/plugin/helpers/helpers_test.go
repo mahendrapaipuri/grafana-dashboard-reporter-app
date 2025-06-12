@@ -2,8 +2,6 @@ package helpers
 
 import (
 	"testing"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSemverComapre(t *testing.T) {

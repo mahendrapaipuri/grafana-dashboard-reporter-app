@@ -144,7 +144,7 @@ func (p *Panel) IsSingleStat() bool {
 
 // IsPartialWidth If panel has width less than total allowable width.
 func (p *Panel) IsPartialWidth() bool {
-	return (p.GridPos.W < 24)
+	return p.GridPos.W < 24
 }
 
 // Width returns the width of the panel.

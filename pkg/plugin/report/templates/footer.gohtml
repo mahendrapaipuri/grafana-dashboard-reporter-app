@@ -1,51 +1,51 @@
 <html lang="en">
-   <style type="text/css">
-      #footer {
-         padding: 0;
-      }
+<style type="text/css">
+    #footer {
+        padding: 0;
+    }
 
-      html { 
-         -webkit-print-color-adjust: exact;
-         print-color-adjust: exact;
-      }
+    html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
 
-       [data-theme="light"] {
-         --color-bg: #ffffff;
-         --color-fg: #000000;
-         --color-margin: lightgray;
-      }
+    [data-theme="light"] {
+        --color-bg: #ffffff;
+        --color-fg: #000000;
+        --color-margin: lightgray;
+    }
 
-      [data-theme="dark"] {
-         --color-bg: #181b1f;
-         --color-fg: #ffffff;
-         --color-margin: #ffffff;
-      }
-	  
-      .content-footer {
-         width: 100%;
-         background-color: var(--color-bg);
-         color: var(--color-fg);
-         padding: 5px;
-         vertical-align: middle;
-         font-style: italic;
-         font-size: 10px;
-         margin-top: 0;
-         display: inline-block;
-         text-align: center;
-      }
+    [data-theme="dark"] {
+        --color-bg: #181b1f;
+        --color-fg: #ffffff;
+        --color-margin: #ffffff;
+    }
 
-      .content-footer-right {
-         float: right;
-      }
-   </style>
-   <body>
-      <div class="content-footer" data-theme="{{.Theme}}">
-         Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-         {{- if .Logo}}
-         <div class="content-footer-right" data-theme="{{.Theme}}">
-            <img src="{{embed .Logo}}" height="25" alt="Logo" />
-         </div>
-         {{- end}}
-      </div>
-   </body>
+    .content-footer {
+        width: 100%;
+        background-color: var(--color-bg);
+        color: var(--color-fg);
+        padding: 5px;
+        vertical-align: middle;
+        font-style: italic;
+        font-size: 10px;
+        margin-top: 0;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .content-footer-right {
+        float: right;
+    }
+</style>
+<body>
+<div class="content-footer" data-theme="{{.Theme}}">
+    Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+    {{- if .Logo}}
+        <div class="content-footer-right" data-theme="{{.Theme}}">
+            <img src="{{embed .Logo}}" height="25" alt="Logo"/>
+        </div>
+    {{- end}}
+</div>
+</body>
 </html>

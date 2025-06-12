@@ -1,61 +1,61 @@
 <html lang="en">
-    <style type="text/css">
-        html { 
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
+<style type="text/css">
+    html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
 
-        [data-theme="light"] {
-            --color-bg: #ffffff;
-            --color-fg: #000000;
-            --color-margin: lightgray;
-        }
+    [data-theme="light"] {
+        --color-bg: #ffffff;
+        --color-fg: #000000;
+        --color-margin: lightgray;
+    }
 
-        [data-theme="dark"] {
-            --color-bg: #181b1f;
-            --color-fg: #ffffff;
-            --color-margin: #ffffff;
-        }
+    [data-theme="dark"] {
+        --color-bg: #181b1f;
+        --color-fg: #ffffff;
+        --color-margin: #ffffff;
+    }
 
-        .content-header {
-            width: 100%;
-            background-color: var(--color-bg);
-            color: var(--color-fg);
-            display: flex;
-            flex-wrap: wrap;
-            padding: 5px;
-            vertical-align: middle;
-            font-weight: bold;
-            font-size: 20px;
-            margin-left: 20px;
-            margin-right: 20px;
-            display: inline-block;
-            text-align: start;
-            border-bottom: 1px solid var(--color-margin);
-        }
+    .content-header {
+        width: 100%;
+        background-color: var(--color-bg);
+        color: var(--color-fg);
+        display: flex;
+        flex-wrap: wrap;
+        padding: 5px;
+        vertical-align: middle;
+        font-weight: bold;
+        font-size: 20px;
+        margin-left: 20px;
+        margin-right: 20px;
+        display: inline-block;
+        text-align: start;
+        border-bottom: 1px solid var(--color-margin);
+    }
 
-        .content-header-left {
-            font-weight: bold;
-            font-size: 8px;
-            float: left;
-        }
+    .content-header-left {
+        font-weight: bold;
+        font-size: 8px;
+        float: left;
+    }
 
-        .content-header-right {
-            font-weight: bold;
-            font-size: 8px;
-            float: right;
-        }
-    </style>
-    <body>
-        <div class="content-header" data-theme="{{.Theme}}">
-            <div class="content-header-left" data-theme="{{.Theme}}">generated on {{.Date}}</div>
-            <div class="content-header-right" data-theme="{{.Theme}}">Datetime range: {{.From}} to {{.To}}</div>
-            <br />
-            {{ .Title }} <span class="pageNumber"></span>/<span class="totalPages"></span>
-            {{- if .VariableValues}}
-            <br />
-            <div class="content-header-left" data-theme="{{.Theme}}">{{ .VariableValues }}</div>
-            {{- end}}
-        </div>
-    </body>
+    .content-header-right {
+        font-weight: bold;
+        font-size: 8px;
+        float: right;
+    }
+</style>
+<body>
+<div class="content-header" data-theme="{{.Theme}}">
+    <div class="content-header-left" data-theme="{{.Theme}}">generated on {{.Date}}</div>
+    <div class="content-header-right" data-theme="{{.Theme}}">Datetime range: {{.From}} to {{.To}}</div>
+    <br/>
+    {{ .Title }} <span class="pageNumber"></span>/<span class="totalPages"></span>
+    {{- if .VariableValues}}
+        <br/>
+        <div class="content-header-left" data-theme="{{.Theme}}">{{ .VariableValues }}</div>
+    {{- end}}
+</div>
+</body>
 </html>
