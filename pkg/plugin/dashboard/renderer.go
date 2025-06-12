@@ -48,7 +48,7 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 		}
 	}
 
-	// Add custom HTTP headers
+	// Add custom HTTP headers for native renderer (Chrome navigation)
 	for name, value := range d.conf.CustomHttpHeaders {
 		headers[name] = value
 	}
@@ -112,11 +112,6 @@ func (d *Dashboard) panelPNGImageRenderer(ctx context.Context, p Panel) (PanelIm
 		for _, value := range values {
 			req.Header.Add(name, value)
 		}
-	}
-
-	// Add custom HTTP headers
-	for name, value := range d.conf.CustomHttpHeaders {
-		req.Header.Add(name, value)
 	}
 
 	// Make request

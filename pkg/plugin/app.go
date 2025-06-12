@@ -17,6 +17,18 @@ import (
 	"github.com/mahendrapaipuri/authlib/authz"
 )
 
+type customHeaderTransport struct {
+	base    http.RoundTripper
+	headers map[string]string
+}
+
+func (t *customHeaderTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	for name, value := range t.headers {
+		req.Header.Set(name, value)
+	}
+	return t.base.RoundTrip(req)
+}
+
 const Name = "mahendrapaipuri-dashboardreporter-app"
 
 // Make sure App implements required interfaces. This is important to do
@@ -88,6 +100,14 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	// Make a new HTTP client
 	if app.httpClient, err = httpclient.New(app.conf.HTTPClientOptions); err != nil {
 		return nil, fmt.Errorf("error in httpclient new: %w", err)
+	}
+
+	// Add custom headers to the HTTP client if configured
+	if len(app.conf.CustomHttpHeaders) > 0 {
+		app.httpClient.Transport = &customHeaderTransport{
+			base:    app.httpClient.Transport,
+			headers: app.conf.CustomHttpHeaders,
+		}
 	}
 
 	// Create a new browser instance
