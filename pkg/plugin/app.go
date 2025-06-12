@@ -26,6 +26,7 @@ func (t *customHeaderTransport) RoundTrip(req *http.Request) (*http.Response, er
 	for name, value := range t.headers {
 		req.Header.Set(name, value)
 	}
+
 	return t.base.RoundTrip(req)
 }
 
