@@ -103,6 +103,17 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 		return nil, fmt.Errorf("error in httpclient new: %w", err)
 	}
 
+	// Configure redirect handling to allow unlimited redirects
+	app.httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		// Apply custom headers to redirect requests if configured
+		for name, value := range app.conf.CustomHttpHeaders {
+			req.Header.Set(name, value)
+		}
+
+		// Allow unlimited redirects
+		return nil
+	}
+
 	// Add custom headers to the HTTP client if configured
 	if len(app.conf.CustomHttpHeaders) > 0 {
 		app.httpClient.Transport = &customHeaderTransport{
