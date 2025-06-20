@@ -45,7 +45,7 @@ func TestFetchPanelPNG(t *testing.T) {
 			&conf,
 			http.DefaultClient,
 			&chrome.LocalInstance{},
-			ts.URL,
+			ts.URL+"/grafana", // With path prefix
 			"v11.1.0",
 			&Model{Dashboard: struct {
 				ID          int          `json:"id"`
@@ -75,7 +75,7 @@ func TestFetchPanelPNG(t *testing.T) {
 		})
 
 		Convey("The httpClient should use the render endpoint with the dashboard name", func() {
-			So(requestURI, ShouldStartWith, "/render/d-solo/randomUID/_")
+			So(requestURI, ShouldStartWith, "/grafana/render/d-solo/randomUID/_")
 		})
 
 		Convey("The httpClient should request the panel ID", func() {

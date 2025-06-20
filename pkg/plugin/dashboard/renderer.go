@@ -8,7 +8,6 @@ import (
 	"io"
 	"maps"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -33,7 +32,7 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 	// Get panel URL
 	panelURL := d.panelPNGURL(p, false)
 
-	defer helpers.TimeTrack(time.Now(), "fetch panel PNG", d.logger, "panel_id", p.ID, "renderer", "native", "url", panelURL.String())
+	defer helpers.TimeTrack(time.Now(), "fetch panel PNG", d.logger, "panel_id", p.ID, "renderer", "native", "url", panelURL)
 
 	// Create a new tab
 	tab := d.chromeInstance.NewTab(d.logger, d.conf)
@@ -48,7 +47,7 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 		}
 	}
 
-	err := tab.NavigateAndWaitFor(panelURL.String(), headers, "networkIdle")
+	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle")
 	if err != nil {
 		return PanelImage{}, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
@@ -72,7 +71,7 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 	}...)
 
 	if err := tab.Run(tasks); err != nil {
-		return PanelImage{}, fmt.Errorf("error fetching panel PNG from browser %s: %w", panelURL.String(), err)
+		return PanelImage{}, fmt.Errorf("error fetching panel PNG from browser %s: %w", panelURL, err)
 	}
 
 	sb := &bytes.Buffer{}
@@ -94,10 +93,10 @@ func (d *Dashboard) panelPNGImageRenderer(ctx context.Context, p Panel) (PanelIm
 	// Get panel render URL
 	panelURL := d.panelPNGURL(p, true)
 
-	defer helpers.TimeTrack(time.Now(), "fetch panel PNG", d.logger, "panel_id", p.ID, "renderer", "grafana-image-renderer", "url", panelURL.String())
+	defer helpers.TimeTrack(time.Now(), "fetch panel PNG", d.logger, "panel_id", p.ID, "renderer", "grafana-image-renderer", "url", panelURL)
 
 	// Create a new request for panel
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, panelURL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, panelURL, nil)
 	if err != nil {
 		return PanelImage{}, fmt.Errorf("error creating request for %s: %w", panelURL, err)
 	}
@@ -161,7 +160,7 @@ func (d *Dashboard) panelPNGImageRenderer(ctx context.Context, p Panel) (PanelIm
 }
 
 // panelPNGURL returns the URL to fetch panel PNG.
-func (d *Dashboard) panelPNGURL(p Panel, render bool) *url.URL {
+func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 	values := maps.Clone(d.model.Dashboard.Variables)
 	values.Add("theme", d.conf.Theme)
 	values.Add("panelId", p.ID)
@@ -181,13 +180,8 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) *url.URL {
 		renderer = "render/"
 	}
 
-	// Make a copy of appURL
-	panelURL := *d.appURL
-	panelURL.Path = fmt.Sprintf("/%sd-solo/%s/_", renderer, d.model.Dashboard.UID)
-	panelURL.RawQuery = values.Encode()
-
 	// Get Panel API endpoint
-	return &panelURL
+	return fmt.Sprintf("%s/%sd-solo/%s/_?%s", d.appURL, renderer, d.model.Dashboard.UID, values.Encode())
 }
 
 // panelDims returns width and height of panel based on layout.
