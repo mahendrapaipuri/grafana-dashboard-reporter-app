@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"maps"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +21,7 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 	// Get panel CSV data URL
 	panelURL := d.panelCSVURL(p)
 
-	defer helpers.TimeTrack(time.Now(), "fetch panel CSV data", d.logger, "fetcher", "native", "panel_id", p.ID, "url", panelURL.String())
+	defer helpers.TimeTrack(time.Now(), "fetch panel CSV data", d.logger, "fetcher", "native", "panel_id", p.ID, "url", panelURL)
 
 	// Create a new tab
 	tab := d.chromeInstance.NewTab(d.logger, d.conf)
@@ -39,7 +38,7 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 		}
 	}
 
-	err := tab.NavigateAndWaitFor(panelURL.String(), headers, "networkIdle")
+	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle")
 	if err != nil {
 		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
@@ -134,18 +133,13 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 }
 
 // panelCSVURL returns URL to fetch panel's CSV data.
-func (d *Dashboard) panelCSVURL(p Panel) *url.URL {
+func (d *Dashboard) panelCSVURL(p Panel) string {
 	values := maps.Clone(d.model.Dashboard.Variables)
 	values.Add("theme", d.conf.Theme)
 	values.Add("viewPanel", p.ID)
 	values.Add("inspect", p.ID)
 	values.Add("inspectTab", "data")
 
-	// Make a copy of appURL
-	panelURL := *d.appURL
-	panelURL.Path = fmt.Sprintf("/d/%s/_", d.model.Dashboard.UID)
-	panelURL.RawQuery = values.Encode()
-
-	// Get Panel API endpoint
-	return &panelURL
+	// Get Panel CSV API endpoint
+	return fmt.Sprintf("%s/d/%s/_?%s", d.appURL, d.model.Dashboard.UID, values.Encode())
 }
