@@ -1,6 +1,6 @@
 {
   "name": "mahendrapaipuri-dashboardreporter-app",
-  "version": "1.7.7",
+  "version": "1.8.0",
   "description": "A Grafana plugin app that generates PDF reports from Grafana dashboards",
   "config": {
     "plainUrl": "http://admin:admin@localhost:3080/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=fdlwjnyim1la8f&layout=simple&orientation=portrait&dashboardMode=default&var-testvar0=All&var-testvar1=foo&var-testvar2=1",

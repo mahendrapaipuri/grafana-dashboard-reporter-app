@@ -1,8 +1,14 @@
 # Changelog
 
+## 1.8.0
+
+- Add Grafana 12.x to CI e2e testcases [#364](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/364)
+- Correct panel CSV data URL when Grafana is served at path prefix [#361](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/361)
+- Fix rendering with path prefix [#359](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/359)
+
 ## 1.7.7
 
-- Apply data transformations to tabular data in report  [#323](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/323)
+- Apply data transformations to tabular data in report [#323](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/323)
 
 ## 1.7.6
 
