@@ -1,0 +1,52 @@
+name: Docs
+on:
+  workflow_dispatch:
+  # Once the release has been published trigger the workflow
+  # to update version numbers in docs
+  release:
+    types: [published]
+
+permissions:
+  # All nested workflows will inherit these permissions and so no need to declare
+  # in each step file
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-readme:
+    name: update-readme
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update version in README
+        run: ./scripts/update-readme.sh
+
+      - name: Verify Changed files
+        id: verify-changed-files
+        run: |
+          # If there are no changes exit code will be 0 and 1 if there are changes
+          if git diff --exit-code src/README.md > /dev/null; then
+              echo "files_changed=false" >> $GITHUB_OUTPUT
+          else
+              echo "files_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        if: steps.verify-changed-files.outputs.files_changed == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "bot@reporterplugin.com"
+          git config --local user.name "Reporter Plugin Bot"
+          git add src/README.md
+          git commit -m "chore: Update version in README.md" -s
+
+      - name: Push changes
+        if: steps.verify-changed-files.outputs.files_changed == 'true' && github.ref == 'refs/heads/main'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.head_ref }}
