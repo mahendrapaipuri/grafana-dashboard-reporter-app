@@ -7,5 +7,5 @@ module.exports = [
   {
     ignores: [".github", ".yarn", "**/build/", "**/compiled/", "**/dist/", ".gitignore"],
   },
-  grafanaConfig,
+  ...grafanaConfig,
 ];
