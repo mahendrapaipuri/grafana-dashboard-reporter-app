@@ -65,7 +65,7 @@ func (d *Dashboard) panels(ctx context.Context) ([]Panel, error) {
 }
 
 // panelMetaData fetches dashboard panels metadata from Grafana chromium browser instance.
-func (d *Dashboard) panelMetaData(_ context.Context) ([]interface{}, error) {
+func (d *Dashboard) panelMetaData(_ context.Context) ([]any, error) {
 	// Get dashboard URL
 	dashURL := fmt.Sprintf("%s/d/%s/_?%s", d.appURL, d.model.Dashboard.UID, d.model.Dashboard.Variables.Encode())
 
@@ -84,7 +84,7 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]interface{}, error) {
 		}
 	}
 
-	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle")
+	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle", []string{"*/api/ds/query*"})
 	if err != nil {
 		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
@@ -92,7 +92,7 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]interface{}, error) {
 	tasks := make(chromedp.Tasks, 0)
 
 	// Fetch dashboard data
-	var dashboardData []interface{}
+	var dashboardData []any
 
 	// var buf []byte
 
@@ -108,6 +108,7 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]interface{}, error) {
 		chromedp.Evaluate(js, &dashboardData, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 			return p.WithAwaitPromise(true)
 		}),
+		// chromedp.FullScreenshot(&buf, 5000),
 	}...)
 
 	if err := tab.Run(tasks); err != nil {
@@ -126,7 +127,7 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]interface{}, error) {
 }
 
 // panels creates slice of panels from the data fetched from browser's DOM model.
-func (d *Dashboard) createPanels(dashData []interface{}) ([]Panel, error) {
+func (d *Dashboard) createPanels(dashData []any) ([]Panel, error) {
 	var (
 		allErrs    error
 		err        error
@@ -156,7 +157,7 @@ func (d *Dashboard) createPanels(dashData []interface{}) ([]Panel, error) {
 	for _, panelData := range dashData {
 		var p Panel
 
-		pMap, ok := panelData.(map[string]interface{})
+		pMap, ok := panelData.(map[string]any)
 		if !ok {
 			continue
 		}

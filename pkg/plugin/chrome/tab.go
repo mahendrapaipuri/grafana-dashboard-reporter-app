@@ -15,6 +15,11 @@ import (
 	"golang.org/x/net/context"
 )
 
+// Default URLs to block.
+var (
+	defaultBlockedURLs = []string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}
+)
+
 var WithAwaitPromise = func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithAwaitPromise(true)
 }
@@ -46,10 +51,10 @@ func (t *Tab) Close(logger log.Logger) {
 }
 
 // NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page.
-func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string) error {
+func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string, blockedURLs []string) error {
 	if err := t.Run(
 		// block some URLs to avoid unnecessary requests
-		network.SetBlockedURLs([]string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}),
+		network.SetBlockedURLs(append(defaultBlockedURLs, blockedURLs...)),
 		enableLifeCycleEvents(),
 	); err != nil {
 		return fmt.Errorf("error enable lifecycle events: %w", err)

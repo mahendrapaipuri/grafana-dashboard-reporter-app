@@ -8,7 +8,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func sameTimeAs(actual interface{}, expected ...interface{}) string {
+func sameTimeAs(actual any, expected ...any) string {
 	if actual == expected[0] {
 		return ""
 	} else {

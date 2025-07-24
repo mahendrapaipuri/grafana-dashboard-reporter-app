@@ -38,7 +38,7 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 		}
 	}
 
-	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle")
+	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle", nil)
 	if err != nil {
 		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
@@ -50,7 +50,7 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 	errCh := make(chan error, 1)
 
 	// Listen for download events. Downloading from JavaScript won't emit any network events.
-	chromedp.ListenTarget(tab.Context(), func(event interface{}) {
+	chromedp.ListenTarget(tab.Context(), func(event any) {
 		if eventDownloadWillBegin, ok := event.(*browser.EventDownloadWillBegin); ok {
 			d.logger.Debug("got CSV download URL", "panel_id", p.ID, "url", eventDownloadWillBegin.URL)
 			// once we have the download URL, we can fetch the CSV data via JavaScript.
