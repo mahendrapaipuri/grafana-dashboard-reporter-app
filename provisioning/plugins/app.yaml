@@ -131,14 +131,36 @@ apps:
       # Custom HTML header template to be used in the report. If empty, default template
       # will be used
       #
+      # Mutually exclusive with headerTemplateFile
+      #
       headerTemplate: ''
+
+      # Full file path to header HTML template in the report.
+      #
+      # Custom HTML header template to be used in the report. If empty, default template
+      # will be used
+      #
+      # Mutually exclusive with headerTemplate
+      #
+      headerTemplateFile: ''
 
       # Footer HTML template in the report.
       #
       # Custom HTML footer template to be used in the report. If empty, default template
       # will be used
       #
+      # Mutually exclusive with footerTemplateFile
+      #
       footerTemplate: ''
+
+      # Full file path to footer HTML template in the report.
+      #
+      # Custom HTML footer template to be used in the report. If empty, default template
+      # will be used
+      #
+      # Mutually exclusive with footerTemplate
+      #
+      footerTemplateFile: ''
 
       # Maximum number of workers for interacting with chrome browser.
       #

@@ -256,10 +256,20 @@ The following settings are advanced settings that allow to customize the header 
 of the report using custom HTML templates.
 
 - `file:headerTemplate; env:GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE; ui:Header Template`:
-  HTML template that will be added as header to the report.
+  HTML template that will be added as header to the report. Mutually exclusive with
+  `headerTemplateFile`.
+
+- `file:headerTemplateFile; env:GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE_FILE; ui:Header Template File`:
+  Full path to HTML template that will be added as header to the report. Mutually exclusive with
+  `headerTemplate`.
 
 - `file:footerTemplate; env:GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE; ui:Footer Template`:
-  HTML template that will be added as footer to the report.
+  HTML template that will be added as footer to the report. Mutually exclusive with
+  `footerTemplateFile`.
+
+- `file:footerTemplateFile; env:GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE_FILE; ui:Footer Template File`:
+  Full path to HTML template that will be added as footer to the report. Mutually exclusive with
+  `footerTemplate`.
 
 Templates must conform to [Go's template](https://pkg.go.dev/text/template) style
 using `{{ }}` as delimiters. The following variables are available in the templates:
@@ -270,8 +280,9 @@ using `{{ }}` as delimiters. The following variables are available in the templa
 - `.To`: Dashboard's `to` time
 - `.Date`: Current date time.
 
-Default [header](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml) and [footer](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml) templates can be used as a base to further
-customize the reports using custom templates.
+Default [header](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml)
+and [footer](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml)
+templates can be used as a base to further customize the reports using custom templates.
 
 ### Additional settings
 

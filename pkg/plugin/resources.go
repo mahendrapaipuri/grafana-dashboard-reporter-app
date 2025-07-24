@@ -241,7 +241,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	app.updateConfig(req, &conf)
 
 	// Validate new updated config
-	if err := conf.Validate(); err != nil {
+	if err := conf.RTValidate(); err != nil {
 		ctxLogger.Debug("invalid config: "+conf.String(), "err", err)
 		http.Error(w, "invalid query parameters found", http.StatusBadRequest)
 

@@ -13,6 +13,8 @@ export const testIds = {
     logo: "data-testid ac-logo",
     headerTemplate: "data-testid ac-header-template",
     footerTemplate: "data-testid ac-footer-template",
+    headerTemplateFile: "data-testid ac-header-template-file",
+    footerTemplateFile: "data-testid ac-footer-template-file",
     maxBrowserWorkers: "data-testid ac-max-browser-workers",
     maxRenderWorkers: "data-testid ac-max-render-workers",
     remoteChromeUrl: "data-testid ac-remote-chrome-url",
