@@ -28,23 +28,23 @@ var (
 
 // Config contains plugin settings.
 type Config struct {
-	AppURL              string `env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"                json:"appUrl"`
-	SkipTLSCheck        bool   `env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"         json:"skipTlsCheck"`
-	Theme               string `env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"           json:"theme"`
-	Orientation         string `env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"     json:"orientation"`
-	Layout              string `env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"          json:"layout"`
-	DashboardMode       string `env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"  json:"dashboardMode"`
-	TimeZone            string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"        json:"timeZone"`
-	TimeFormat          string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEFORMAT, overwrite"      json:"timeFormat"`
-	EncodedLogo         string `env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"            json:"logo"`
-	HeaderTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE, overwrite" json:"headerTemplate"`
-	FooterTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE, overwrite" json:"footerTemplate"`
+	AppURL              string `env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"                     json:"appUrl"`
+	SkipTLSCheck        bool   `env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"              json:"skipTlsCheck"`
+	Theme               string `env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"                json:"theme"`
+	Orientation         string `env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"          json:"orientation"`
+	Layout              string `env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"               json:"layout"`
+	DashboardMode       string `env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"       json:"dashboardMode"`
+	TimeZone            string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"             json:"timeZone"`
+	TimeFormat          string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEFORMAT, overwrite"           json:"timeFormat"`
+	EncodedLogo         string `env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"                 json:"logo"`
+	HeaderTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE, overwrite"      json:"headerTemplate"`
+	FooterTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE, overwrite"      json:"footerTemplate"`
 	HeaderTemplateFile  string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE_FILE, overwrite" json:"headerTemplateFile"`
 	FooterTemplateFile  string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE_FILE, overwrite" json:"footerTemplateFile"`
-	MaxBrowserWorkers   int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"    json:"maxBrowserWorkers"`
-	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"     json:"maxRenderWorkers"`
-	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"      json:"remoteChromeUrl"`
-	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"        json:"nativeRenderer"`
+	MaxBrowserWorkers   int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"         json:"maxBrowserWorkers"`
+	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"          json:"maxRenderWorkers"`
+	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"           json:"remoteChromeUrl"`
+	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"             json:"nativeRenderer"`
 	AppVersion          string `json:"appVersion"`
 	IncludePanelIDs     []string
 	ExcludePanelIDs     []string

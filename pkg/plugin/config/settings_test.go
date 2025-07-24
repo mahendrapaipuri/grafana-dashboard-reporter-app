@@ -65,8 +65,9 @@ func TestSettings(t *testing.T) {
 		tmpDir := t.TempDir()
 		headerTemplateFile := filepath.Join(tmpDir, "header.html")
 		footerTemplateFile := filepath.Join(tmpDir, "footer.html")
-		os.WriteFile(headerTemplateFile, []byte("header template"), 0700)
-		os.WriteFile(footerTemplateFile, []byte("footer template"), 0700)
+
+		os.WriteFile(headerTemplateFile, []byte("header template"), 0o700) //nolint:gosec
+		os.WriteFile(footerTemplateFile, []byte("footer template"), 0o700) //nolint:gosec
 
 		configJSON := fmt.Sprintf(`{"headerTemplateFile": "%s", "footerTemplateFile": "%s"}`, headerTemplateFile, footerTemplateFile)
 		configData := json.RawMessage(configJSON)
