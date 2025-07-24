@@ -275,7 +275,7 @@ func TestDashboardCreatePanels(t *testing.T) {
 
 		dashDataString := `[{"width":940,"height":258,"x":0,"y":0,"id":"12"},{"width":940,"height":258,"x":940,"y":0,"id":"26"},{"width":940,"height":258,"x":0,"y":0,"id":"27"}]`
 
-		var dashData []interface{}
+		var dashData []any
 		err = json.Unmarshal([]byte(dashDataString), &dashData)
 
 		Convey("setup dashboard data unmarshal", func() {

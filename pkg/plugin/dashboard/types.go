@@ -87,7 +87,7 @@ type GridPos struct {
 type PanelID string
 
 func (i *PanelID) UnmarshalJSON(b []byte) error {
-	var item interface{}
+	var item any
 	if err := json.Unmarshal(b, &item); err != nil {
 		return err
 	}

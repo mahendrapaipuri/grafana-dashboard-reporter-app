@@ -9,7 +9,7 @@ import (
 )
 
 // TimeTrack tracks execution time of each function.
-func TimeTrack(start time.Time, name string, logger log.Logger, args ...interface{}) {
+func TimeTrack(start time.Time, name string, logger log.Logger, args ...any) {
 	elapsed := time.Since(start)
 	args = append(args, "duration", elapsed.String())
 	logger.Debug(name, args...)

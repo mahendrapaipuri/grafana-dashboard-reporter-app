@@ -50,7 +50,7 @@ func waitFor(eventName string) chromedp.ActionFunc {
 	return func(ctx context.Context) error {
 		ch := make(chan struct{})
 		cctx, cancel := context.WithCancel(ctx)
-		chromedp.ListenTarget(cctx, func(ev interface{}) {
+		chromedp.ListenTarget(cctx, func(ev any) {
 			switch e := ev.(type) {
 			case *page.EventLifecycleEvent:
 				if e.Name == eventName {

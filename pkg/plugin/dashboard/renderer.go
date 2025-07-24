@@ -47,7 +47,7 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 		}
 	}
 
-	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle")
+	err := tab.NavigateAndWaitFor(panelURL, headers, "networkIdle", nil)
 	if err != nil {
 		return PanelImage{}, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
