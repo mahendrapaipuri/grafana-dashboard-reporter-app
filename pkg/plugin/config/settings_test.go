@@ -2,6 +2,9 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -55,6 +58,31 @@ func TestSettings(t *testing.T) {
 			So(config.MaxBrowserWorkers, ShouldEqual, 2)
 			So(config.MaxRenderWorkers, ShouldEqual, 2)
 			So(config.Token, ShouldEqual, "supersecrettoken")
+		})
+	})
+
+	Convey("When creating a new config from template files", t, func() {
+		tmpDir := t.TempDir()
+		headerTemplateFile := filepath.Join(tmpDir, "header.html")
+		footerTemplateFile := filepath.Join(tmpDir, "footer.html")
+
+		os.WriteFile(headerTemplateFile, []byte("header template"), 0o700) //nolint:gosec
+		os.WriteFile(footerTemplateFile, []byte("footer template"), 0o700) //nolint:gosec
+
+		configJSON := fmt.Sprintf(`{"headerTemplateFile": "%s", "footerTemplateFile": "%s"}`, headerTemplateFile, footerTemplateFile)
+		configData := json.RawMessage(configJSON)
+		secretsMap := map[string]string{
+			"saToken": "supersecrettoken",
+		}
+		config, err := Load(
+			t.Context(),
+			backend.AppInstanceSettings{JSONData: configData, DecryptedSecureJSONData: secretsMap},
+		)
+
+		Convey("Config should contain header and footer templates", func() {
+			So(err, ShouldBeNil)
+			So(config.HeaderTemplate, ShouldEqual, "header template")
+			So(config.FooterTemplate, ShouldEqual, "footer template")
 		})
 	})
 }

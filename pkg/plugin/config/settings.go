@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"slices"
 	"strings"
 	"time"
@@ -27,21 +28,23 @@ var (
 
 // Config contains plugin settings.
 type Config struct {
-	AppURL              string `env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"                json:"appUrl"`
-	SkipTLSCheck        bool   `env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"         json:"skipTlsCheck"`
-	Theme               string `env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"           json:"theme"`
-	Orientation         string `env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"     json:"orientation"`
-	Layout              string `env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"          json:"layout"`
-	DashboardMode       string `env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"  json:"dashboardMode"`
-	TimeZone            string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"        json:"timeZone"`
-	TimeFormat          string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEFORMAT, overwrite"      json:"timeFormat"`
-	EncodedLogo         string `env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"            json:"logo"`
-	HeaderTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE, overwrite" json:"headerTemplate"`
-	FooterTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE, overwrite" json:"footerTemplate"`
-	MaxBrowserWorkers   int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"    json:"maxBrowserWorkers"`
-	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"     json:"maxRenderWorkers"`
-	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"      json:"remoteChromeUrl"`
-	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"        json:"nativeRenderer"`
+	AppURL              string `env:"GF_REPORTER_PLUGIN_APP_URL, overwrite"                     json:"appUrl"`
+	SkipTLSCheck        bool   `env:"GF_REPORTER_PLUGIN_SKIP_TLS_CHECK, overwrite"              json:"skipTlsCheck"`
+	Theme               string `env:"GF_REPORTER_PLUGIN_REPORT_THEME, overwrite"                json:"theme"`
+	Orientation         string `env:"GF_REPORTER_PLUGIN_REPORT_ORIENTATION, overwrite"          json:"orientation"`
+	Layout              string `env:"GF_REPORTER_PLUGIN_REPORT_LAYOUT, overwrite"               json:"layout"`
+	DashboardMode       string `env:"GF_REPORTER_PLUGIN_REPORT_DASHBOARD_MODE, overwrite"       json:"dashboardMode"`
+	TimeZone            string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEZONE, overwrite"             json:"timeZone"`
+	TimeFormat          string `env:"GF_REPORTER_PLUGIN_REPORT_TIMEFORMAT, overwrite"           json:"timeFormat"`
+	EncodedLogo         string `env:"GF_REPORTER_PLUGIN_REPORT_LOGO, overwrite"                 json:"logo"`
+	HeaderTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE, overwrite"      json:"headerTemplate"`
+	FooterTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE, overwrite"      json:"footerTemplate"`
+	HeaderTemplateFile  string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE_FILE, overwrite" json:"headerTemplateFile"`
+	FooterTemplateFile  string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE_FILE, overwrite" json:"footerTemplateFile"`
+	MaxBrowserWorkers   int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"         json:"maxBrowserWorkers"`
+	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"          json:"maxRenderWorkers"`
+	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"           json:"remoteChromeUrl"`
+	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"             json:"nativeRenderer"`
 	AppVersion          string `json:"appVersion"`
 	IncludePanelIDs     []string
 	ExcludePanelIDs     []string
@@ -57,8 +60,8 @@ type Config struct {
 	Token string
 }
 
-// Validate checks current settings and sets them to defaults for invalid ones.
-func (c *Config) Validate() error {
+// RTValidate validates the config that can change at runtime.
+func (c *Config) RTValidate() error {
 	// Check theme
 	if !slices.Contains(validThemes, c.Theme) {
 		return fmt.Errorf("theme: %s must be one of [%s]", c.Theme, strings.Join(validThemes, ","))
@@ -94,6 +97,16 @@ func (c *Config) Validate() error {
 		c.TimeFormat = time.UnixDate
 	}
 
+	return nil
+}
+
+// Validate checks current settings and sets them to defaults for invalid ones.
+func (c *Config) Validate() error {
+	// Make runtime validations
+	if err := c.RTValidate(); err != nil {
+		return err
+	}
+
 	// Verify RemoteChromeURL
 	// url.Parse almost allows all the URLs. Need to check Scheme and Host
 	if c.RemoteChromeURL != "" {
@@ -104,6 +117,36 @@ func (c *Config) Validate() error {
 				return errors.New("remote chrome url is invalid")
 			}
 		}
+	}
+
+	// Only one of headerTemplate or headerTemplateFile must be provided
+	if c.HeaderTemplate != "" && c.HeaderTemplateFile != "" {
+		return errors.New("headerTemplate and headerTemplateFile are mutually exclusive")
+	}
+
+	// Only one of footerTemplate or footerTemplateFile must be provided
+	if c.FooterTemplate != "" && c.FooterTemplateFile != "" {
+		return errors.New("footerTemplate and footerTemplateFile are mutually exclusive")
+	}
+
+	// If headerTemplateFile is found, read the file contents into headerTemplate
+	if c.HeaderTemplateFile != "" {
+		tmpl, err := os.ReadFile(c.HeaderTemplateFile)
+		if err != nil {
+			return fmt.Errorf("failed to read headerTemplateFile at %s: %w", c.HeaderTemplateFile, err)
+		}
+
+		c.HeaderTemplate = string(tmpl)
+	}
+
+	// If footerTemplateFile is found, read the file contents into headerTemplate
+	if c.FooterTemplateFile != "" {
+		tmpl, err := os.ReadFile(c.FooterTemplateFile)
+		if err != nil {
+			return fmt.Errorf("failed to read footerTemplateFile at %s: %w", c.FooterTemplateFile, err)
+		}
+
+		c.FooterTemplate = string(tmpl)
 	}
 
 	// If AppVersion is empty, set it to 0.0.0

@@ -34,7 +34,9 @@ export type JsonData = {
   timeFormat?: string;
   logo?: string;
   headerTemplate?: string;
+  headerTemplateFile?: string;
   footerTemplate?: string;
+  footerTemplateFile?: string;
   maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
   remoteChromeUrl?: string;
@@ -91,10 +93,18 @@ type State = {
   headerTemplate: string;
   // If header template has changed
   headerTemplateChanged: boolean;
+  // HTML header template file
+  headerTemplateFile: string;
+  // If header template file has changed
+  headerTemplateFileChanged: boolean;
   // HTML footer template
   footerTemplate: string;
   // If footer template has changed
   footerTemplateChanged: boolean;
+  // HTML footer file template
+  footerTemplateFile: string;
+  // If footer template has changed
+  footerTemplateFileChanged: boolean;
   // Maximum browser workers
   maxBrowserWorkers: number;
   // If maxRenderWorkers has changed
@@ -153,8 +163,12 @@ export const AppConfig = ({ plugin }: Props) => {
     logoChanged: false,
     headerTemplate: jsonData?.headerTemplate || "",
     headerTemplateChanged: false,
+    headerTemplateFile: jsonData?.headerTemplateFile || "",
+    headerTemplateFileChanged: false,
     footerTemplate: jsonData?.footerTemplate || "",
     footerTemplateChanged: false,
+    footerTemplateFile: jsonData?.footerTemplateFile || "",
+    footerTemplateFileChanged: false,
     maxBrowserWorkers: jsonData?.maxBrowserWorkers || 2,
     maxBrowserWorkersChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
@@ -274,11 +288,27 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
+  const onChangeHeaderTemplateFile = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      headerTemplateFile: event.target.value,
+      headerTemplateFileChanged: true,
+    });
+  };
+
   const onChangeFooterTemplate = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setState({
       ...state,
       footerTemplate: event.target.value,
       footerTemplateChanged: true,
+    });
+  };
+
+  const onChangeFooterTemplateFile = (event: ChangeEvent<HTMLInputElement>) => {
+    setState({
+      ...state,
+      footerTemplateFile: event.target.value,
+      footerTemplateFileChanged: true,
     });
   };
 
@@ -349,7 +379,9 @@ export const AppConfig = ({ plugin }: Props) => {
                     timeFormat: state.timeFormat,
                     logo: state.logo,
                     headerTemplate: state.headerTemplate,
+                    headerTemplateFile: state.headerTemplateFile,
                     footerTemplate: state.footerTemplate,
+                    footerTemplateFile: state.footerTemplateFile,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
@@ -400,7 +432,9 @@ export const AppConfig = ({ plugin }: Props) => {
                     timeFormat: state.timeFormat,
                     logo: state.logo,
                     headerTemplate: state.headerTemplate,
+                    headerTemplateFile: state.headerTemplateFile,
                     footerTemplate: state.footerTemplate,
+                    footerTemplateFile: state.footerTemplateFile,
                     maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
@@ -578,7 +612,7 @@ export const AppConfig = ({ plugin }: Props) => {
           {/* Header Template */}
           <Field
             label="Report Header Template"
-            description="HTML template used in the header of the report."
+            description="HTML template used in the header of the report. Mutually exclusive with Report Header Template File."
             data-testid={testIds.appConfig.headerTemplate}
           >
             <TextArea
@@ -591,10 +625,27 @@ export const AppConfig = ({ plugin }: Props) => {
             </TextArea>
           </Field>
 
+          {/* Header Template File */}
+          <Field
+            label="Report Header Template File"
+            description="Path to HTML template used in the header of the report. Mutually exclusive with Report Header Template."
+            data-testid={testIds.appConfig.headerTemplateFile}
+            className={s.marginTop}
+          >
+            <Input
+              type="string"
+              width={60}
+              id="headerTemplateFile"
+              label={`Header Template File`}
+              value={state.headerTemplateFile}
+              onChange={onChangeHeaderTemplateFile}
+            />
+          </Field>
+
           {/* Footer Template */}
           <Field
             label="Report Footer Template"
-            description="HTML template used in the footer of the report."
+            description="HTML template used in the footer of the report. Mutually exclusive with Report Footer Template File."
             data-testid={testIds.appConfig.footerTemplate}
           >
             <TextArea
@@ -605,6 +656,23 @@ export const AppConfig = ({ plugin }: Props) => {
               onChange={onChangeFooterTemplate}
             >{state.footerTemplate}
             </TextArea>
+          </Field>
+
+          {/* Footer Template File */}
+          <Field
+            label="Report Footer Template File"
+            description="Path to HTML template used in the footer of the report. Mutually exclusive with Report Footer Template."
+            data-testid={testIds.appConfig.footerTemplateFile}
+            className={s.marginTop}
+          >
+            <Input
+              type="string"
+              width={60}
+              id="footerTemplateFile"
+              label={`Footer Template File`}
+              value={state.footerTemplateFile}
+              onChange={onChangeFooterTemplateFile}
+            />
           </Field>
         </ConfigSubSection>
       </ConfigSection>
@@ -722,7 +790,9 @@ export const AppConfig = ({ plugin }: Props) => {
                 timeFormat: state.timeFormat,
                 logo: state.logo,
                 headerTemplate: state.headerTemplate,
+                headerTemplateFile: state.headerTemplateFile,
                 footerTemplate: state.footerTemplate,
+                footerTemplateFile: state.footerTemplateFile,
                 maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
                 remoteChromeUrl: state.remoteChromeUrl,
@@ -755,7 +825,9 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.timeFormatChanged &&
               !state.logoChanged &&
               !state.headerTemplateChanged &&
+              !state.headerTemplateFileChanged &&
               !state.footerTemplateChanged &&
+              !state.footerTemplateFileChanged &&
               !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
               !state.remoteChromeUrlChanged &&
