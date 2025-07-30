@@ -154,6 +154,7 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	browserCtx, _ := chromedp.NewContext(allocCtx,
 		chromedp.WithErrorf(chromeLogger.Error),
 		chromedp.WithLogf(chromeLogger.Debug),
+		// chromedp.WithDebugf(chromeLogger.Debug),
 	)
 
 	if err := chromedp.Run(browserCtx); err != nil {
