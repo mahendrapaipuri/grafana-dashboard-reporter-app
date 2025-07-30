@@ -37,7 +37,7 @@ jobs:
           fi
 
       - name: Commit changes
-        if: steps.verify-changed-files.outputs.files_changed == 'true' && github.ref == 'refs/heads/main'
+        if: steps.verify-changed-files.outputs.files_changed == 'true'
         run: |
           git config --local user.email "bot@reporterplugin.com"
           git config --local user.name "Reporter Plugin Bot"
@@ -45,7 +45,7 @@ jobs:
           git commit -m "chore: Update version in README.md" -s
 
       - name: Push changes
-        if: steps.verify-changed-files.outputs.files_changed == 'true' && github.ref == 'refs/heads/main'
+        if: steps.verify-changed-files.outputs.files_changed == 'true'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -50,7 +50,7 @@ However, it is still possible to install this plugin using `grafana-cli` by over
 For example following command will install latest version of plugin
 
 ```bash
-VERSION=1.8.0; grafana-cli --pluginUrl "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
+VERSION=1.9.0; grafana-cli --pluginUrl "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
 ```
 
 Similarly, `nightly` version can be installed suing
