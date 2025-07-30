@@ -16,6 +16,21 @@ import (
 )
 
 // Default URLs to block.
+/*
+	When dashboards use datasources that rely on Grafana Live like MQTT,
+	we need to unblock /api/live/ws endpoint. However, it is observed that
+	Grafana does not forward Authorization header to /api/live/ws endpoint
+	when rendering individual panel and thus, websocket handshake would never
+	be finished and we never get panel rendered.
+
+	Unfortunately, chromedp's fetch method does not intercept websocket
+	requests to be able to inject the headers and so we cannot render
+	panels with live in native mode.
+
+	Refs:
+	- https://issues.chromium.org/issues/40923369#comment9
+	- https://github.com/chromedp/chromedp/issues/805
+*/
 var (
 	defaultBlockedURLs = []string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}
 )

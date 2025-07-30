@@ -37,7 +37,7 @@
       "type": "page",
       "name": "Status",
       "path": "/a/%PLUGIN_ID%/status",
-      "role": "Viewer",
+      "role": "Admin",
       "addToNav": true,
       "defaultNav": true
     },
@@ -47,7 +47,7 @@
       "name": "Configuration",
       "path": "/plugins/%PLUGIN_ID%",
       "role": "Admin",
-      "addToNav": false
+      "addToNav": true
     }
   ],
   "dependencies": {

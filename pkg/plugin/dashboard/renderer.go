@@ -9,6 +9,7 @@ import (
 	"maps"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/runtime"
@@ -162,8 +163,33 @@ func (d *Dashboard) panelPNGImageRenderer(ctx context.Context, p Panel) (PanelIm
 // panelPNGURL returns the URL to fetch panel PNG.
 func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 	values := maps.Clone(d.model.Dashboard.Variables)
+	pID := p.ID
+
+	// Starting from Grafana v11.3.0, repeated panels will have clone in
+	// their IDs but we need to strip it down and repeat the panel ID with
+	// each var. If var is $__all, there is nothing we can do, just pass
+	// it through and all panels will be overlapped.
+	//
+	// Panel IDs will be of format panel-10-clone-0
+	// Split by -clone- and get first and second parts
+	//
+	// NOTE: Workaround until https://github.com/grafana/grafana/issues/108754 gets fixed
+	parts := strings.Split(p.ID, "-clone-")
+
+	if p.Repeat != "" && len(parts) == 2 {
+		pID = parts[0]
+
+		if i, err := strconv.Atoi(parts[1]); err == nil {
+			varKey := "var-" + p.Repeat
+			if varValues := values[varKey]; len(varValues) > 1 && i < len(varValues) {
+				values.Del(varKey)
+				values.Set(varKey, varValues[i])
+			}
+		}
+	}
+
 	values.Add("theme", d.conf.Theme)
-	values.Add("panelId", p.ID)
+	values.Add("panelId", pID)
 
 	if d.conf.TimeZone != "" && values.Get("timezone") == "" {
 		values.Add("timezone", d.conf.TimeZone)

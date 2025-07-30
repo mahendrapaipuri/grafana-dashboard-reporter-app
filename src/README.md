@@ -584,6 +584,16 @@ apps:
 > These settings can be configured only through provisioned config file and it is not
 possible to set them using either environment variables or Grafana UI.
 
+## Limitations
+
+- Due to a [bug](https://github.com/grafana/grafana/issues/108754) in Grafana, there exists
+a limitation for the reports generated for dashboards with repeated panels using query based variable.
+If variable `All` in selected for generating report with repeated panels, all the data will be
+included in the same panel instead of generating a panel for each different variable. This cannot
+be fixed until the bug in upstream Grafana is fixed. A workaround is to select all the variables
+in the dashboard instead of selecting `All` which will generate different panel for each variable
+in the report.
+
 ## Troubleshooting
 
 - When TLS is enabled on Grafana server, `grafana-image-renderer` tends to throw

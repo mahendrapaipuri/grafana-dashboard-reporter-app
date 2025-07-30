@@ -110,12 +110,13 @@ type Panel struct {
 	Type         string  `json:"type"`
 	Title        string  `json:"title"`
 	GridPos      GridPos `json:"gridPos"`
+	Repeat       string  `json:"repeat"`
 	EncodedImage PanelImage
 	CSVData      CSVData
 }
 
 func (p *Panel) String() string {
-	return fmt.Sprintf("Panel ID: %s and Title: %s", p.ID, p.Title)
+	return fmt.Sprintf("Panel ID: %s; Title: %s; Repeat: %s", p.ID, p.Title, p.Repeat)
 }
 
 func (p *Panel) UnmarshalJSON(b []byte) error {

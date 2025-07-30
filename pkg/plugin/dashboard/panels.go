@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 
@@ -50,6 +51,13 @@ var (
 	viewportHeight int64 = 10800
 )
 
+// Starting from Grafana v11.3.0, repeated panels will get panel-1-clone-0, panel-2-clone-1
+// suffixes instead of number IDs for panels. When comparing the panel, we need
+// to retrieve the ID from the string.
+var (
+	panelIDRegex = regexp.MustCompile("panel-([0-9]+)(?:.*)")
+)
+
 // panels fetches dashboard panels from Grafana chromium browser instance.
 func (d *Dashboard) panels(ctx context.Context) ([]Panel, error) {
 	// Fetch dashboard data from browser
@@ -84,7 +92,10 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]any, error) {
 		}
 	}
 
-	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle", []string{"*/api/ds/query*"})
+	// We dont need to load data from backend datasources to get panels metadata.
+	// Similarly there is no need of Grafana live for fetching metadata.
+	// So block both of them as they can hinder firing networkIdle event.
+	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle", []string{"*/api/ds/query*", "*/api/live/ws"})
 	if err != nil {
 		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
@@ -202,26 +213,40 @@ func (d *Dashboard) createPanels(dashData []any) ([]Panel, error) {
 			continue
 		}
 
-		// // Populate Type and Title from dashboard JSON model
-		// for _, rowOrPanel := range d.model.Dashboard.RowOrPanels {
-		// 	if rowOrPanel.Type == "row" {
-		// 		for _, rp := range rowOrPanel.Panels {
-		// 			if rp.ID == p.ID {
-		// 				p.Type = rp.Type
-		// 				p.Title = rp.Title
+		// Retrieve numeric ID from panel.ID
+		var pID string
 
-		// 				break
-		// 			}
-		// 		}
-		// 	} else {
-		// 		if p.ID == rowOrPanel.ID {
-		// 			p.Type = rowOrPanel.Type
-		// 			p.Title = rowOrPanel.Title
+		if matches := panelIDRegex.FindStringSubmatch(p.ID); len(matches) > 1 {
+			pID = matches[1]
+		} else {
+			pID = p.ID
+		}
 
-		// 			break
-		// 		}
-		// 	}
-		// }
+		// Populate Repeat var from dashboard JSON model
+		for _, rowOrPanel := range d.model.Dashboard.RowOrPanels {
+			if rowOrPanel.Type == "row" {
+				for _, rp := range rowOrPanel.Panels {
+					if rp.ID == pID {
+						p.Repeat = rp.Repeat
+
+						break
+					}
+				}
+			} else {
+				if rowOrPanel.ID == pID {
+					p.Repeat = rowOrPanel.Repeat
+
+					break
+				}
+			}
+		}
+
+		// Check if panel has repeat variable and repeat variable is set to $__all, ignore all
+		// clones except the first one
+		// NOTE: Workaround until https://github.com/grafana/grafana/issues/108754 gets fixed
+		if p.Repeat != "" && d.model.Dashboard.Variables.Get("var-"+p.Repeat) == "$__all" && !strings.Contains(p.ID, "clone-0") {
+			continue
+		}
 
 		// Create panel model and append to panels
 		panels = append(panels, p)

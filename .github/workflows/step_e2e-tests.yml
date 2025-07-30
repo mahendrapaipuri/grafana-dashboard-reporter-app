@@ -72,12 +72,12 @@ jobs:
             name: local-chrome-11.6.0-with-features-native-renderer
 
           # Latest Grafana v12.x with remote chrome and native-renderer
-          - grafana-version: 12.0.2
+          - grafana-version: 12.1.0
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             native-rendering: true
             # snapshots-folder: remote-chrome
-            name: remote-chrome-12.0.2-with-features-native-renderer
+            name: remote-chrome-12.1.0-with-features-native-renderer
 
     steps:
       - uses: actions/checkout@v4
