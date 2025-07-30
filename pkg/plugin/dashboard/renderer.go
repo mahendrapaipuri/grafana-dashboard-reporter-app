@@ -178,8 +178,9 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 
 	if p.Repeat != "" && len(parts) == 2 {
 		pID = parts[0]
+
 		if i, err := strconv.Atoi(parts[1]); err == nil {
-			varKey := fmt.Sprintf("var-%s", p.Repeat)
+			varKey := "var-" + p.Repeat
 			if varValues := values[varKey]; len(varValues) > 1 && i < len(varValues) {
 				values.Del(varKey)
 				values.Set(varKey, varValues[i])

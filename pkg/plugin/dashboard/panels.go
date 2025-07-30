@@ -53,7 +53,7 @@ var (
 
 // Starting from Grafana v11.3.0, repeated panels will get panel-1-clone-0, panel-2-clone-1
 // suffixes instead of number IDs for panels. When comparing the panel, we need
-// to retreive the ID from the string.
+// to retrieve the ID from the string.
 var (
 	panelIDRegex = regexp.MustCompile("panel-([0-9]+)(?:.*)")
 )
@@ -213,7 +213,7 @@ func (d *Dashboard) createPanels(dashData []any) ([]Panel, error) {
 			continue
 		}
 
-		// Retrive numeric ID from panel.ID
+		// Retrieve numeric ID from panel.ID
 		var pID string
 
 		if matches := panelIDRegex.FindStringSubmatch(p.ID); len(matches) > 1 {
