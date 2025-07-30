@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0
+
+- Repeated panels using query based variable [#391](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/391)
+- Support passing templates by files [#383](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/383)
+- Avoid loading data when fetching panels metadata [#382](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/382)
+
 ## 1.8.0
 
 - Add Grafana 12.x to CI e2e testcases [#364](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/364)
