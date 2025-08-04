@@ -53,6 +53,12 @@ const waitForQueriesAndVisualizations = async (version = `v${fallbackVersion}`, 
         selector = 'data-viz-panel-key'
     }
 
+    // Hide dock menu if present
+    let dockMenu = document.getElementById('dock-menu-button');
+    if (dockMenu !== null) {
+        dockMenu.click();
+    }
+
     // Expand row panels if mode is full
     if (mode === 'full') {
         // For Grafana <= v10

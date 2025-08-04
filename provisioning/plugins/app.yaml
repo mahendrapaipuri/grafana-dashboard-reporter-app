@@ -131,6 +131,8 @@ apps:
       # Custom HTML header template to be used in the report. If empty, default template
       # will be used
       #
+      # Template functions from Sprig lib (https://masterminds.github.io/sprig/) are supported.
+      #
       # Mutually exclusive with headerTemplateFile
       #
       headerTemplate: ''
@@ -139,6 +141,8 @@ apps:
       #
       # Custom HTML header template to be used in the report. If empty, default template
       # will be used
+      #
+      # Template functions from Sprig lib (https://masterminds.github.io/sprig/) are supported.
       #
       # Mutually exclusive with headerTemplate
       #

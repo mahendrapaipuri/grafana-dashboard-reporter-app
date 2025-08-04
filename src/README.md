@@ -275,11 +275,12 @@ Templates must conform to [Go's template](https://pkg.go.dev/text/template) styl
 using `{{ }}` as delimiters. The following variables are available in the templates:
 
 - `.Title`: Dashboard title
-- `.VariableValues`: Comma separated list of dashboard variable values
+- `.VariableValues`: Semicolon separated list of dashboard variable values
 - `.From`: Dashboard's `from` time
 - `.To`: Dashboard's `to` time
 - `.Date`: Current date time.
 
+All the templates support functions from [Sprig](https://masterminds.github.io/sprig/) library.
 Default [header](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml)
 and [footer](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml)
 templates can be used as a base to further customize the reports using custom templates.
@@ -593,6 +594,10 @@ included in the same panel instead of generating a panel for each different vari
 be fixed until the bug in upstream Grafana is fixed. A workaround is to select all the variables
 in the dashboard instead of selecting `All` which will generate different panel for each variable
 in the report.
+
+- Including tabular data for the datasources that rely on Grafana Live (like MQTT) is not supported.
+Grafana does not include authentication headers in the websocket handshake protocol and thus, it is
+not possible to render the panel and fetch the data.
 
 ## Troubleshooting
 

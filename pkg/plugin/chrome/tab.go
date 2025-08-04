@@ -151,6 +151,11 @@ func (t *Tab) PrintToPDF(options PDFOptions, writer io.Writer) error {
 					WithPreferCSSPageSize(true)
 			} else {
 				pageParams = page.PrintToPDF().
+					// The unit of the size is "inch".
+					// 8.28 x 11.7 is the size of an A4 paper.
+					// We should able to make it configurable.
+					// WithPaperWidth(8.28).
+					// WithPaperHeight(11.7).
 					WithDisplayHeaderFooter(true).
 					WithHeaderTemplate(options.Header).
 					WithFooterTemplate(options.Footer).

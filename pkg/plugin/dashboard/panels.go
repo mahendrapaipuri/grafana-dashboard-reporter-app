@@ -250,7 +250,6 @@ func (d *Dashboard) createPanels(dashData []any) ([]Panel, error) {
 
 		// Create panel model and append to panels
 		panels = append(panels, p)
-		panelReprs = append(panelReprs, p.String())
 	}
 
 	// Remove xOffset and yOffset from all coordinates of panels
@@ -264,6 +263,7 @@ func (d *Dashboard) createPanels(dashData []any) ([]Panel, error) {
 		panels[ipanel].GridPos.Y = math.Round((panels[ipanel].GridPos.Y - yOffset) / scales["height"])
 		panels[ipanel].GridPos.W = math.Round(panels[ipanel].GridPos.W / scales["width"])
 		panels[ipanel].GridPos.H = math.Round(panels[ipanel].GridPos.H / scales["height"])
+		panelReprs = append(panelReprs, panels[ipanel].String())
 	}
 
 	// Check if we fetched any panels

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"slices"
@@ -15,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
@@ -159,7 +161,7 @@ func (r *Report) generateHTMLFile(dashboardData *dashboard.Data) (HTML, error) {
 	var err error
 
 	// Template functions
-	funcMap := template.FuncMap{
+	localFuncMap := template.FuncMap{
 		// The name "inc" is what the function will be called in the template text.
 		"inc": func(i int) int {
 			return i + 1
@@ -187,6 +189,12 @@ func (r *Report) generateHTMLFile(dashboardData *dashboard.Data) (HTML, error) {
 			return template.URL(template.HTMLEscapeString(url)) //nolint:gosec
 		},
 	}
+
+	// Include functions from sprig
+	funcMap := sprig.FuncMap()
+
+	// Add local funcs to map
+	maps.Copy(funcMap, localFuncMap)
 
 	// Make a new template for Body of the PDF
 	if tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml"); err != nil {
