@@ -120,7 +120,10 @@ const waitForCSVDownloadButton = async () => {
 
         // Ensure download CSV button exists in buttons
         for (let i = 0; i < buttons.length; i++) {
-            if (buttons[i].innerText === 'Download CSV') {
+            // Instead of checking for literal "Download CSV", check
+            // if button text contains CSV. This ensures that it will
+            // work for Grafana instances that are not in English.
+            if (buttons[i].innerText.includes('CSV')) {
                 buttons[i].click();
                 return;
             }
