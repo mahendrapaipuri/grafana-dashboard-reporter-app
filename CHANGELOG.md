@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.0
+
+- Support sprig template functions in HTML templates [#394](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/394)
+
 ## 1.9.0
 
 - Repeated panels using query based variable [#391](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/391)
