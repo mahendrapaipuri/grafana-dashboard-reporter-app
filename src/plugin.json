@@ -9,7 +9,7 @@
     "keywords": ["report", "pdf", "dashboards", "api"],
     "description": "A Grafana plugin app that generates PDF reports from Grafana dashboards",
     "author": {
-      "name": "Samana Group based on the work of Mahendra Paipuri"
+      "name": "by Mahendra Paipuri, modified by Samana Group"
     },
     "logos": {
       "small": "img/logo.svg",

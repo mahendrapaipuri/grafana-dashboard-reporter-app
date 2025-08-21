@@ -32,7 +32,7 @@
     "test": "jest --watch --onlyChanged",
     "typecheck": "tsc --noEmit"
   },
-  "author": "Samana Group based on the work of Mahendra Paipuri",
+  "author": "by Mahendra Paipuri, modified by Samana Group",
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/core": "^7.28.3",
