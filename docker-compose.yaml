@@ -1,7 +1,7 @@
 services:
   grafana:
     # image: grafana/grafana:latest
-    container_name: 'mahendrapaipuri-dashboardreporter-app'
+    container_name: 'grafana-dashboardreporter-app'
     build:
       context: ./.config
       args:
@@ -18,9 +18,9 @@ services:
       - "apparmor:unconfined"
       - "seccomp:unconfined"
     volumes:
-      - ./dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
+      - ./dist:/var/lib/grafana/plugins/grafana-dashboardreporter-app
       - ./provisioning:/etc/grafana/provisioning
-      - ./:/root/mahendrapaipuri-dashboardreporter-app
+      - ./:/root/grafana-dashboardreporter-app
     environment:
       # basic settings
       # output to terminal
@@ -49,7 +49,7 @@ services:
       # Grafana image renderer
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:${GF_SERVER_HTTP_PORT:-3000}/
-      - "GF_LOG_FILTERS=rendering:debug plugin.mahendrapaipuri-dashboardreporter-app:debug"
+      - "GF_LOG_FILTERS=rendering:debug plugin.grafana-dashboardreporter-app:debug"
       # Current plugin config
       - GF_REPORTER_PLUGIN_NATIVE_RENDERER=${GF_REPORTER_PLUGIN_NATIVE_RENDERER:-false}
   renderer:

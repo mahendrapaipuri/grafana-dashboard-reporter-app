@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Constants
-API_PATH="api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report"
+API_PATH="api/plugins/grafana-dashboardreporter-app/resources/report"
 DASH_UID="b3228ada-fd89-4aed-8605-d5f7b95aa237"
 
 # CLI ARGS

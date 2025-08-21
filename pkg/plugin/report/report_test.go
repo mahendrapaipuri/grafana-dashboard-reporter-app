@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/worker"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

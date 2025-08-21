@@ -3,7 +3,7 @@ version: '3.0'
 services:
   grafana_plain:
     # image: grafana/grafana:latest
-    container_name: 'mahendrapaipuri-dashboardreporter-app-plain'
+    container_name: 'grafana-dashboardreporter-app-plain'
     build:
       context: ../.config
       args:
@@ -12,7 +12,7 @@ services:
     ports:
       - 3080:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
-      - ../dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
+      - ../dist:/var/lib/grafana/plugins/grafana-dashboardreporter-app
       - ./dashboards:/etc/grafana/provisioning/dashboards
       - ./datasources:/etc/grafana/provisioning/datasources
       # Dont set config in provisioning just to ensure that plugin works without any
@@ -48,7 +48,7 @@ services:
       - GF_RENDERING_SERVER_URL=http://renderer_plain:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana_plain:${GF_SERVER_HTTP_PORT:-3000}/
       - GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true
-      - "GF_LOG_FILTERS=rendering:debug plugin.mahendrapaipuri-dashboardreporter-app:debug"
+      - "GF_LOG_FILTERS=rendering:debug plugin.grafana-dashboardreporter-app:debug"
       # Set CI mode to remove header in report
       - __REPORTER_APP_CI_MODE=true
       - GF_REPORTER_PLUGIN_REMOTE_CHROME_URL=${GF_REPORTER_PLUGIN_REMOTE_CHROME_URL:-}
@@ -73,7 +73,7 @@ services:
 
   grafana_tls:
     # image: grafana/grafana:latest
-    container_name: 'mahendrapaipuri-dashboardreporter-app-tls'
+    container_name: 'grafana-dashboardreporter-app-tls'
     build:
       context: ../.config
       args:
@@ -82,7 +82,7 @@ services:
     ports:
       - 3443:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
-      - ../dist:/var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
+      - ../dist:/var/lib/grafana/plugins/grafana-dashboardreporter-app
       - ./dashboards:/etc/grafana/provisioning/dashboards
       - ./datasources:/etc/grafana/provisioning/datasources
       - ./config/tls:/etc/grafana/provisioning/plugins

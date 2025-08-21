@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 // Embed the entire directory.

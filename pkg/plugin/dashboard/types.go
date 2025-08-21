@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/config"
 )
 
 // Dashboard represents a Grafana dashboard resource.

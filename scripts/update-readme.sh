@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set repository information
-REPO_OWNER="mahendrapaipuri"
+REPO_OWNER="samanamonitor"
 REPO_NAME="grafana-dashboard-reporter-app"
 API_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases"
 

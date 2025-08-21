@@ -2,7 +2,7 @@ package chrome
 
 import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/config"
 )
 
 // PDFOptions contains the templated HTML Body, Header and Footer strings.

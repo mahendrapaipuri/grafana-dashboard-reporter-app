@@ -29,7 +29,7 @@
       "title": "Report",
       "tooltip": "Create a PDF report",
       "type": "link",
-      "url": "/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=fdlwjnyim1la8f"
+      "url": "/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=fdlwjnyim1la8f"
     }
   ],
   "liveNow": false,

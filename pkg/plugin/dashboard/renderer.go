@@ -14,7 +14,7 @@ import (
 
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 var getPanelRetrySleepTime = time.Duration(10) * time.Second

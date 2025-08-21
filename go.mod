@@ -1,4 +1,4 @@
-module github.com/mahendrapaipuri/grafana-dashboard-reporter-app
+module github.com/samanamonitor/grafana-dashboard-reporter-app
 
 go 1.24.1
 
@@ -13,7 +13,7 @@ require (
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/smartystreets/goconvey v1.8.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	golang.org/x/mod v0.27.0
 	golang.org/x/net v0.43.0
 )

@@ -61,7 +61,7 @@
       "title": "Report",
       "tooltip": "Create a PDF report",
       "type": "link",
-      "url": "/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=b3228ada-fd89-4aed-8605-d5f7b95aa237"
+      "url": "/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=b3228ada-fd89-4aed-8605-d5f7b95aa237"
     }
   ],
   "panels": [
