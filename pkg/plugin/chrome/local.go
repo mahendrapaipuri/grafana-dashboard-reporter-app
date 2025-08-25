@@ -12,7 +12,7 @@ import (
 
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"golang.org/x/net/context"
 )
 
@@ -36,7 +36,7 @@ func init() {
 		panic(err)
 	}
 
-	// Generally this pluginExe should be at install_dir/plugins/mahendrapaipuri-dashboardreporter-app/exe
+	// Generally this pluginExe should be at install_dir/plugins/grafana-dashboardreporter-app/exe
 	// Now we attempt to get install_dir directory which is Grafana data path
 	dataPath := filepath.Dir(filepath.Dir(filepath.Dir(pluginExe)))
 

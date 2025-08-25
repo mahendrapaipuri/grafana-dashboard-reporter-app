@@ -32,9 +32,9 @@ jobs:
           # Add +x bits on executables
           chmod -R +x dist/gpx_*
           
-          mv dist mahendrapaipuri-dashboardreporter-app
-          zip mahendrapaipuri-dashboardreporter-app-nightly.zip mahendrapaipuri-dashboardreporter-app -r
-          sha1sum mahendrapaipuri-dashboardreporter-app-nightly.zip | cut -f1 -d' ' > mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
+          mv dist grafana-dashboardreporter-app
+          zip grafana-dashboardreporter-app-nightly.zip grafana-dashboardreporter-app -r
+          sha1sum grafana-dashboardreporter-app-nightly.zip | cut -f1 -d' ' > grafana-dashboardreporter-app-nightly.zip.sha1
 
       - name: Validate plugin
         run: |
@@ -43,7 +43,7 @@ jobs:
           pushd ./plugin-validator/pkg/cmd/plugincheck2
           go install
           popd
-          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
+          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml grafana-dashboardreporter-app-nightly.zip
         shell: bash
 
       # Check if bootstrap script is working for latest release and nightly release
@@ -66,8 +66,8 @@ jobs:
         with:
           name: plugin-artifacts
           path: |
-            mahendrapaipuri-dashboardreporter-app-nightly.zip
-            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
+            grafana-dashboardreporter-app-nightly.zip
+            grafana-dashboardreporter-app-nightly.zip.sha1
           retention-days: 3
       
       - name: Release nightly
@@ -79,11 +79,11 @@ jobs:
           name: nightly
           tag_name: nightly
           files: |
-            mahendrapaipuri-dashboardreporter-app-nightly.zip
-            mahendrapaipuri-dashboardreporter-app-nightly.zip.sha1
+            grafana-dashboardreporter-app-nightly.zip
+            grafana-dashboardreporter-app-nightly.zip.sha1
           fail_on_unmatched_files: true
           body: |
             # Latest Build Complete! :rocket:
             
             For the public download links of these build artifacts, please see:
-            <https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/tag/nightly>
+            <https://github.com/samanamonitor/grafana-dashboard-reporter-app/releases/tag/nightly>

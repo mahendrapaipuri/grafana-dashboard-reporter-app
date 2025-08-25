@@ -3,7 +3,7 @@ package report
 import (
 	"testing"
 
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

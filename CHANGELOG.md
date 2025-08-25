@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.0
+
+- First version forked by Samana Group
+
+
 ## 1.10.0
 
 - Support sprig template functions in HTML templates [#394](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/394)

@@ -12,12 +12,12 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
 	"github.com/mahendrapaipuri/authlib/authz"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/worker"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/chrome"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/worker"
 )
 
-const Name = "mahendrapaipuri-dashboardreporter-app"
+const Name = "grafana-dashboardreporter-app"
 
 // Make sure App implements required interfaces. This is important to do
 // since otherwise we will only get a not implemented error response from plugin in

@@ -13,10 +13,10 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/authlib/authz"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/report"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/helpers"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/report"
 )
 
 // GrafanaUserSignInTokenHeaderName the header name used for forwarding
@@ -194,7 +194,7 @@ func (app *App) dashboardModel(ctx context.Context, appURL, dashUID string, auth
 }
 
 // handleReport handles creating a PDF report from a given dashboard UID
-// GET /api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report.
+// GET /api/plugins/grafana-dashboardreporter-app/resources/report.
 func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

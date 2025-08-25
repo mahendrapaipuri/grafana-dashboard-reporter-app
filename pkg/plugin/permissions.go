@@ -10,7 +10,7 @@ import (
 	"github.com/mahendrapaipuri/authlib/authn"
 	"github.com/mahendrapaipuri/authlib/authz"
 	"github.com/mahendrapaipuri/authlib/cache"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
+	"github.com/samanamonitor/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 
 // HasAccess verifies if the current request context has access to certain action.

@@ -46,17 +46,17 @@ PDF report of a given dashboard. If users needs more advanced functionalities li
 generating and sending reports automatically, they should look into official plugin.
 
 However, it is still possible to install this plugin using `grafana-cli` by overriding
-`pluginUrl` by using URL from [releases](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases).
+`pluginUrl` by using URL from [releases](https://github.com/samanamonitor/grafana-dashboard-reporter-app/releases).
 For example following command will install latest version of plugin
 
 ```bash
-VERSION=1.10.0; grafana-cli --pluginUrl "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
+VERSION=1.11.0; grafana-cli --pluginUrl "https://github.com/samanamonitor/grafana-dashboard-reporter-app/releases/download/v${VERSION}/grafana-dashboardreporter-app-${VERSION}.zip" plugins install grafana-dashboardreporter-app
 ```
 
 Similarly, `nightly` version can be installed suing
 
 ```bash
-grafana-cli --pluginUrl  https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/nightly/mahendrapaipuri-dashboardreporter-app-nightly.zip plugins install mahendrapaipuri-dashboardreporter-app
+grafana-cli --pluginUrl  https://github.com/samanamonitor/grafana-dashboard-reporter-app/releases/download/nightly/grafana-dashboardreporter-app-nightly.zip plugins install grafana-dashboardreporter-app
 ```
 
 > [!TIP]
@@ -74,15 +74,15 @@ whitelist the plugin, we need to add following to the Grafana configuration file
 
 ```ini
 [plugins]
-allow_loading_unsigned_plugins = mahendrapaipuri-dashboardreporter-app
+allow_loading_unsigned_plugins = grafana-dashboardreporter-app
 ```
 
 Once this configuration is added, restart the Grafana server and it should load the
 plugin. The loading of plugin can be verified by the following log lines
 
 ```bash
-logger=plugin.signature.validator t=2024-03-21T11:16:54.738077851Z level=warn msg="Permitting unsigned plugin. This is not recommended" pluginID=mahendrapaipuri-dashboardreporter-app
-logger=plugin.loader t=2024-03-21T11:16:54.738166325Z level=info msg="Plugin registered" pluginID=mahendrapaipuri-dashboardreporter-app
+logger=plugin.signature.validator t=2024-03-21T11:16:54.738077851Z level=warn msg="Permitting unsigned plugin. This is not recommended" pluginID=grafana-dashboardreporter-app
+logger=plugin.loader t=2024-03-21T11:16:54.738166325Z level=info msg="Plugin registered" pluginID=grafana-dashboardreporter-app
 
 ```
 
@@ -155,16 +155,16 @@ After successful installation of the plugin, it will be, by default, disabled. W
 enable it in different ways.
 
 - From Grafana UI, navigating to `Apps > Dashboard Reporter App > Configuration` will
-show [this page](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/src/img/light.png)
+show [this page](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/src/img/light.png)
 and plugin can be enabled there. The configuration page can also be
-accessed by URL `<Grafana URL>/plugins/mahendrapaipuri-dashboardreporter-app`.
+accessed by URL `<Grafana URL>/plugins/grafana-dashboardreporter-app`.
 
 > [!NOTE]
 > The warning about `Invalid plugin signature` is not fatal and it is simply saying
 that plugin has not been signed by Grafana Labs.
 
 - By using [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/).
-An example provision config is provided in the [repo](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
+An example provision config is provided in the [repo](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/provisioning/plugins/app.yaml)
 and it can be installed at `/etc/grafana/provisioning/plugins/reporter.yml`. After installing
 this YAML file, by restarting Grafana server, the plugin will be enabled with config
 settings used in the `reporter.yml` file.
@@ -281,8 +281,8 @@ using `{{ }}` as delimiters. The following variables are available in the templa
 - `.Date`: Current date time.
 
 All the templates support functions from [Sprig](https://masterminds.github.io/sprig/) library.
-Default [header](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml)
-and [footer](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml)
+Default [header](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/header.gohtml)
+and [footer](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/pkg/plugin/report/templates/footer.gohtml)
 templates can be used as a base to further customize the reports using custom templates.
 
 ### Additional settings
@@ -300,7 +300,7 @@ The following configuration settings allow more control over plugin's functional
 - `file:remoteChromeUrl; env: GF_REPORTER_PLUGIN_REMOTE_CHROME_URL; ui: Remote Chrome URL`:
   A URL of a running remote chrome instance which will be used in report generation. Grafana
   running on k8s can opt to use this option when installing `chromium` inside Grafana
-  container is not desired. An example [docker-compose file](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docker-compose.yaml) shows how to run `chromium` in an `init` container. When remote chrome instance is being used, ensure
+  container is not desired. An example [docker-compose file](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/docker-compose.yaml) shows how to run `chromium` in an `init` container. When remote chrome instance is being used, ensure
   that `appUrl` is accessible to remote chrome.
 
 - `file:maxBrowserWorkers; env: GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS; ui: Maximum Browser Workers`:
@@ -325,39 +325,39 @@ by using query parameters. It is enough to add query parameters to dashboard rep
 to set these values. Currently, the supported query parameters are:
 
 - Query field for theme is `theme` and it takes either `light` or `dark` as value.
-  Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&theme=dark`
+  Example is `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&theme=dark`
 
 - Query field for layout is `layout` and it takes either `simple` or `grid` as value.
-  Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&layout=grid`
+  Example is `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&layout=grid`
 
 - Query field for orientation is `orientation` and it takes either `portrait` or `landscape`
-  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&orientation=landscape`
+  as value. Example is `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&orientation=landscape`
 
 - Query field for dashboard mode is `dashboardMode` and it takes either `default` or `full`
-  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
+  as value. Example is `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
 
 - Query field for dashboard mode is `timeZone` and it takes a value in [IANA format](https://www.iana.org/time-zones)
   as value. **Note** that it should be encoded to escape URL specific characters. For example
   to use `America/New_York` query parameter should be
-  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeZone=America%2FNew_York`
+  `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeZone=America%2FNew_York`
 
 - Query field for dashboard mode is `timeFormat` and it takes a value in [Golang time layout](https://pkg.go.dev/time#Layout)
   as value. **Note** that it should be encoded to escape URL specific characters. For example
   to use `Monday, 02-Jan-06 15:04:05 MST` query parameter should be
-  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeFormat=Monday%2C+02-Jan-06+15%3A04%3A05+MST`
+  `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&timeFormat=Monday%2C+02-Jan-06+15%3A04%3A05+MST`
 
 Besides there are **two** special query parameters available namely:
 
 - `includePanelID`: This can be used to include only panels with IDs set in the query in
   the generated report. An example can be
-  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelID=1&includePanelID=5&includePanelID=8`.
+  `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelID=1&includePanelID=5&includePanelID=8`.
   This request will only include the panels `1`, `5` and `8` in the report and ignoring the rest.
   When `grid` layout is used with `includePanelID`, the report layout will leave the gaps
   in the place of panels that are not included in the report.
 
 - `excludePanelID`: This can be used to exclude any unwanted panels in
   the generated report. An example can be
-  `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&excludePanelID=2&excludePanelID=7`.
+  `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&excludePanelID=2&excludePanelID=7`.
   This request will only exclude panels `2`, and `7` in the report and including the rest.
   When `grid` layout is used with `excludePanelID`, the report layout will leave the gaps
   in the place of panels that are excluded in the report.
@@ -370,7 +370,7 @@ Besides there are **two** special query parameters available namely:
 
 The plugin can fetch panel data and render it as tables at the end of the dashboard report. However,
 by default no data is rendered and user can request the tabular data by using `includePanelDataID`
-query parameter. For instance, an API request like `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelDataID=1&includePanelDataID=5&includePanelDataID=8` will  include tabular data for
+query parameter. For instance, an API request like `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&includePanelDataID=1&includePanelDataID=5&includePanelDataID=8` will  include tabular data for
 the panels `1`, `5` and `8` at the end of the report.
 
 ### Grafana API Token
@@ -406,7 +406,7 @@ configuration file. In this case, the provisioned config for the plugin will loo
 
 ```yaml
 apps:
-  - type: mahendrapaipuri-dashboardreporter-app
+  - type: grafana-dashboardreporter-app
     org_id: 1
     org_name: Main Org.
     disabled: false
@@ -415,7 +415,7 @@ apps:
     jsonData:
       appUrl: http://localhost:3000
 
-  - type: mahendrapaipuri-dashboardreporter-app
+  - type: grafana-dashboardreporter-app
     org_id: 2
     org_name: Test Org.
     disabled: false
@@ -438,7 +438,7 @@ want to create a PDF report. After the user authenticates with Grafana, creating
 dashboard report is done by visiting the following end point
 
 ```bash
-<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>
+<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>
 ```
 
 In addition to `dashUid` query parameter, it is possible to pass time range query
@@ -455,7 +455,7 @@ Following steps will configure a dashboard link to create PDF report for that da
 - Go to Settings of Dashboard
 - Go to Links in the side bar and click on `Add Dashboard Link`
 - Use Report for `Title` field, set `Type` to `Link`
-- Now set `URL` to `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>`
+- Now set `URL` to `<grafanaAppUrl>/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>`
 - Set `Tooltip` to `Create a PDF report` and set `Icon` to `doc`
 - By checking `Include current time range` and `Include current template variables values`,
   time range and dashboard variables will be added to query parameters while creating
@@ -478,7 +478,7 @@ either the same or another API token must be added to the
 generated and configured in the plugin, reports can be created using
 
 ```bash
-curl --output=report.pdf -H "Authorization: Bearer <supersecrettoken>" "https://example.grafana.com/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>"
+curl --output=report.pdf -H "Authorization: Bearer <supersecrettoken>" "https://example.grafana.com/api/plugins/grafana-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>"
 ```
 
 The above example shows on how to generate report using `curl` but this can be done with
@@ -493,7 +493,7 @@ the if the user who is making the request to generate the report has
 enough permissions to view the dashboard before generating the report.
 The plugin _always_ prioritizes the cookie for authentication when found.
 
-<!-- ### `Grafana >= 10.4.4 and mahendrapaipuri-dashboardreporter-app <= 1.5.0`
+<!-- ### `Grafana >= 10.4.4 and grafana-dashboardreporter-app <= 1.5.0`
 
 If you are using `Grafana >= 10.4.4` along with plugin `<= 1.5.0`, depending on your
 deployment, it is possible for a user who do not have `View` permissions on a dashboard
@@ -504,12 +504,12 @@ to a version `> 1.5.0` ASAP. -->
 
 Here are the example reports that are generated out of the test dashboards
 
-- [Report with portrait orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full.pdf)
-- [Report with portrait orientation, simple layout, full dashboard mode and tabular data](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full_table.pdf)
-- [Report with landscape orientation, simple layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_simple_full.pdf)
-- [Report with portrait orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_full.pdf)
-- [Report with landscape orientation, grid layout and full dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_grid_full.pdf)
-- [Report with portrait orientation, grid layout and default dashboard mode](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_default.pdf)
+- [Report with portrait orientation, simple layout and full dashboard mode](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full.pdf)
+- [Report with portrait orientation, simple layout, full dashboard mode and tabular data](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_simple_full_table.pdf)
+- [Report with landscape orientation, simple layout and full dashboard mode](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_simple_full.pdf)
+- [Report with portrait orientation, grid layout and full dashboard mode](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_full.pdf)
+- [Report with landscape orientation, grid layout and full dashboard mode](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/docs/reports/report_landscape_grid_full.pdf)
+- [Report with portrait orientation, grid layout and default dashboard mode](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/docs/reports/report_portrait_grid_default.pdf)
 
 ## Advanced Settings
 
@@ -524,7 +524,7 @@ to set timeout to 120 seconds can be defined as follows:
 apiVersion: 1
 
 apps:
-  - type: mahendrapaipuri-dashboardreporter-app
+  - type: grafana-dashboardreporter-app
     org_id: 1
     org_name: Main Org.
     disabled: false
@@ -542,7 +542,7 @@ provisioned config file which are shown below along with their default values:
 apiVersion: 1
 
 apps:
-  - type: mahendrapaipuri-dashboardreporter-app
+  - type: grafana-dashboardreporter-app
     org_id: 1
     org_name: Main Org.
     disabled: false
@@ -640,4 +640,4 @@ see errors as follows:
 
 ## Development
 
-See [DEVELOPMENT.md](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/DEVELOPMENT.md)
+See [DEVELOPMENT.md](https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/DEVELOPMENT.md)

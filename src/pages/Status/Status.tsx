@@ -13,7 +13,7 @@ export const Status = () => {
 
     return Promise.all([
       backendSrv.get(
-        `api/plugins/mahendrapaipuri-dashboardreporter-app/health`
+        `api/plugins/grafana-dashboardreporter-app/health`
       ),
     ]);
   });

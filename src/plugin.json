@@ -2,14 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "app",
   "name": "Grafana Dashboard Reporter",
-  "id": "mahendrapaipuri-dashboardreporter-app",
+  "id": "grafana-dashboardreporter-app",
   "backend": true,
   "executable": "gpx_dashboardreporter-app",
   "info": {
     "keywords": ["report", "pdf", "dashboards", "api"],
     "description": "A Grafana plugin app that generates PDF reports from Grafana dashboards",
     "author": {
-      "name": "Mahendra Paipuri"
+      "name": "by Mahendra Paipuri, modified by Samana Group"
     },
     "logos": {
       "small": "img/logo.svg",
@@ -18,11 +18,11 @@
     "links": [
       {
         "name": "Project site",
-        "url": "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app"
+        "url": "https://github.com/samanamonitor/grafana-dashboard-reporter-app"
       },
       {
         "name": "License & Terms",
-        "url": "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/LICENSE"
+        "url": "https://github.com/samanamonitor/grafana-dashboard-reporter-app/blob/main/LICENSE"
       }
     ],
     "screenshots": [
