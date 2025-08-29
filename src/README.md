@@ -455,7 +455,7 @@ Following steps will configure a dashboard link to create PDF report for that da
 - Go to Settings of Dashboard
 - Go to Links in the side bar and click on `Add Dashboard Link`
 - Use Report for `Title` field, set `Type` to `Link`
-- Now set `URL` to `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>`
+- Now set `URL` to `/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>`
 - Set `Tooltip` to `Create a PDF report` and set `Icon` to `doc`
 - By checking `Include current time range` and `Include current template variables values`,
   time range and dashboard variables will be added to query parameters while creating
