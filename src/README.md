@@ -601,6 +601,10 @@ not possible to render the panel and fetch the data.
 
 ## Troubleshooting
 
+- In Grafana v12, fetching dashboard JSON models might fail with "Dashboard Not found" error.
+A workaround is described [discussions](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/discussions/422)
+until the bug is fixed in upstream Grafana.
+
 - When TLS is enabled on Grafana server, `grafana-image-renderer` tends to throw
 certificate errors even when the TLS certificates are signed by well-known CA. Typical
 error messages will be as follows:
