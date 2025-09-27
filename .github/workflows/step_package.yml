@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Go environment
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.24'
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-artifacts
           path: dist
@@ -71,7 +71,7 @@ jobs:
           retention-days: 3
       
       - name: Release nightly
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         # Only run on main branch
         if: github.ref == 'refs/heads/main'
         with:
