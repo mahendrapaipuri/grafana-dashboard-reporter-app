@@ -22,6 +22,13 @@ import {
 import { getBackendSrv } from "@grafana/runtime";
 import { testIds } from "../testIds";
 
+// Extend Window to silence type checks
+declare global {
+	interface Window {
+		grafanaBootData: any;
+	}
+}
+
 export type JsonData = {
   appUrl?: string;
   appVersion?: string;
