@@ -26,6 +26,10 @@ updates:
         # dependency name)
         exclude-patterns:
           - "react-router-dom"
+          # Until upstream package (https://github.com/grafana/eslint-config-grafana)
+          # bumps the version, we need to pin it down to latest
+          # supported 5.2.0
+          - "eslint-plugin-react-hooks"
     ignore:
       - dependency-name: "react-router-dom"
 
