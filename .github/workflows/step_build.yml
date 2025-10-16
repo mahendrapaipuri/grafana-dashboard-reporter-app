@@ -49,11 +49,11 @@ jobs:
           which google-chrome
 
       # Seems like running google-chrome in headless mode with debugging port does not
-			# work with newer version of chromedp. Moreover, chromedp advises to use
-			# headless-shell container for remote chrome execution, so we change it here
-			# in CI.
-			# Ref: https://github.com/chromedp/chromedp/issues/297
-			- name: Start headless chrome for remote tests
+      # work with newer version of chromedp. Moreover, chromedp advises to use
+      # headless-shell container for remote chrome execution, so we change it here
+      # in CI.
+      # Ref: https://github.com/chromedp/chromedp/issues/297
+      - name: Start headless chrome for remote tests
         run: |
           docker run --rm --detach --network=host docker.io/chromedp/headless-shell:latest
           echo "CHROME_REMOTE_URL=ws://localhost:9222" >> $GITHUB_ENV
