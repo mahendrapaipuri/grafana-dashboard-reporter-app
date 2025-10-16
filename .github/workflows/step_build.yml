@@ -40,11 +40,6 @@ jobs:
             echo "has-backend=true" >> $GITHUB_OUTPUT
           fi
 
-      # # Install chrome as we will use it in e2e tests
-      # - uses: browser-actions/setup-chrome@v1
-      #   with:
-      #     install-dependencies: true
-
       # Install chrome manually until the upstream action
       # fixes it for latest ubuntu
       - name: Install chrome
@@ -53,41 +48,15 @@ jobs:
           sudo dpkg -i google-chrome-stable_current_amd64.deb
           which google-chrome
 
-      - name: Start headless chrome for remote tests
-        run: >-
-          google-chrome
-          --remote-debugging-port=44251
-          --no-sandbox
-          --disable-gpu
-          --no-first-run
-          --no-default-browser-check
-          --headless
-          --hide-scrollbars
-          --mute-audio
-          --disable-background-networking
-          --enable-features=NetworkService,NetworkServiceInProcess
-          --disable-background-timer-throttling
-          --disable-backgrounding-occluded-windows
-          --disable-breakpad
-          --disable-client-side-phishing-detection
-          --disable-default-apps
-          --disable-dev-shm-usage
-          --disable-extensions
-          --disable-features=site-per-process,Translate,BlinkGenPropertyTrees
-          --disable-hang-monitor
-          --disable-ipc-flooding-protection
-          --disable-popup-blocking
-          --disable-prompt-on-repost
-          --disable-renderer-backgrounding
-          --disable-sync
-          --force-color-profile=srgb
-          --metrics-recording-only
-          --safebrowsing-disable-auto-update
-          --enable-automation
-          --password-store=basic
-          --use-mock-keychain &
-          
-          echo "CHROME_REMOTE_URL=ws://localhost:44251" >> $GITHUB_ENV
+      # Seems like running google-chrome in headless mode with debugging port does not
+			# work with newer version of chromedp. Moreover, chromedp advises to use
+			# headless-shell container for remote chrome execution, so we change it here
+			# in CI.
+			# Ref: https://github.com/chromedp/chromedp/issues/297
+			- name: Start headless chrome for remote tests
+        run: |
+          docker run --rm --detach --network=host docker.io/chromedp/headless-shell:latest
+          echo "CHROME_REMOTE_URL=ws://localhost:9222" >> $GITHUB_ENV
 
       - name: Setup Go environment
         if: steps.check-for-backend.outputs.has-backend == 'true'
