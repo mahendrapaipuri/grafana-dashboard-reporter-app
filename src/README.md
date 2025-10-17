@@ -34,7 +34,7 @@ a more recent version of `chromium` as few issues were noticed with `chromium <=
 > [!WARNING]
 > Using `grafana-image-renderer` as Grafana plugin is deprecated and there is a known
 [bug](https://github.com/grafana/grafana-image-renderer/issues/815) from the version
-`4.0.19` that makes the plugin unusable. Therefore, users must install a version `< 4.0.19`
+`4.0.17` that makes the plugin unusable. Therefore, users must install a version `<= 4.0.16`
 or use Grafana image renderer as an external service. 
 
 ## Installation
