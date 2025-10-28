@@ -818,10 +818,10 @@
     typescript "5.8.3"
     yargs "^18.0.0"
 
-"@grafana/plugin-e2e@^2.2.3":
-  version "2.2.3"
-  resolved "https://registry.yarnpkg.com/@grafana/plugin-e2e/-/plugin-e2e-2.2.3.tgz#164211a651a704522de8af89d1c753df4907a684"
-  integrity sha512-32EHUKOPOs8E+moMewuiDWuvGLOgYdT5ykvziIUrMrl+b5qMmmY4h81D0vLAAL5IiayRFugLpsfo8CB/T7hsBg==
+"@grafana/plugin-e2e@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@grafana/plugin-e2e/-/plugin-e2e-3.0.0.tgz#91c74961dbc42a3ffa71336ec024098bca34c305"
+  integrity sha512-vH7LX3ikoSxF7NCBIvBRNJBD7+LlZzTOfNfAVSdz+Z+00ENB86KgItOw0JmJYHBi+bXK/HXuSOSfXM+HzbJOSg==
   dependencies:
     "@grafana/e2e-selectors" "^12.2.0-255920"
     semver "^7.5.4"
@@ -7331,8 +7331,9 @@ react-custom-scrollbars-2@4.5.0:
     prop-types "^15.5.10"
     raf "^3.1.0"
 
-"react-data-grid@github:grafana/react-data-grid#a922856b5ede21d55db3fdffb6d38dc76bdc7c58":
+react-data-grid@grafana/react-data-grid#a922856b5ede21d55db3fdffb6d38dc76bdc7c58:
   version "7.0.0-beta.56"
+  uid a922856b5ede21d55db3fdffb6d38dc76bdc7c58
   resolved "https://codeload.github.com/grafana/react-data-grid/tar.gz/a922856b5ede21d55db3fdffb6d38dc76bdc7c58"
   dependencies:
     clsx "^2.0.0"
