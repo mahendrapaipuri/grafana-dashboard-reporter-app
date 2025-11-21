@@ -35,7 +35,7 @@ a more recent version of `chromium` as few issues were noticed with `chromium <=
 > Using `grafana-image-renderer` as Grafana plugin is deprecated and there is a known
 [bug](https://github.com/grafana/grafana-image-renderer/issues/815) from the version
 `4.0.17` that makes the plugin unusable. Therefore, users must install a version `<= 4.0.16`
-or use Grafana image renderer as an external service. 
+or use Grafana image renderer as an external service.
 
 ## Installation
 
@@ -621,7 +621,8 @@ error messages will be as follows:
   ```
 
   To solve this issue set environment variables `GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true`
-  and `IGNORE_HTTPS_ERRORS=true` for the `grafana-image-renderer` service.
+  and `IGNORE_HTTPS_ERRORS=true` for the `grafana-image-renderer < 5` and for `grafana-image-renderer >= 5`,
+	set variable `BROWSER_FLAG=--ignore-certificate-errors` on renderer service.
 
 - If `chromium` fails to run, it suggests that there are missing dependent libraries on
 the host. In that case, we advise to install `chromium` on the machine which will
