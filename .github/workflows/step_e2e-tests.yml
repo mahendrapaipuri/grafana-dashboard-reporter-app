@@ -80,7 +80,7 @@ jobs:
             name: remote-chrome-12.1.0-with-features-native-renderer
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Download build artifacts
         uses: actions/download-artifact@v6
