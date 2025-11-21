@@ -38,7 +38,9 @@ func selectPanels(panels []dashboard.Panel, includeIDs, excludeIDs []string, def
 		// Attempt to convert panel ID to int. If we succeed, do direct
 		// comparison else do prefix check
 		panelID := panel.ID
-		if _, err := strconv.ParseInt(panel.ID, 10, 0); err != nil {
+
+		_, err := strconv.ParseInt(panel.ID, 10, 0)
+		if err != nil {
 			panelID = strings.Split(panel.ID, "-clone")[0]
 		}
 

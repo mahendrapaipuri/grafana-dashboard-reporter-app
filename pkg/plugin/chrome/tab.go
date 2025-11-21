@@ -1,6 +1,7 @@
 package chrome
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"golang.org/x/net/context"
 )
 
 // Default URLs to block.
@@ -51,11 +51,13 @@ func (t *Tab) Close(logger log.Logger) {
 		var err error
 
 		// Clear browser cookies to ensure no session is left
-		if err = chromedp.Run(t.ctx, network.ClearBrowserCookies()); err != nil {
+		err = chromedp.Run(t.ctx, network.ClearBrowserCookies())
+		if err != nil {
 			logger.Error("got error from clear browser cookies", "error", err)
 		}
 
-		if err = chromedp.Cancel(t.ctx); err != nil {
+		err = chromedp.Cancel(t.ctx)
+		if err != nil {
 			logger.Error("got error from cancel tab context", "error", err)
 		}
 
@@ -67,16 +69,18 @@ func (t *Tab) Close(logger log.Logger) {
 
 // NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page.
 func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string, blockedURLs []string) error {
-	if err := t.Run(
+	err := t.Run(
 		// block some URLs to avoid unnecessary requests
 		network.SetBlockedURLs(append(defaultBlockedURLs, blockedURLs...)),
 		enableLifeCycleEvents(),
-	); err != nil {
+	)
+	if err != nil {
 		return fmt.Errorf("error enable lifecycle events: %w", err)
 	}
 
 	if headers != nil {
-		if err := t.Run(setHeaders(headers)); err != nil {
+		err := t.Run(setHeaders(headers))
+		if err != nil {
 			return fmt.Errorf("error set headers: %w", err)
 		}
 	}
@@ -90,7 +94,8 @@ func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName 
 		return fmt.Errorf("status code is %d:%s", resp.Status, resp.StatusText)
 	}
 
-	if err = t.Run(waitFor(eventName)); err != nil {
+	err = t.Run(waitFor(eventName))
+	if err != nil {
 		return fmt.Errorf("error waiting for %s on page %s: %w", eventName, addr, err)
 	}
 
@@ -180,7 +185,8 @@ func (t *Tab) PrintToPDF(options PDFOptions, writer io.Writer) error {
 			reader := NewStreamReader(ctx, stream)
 			defer reader.Close()
 
-			if _, err = io.Copy(writer, reader); err != nil {
+			_, err = io.Copy(writer, reader)
+			if err != nil {
 				return fmt.Errorf("failed to copy PDF stream: %w", err)
 			}
 

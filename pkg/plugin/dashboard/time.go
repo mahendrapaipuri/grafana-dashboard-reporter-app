@@ -88,12 +88,14 @@ func roundTimeToBoundary(t time.Time, b boundary, boundaryUnit string) time.Time
 // Parse time stamp to time.Unix() format.
 func parseAbsTime(s string) time.Time {
 	// Check if time is in unix timestamp format
-	if timeInMs, err := strconv.ParseInt(s, 10, 64); err == nil {
+	timeInMs, err := strconv.ParseInt(s, 10, 64)
+	if err == nil {
 		return time.Unix(timeInMs/1000, 0)
 	}
 
 	// Check if time is in 2024-12-02T23:00:00.000Z format
-	if absTime, err := time.Parse(layout, s); err == nil && absTime.Unix() > 0 {
+	absTime, err := time.Parse(layout, s)
+	if err == nil && absTime.Unix() > 0 {
 		return absTime
 	}
 
@@ -127,14 +129,14 @@ func NewTimeRange(from, to string) TimeRange {
 	return TimeRange{from, to}
 }
 
-// Formats Grafana 'From' time spec into absolute printable time.
+// FromFormatted formats Grafana 'From' time spec into absolute printable time.
 func (tr TimeRange) FromFormatted(loc *time.Location, layout string) string {
 	n := newNow()
 
 	return n.parseFrom(tr.From).In(loc).Format(layout)
 }
 
-// Formats Grafana 'To' time spec into absolute printable time.
+// ToFormatted formats Grafana 'To' time spec into absolute printable time.
 func (tr TimeRange) ToFormatted(loc *time.Location, layout string) string {
 	n := newNow()
 

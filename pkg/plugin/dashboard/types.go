@@ -28,6 +28,7 @@ type Dashboard struct {
 // RowOrPanel represents a container for Panels.
 type RowOrPanel struct {
 	Panel
+
 	Collapsed bool    `json:"collapsed"`
 	Panels    []Panel `json:"panels"`
 }
@@ -88,7 +89,9 @@ type PanelID string
 
 func (i *PanelID) UnmarshalJSON(b []byte) error {
 	var item any
-	if err := json.Unmarshal(b, &item); err != nil {
+
+	err := json.Unmarshal(b, &item)
+	if err != nil {
 		return err
 	}
 
@@ -124,6 +127,7 @@ func (p *Panel) UnmarshalJSON(b []byte) error {
 
 	var s struct {
 		tmp
+
 		ID PanelID `json:"id"`
 	}
 

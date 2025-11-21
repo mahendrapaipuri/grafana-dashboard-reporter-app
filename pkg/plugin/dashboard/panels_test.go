@@ -78,11 +78,14 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 			}
 
 			muLock.Lock()
+
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+
 			muLock.Unlock()
 
-			if _, err := w.Write(data); err != nil {
+			_, err = w.Write(data)
+			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 
 				return
@@ -182,11 +185,14 @@ func TestDashboardFetchWithRemoteChrome(t *testing.T) {
 			}
 
 			muLock.Lock()
+
 			requestURI = append(requestURI, r.RequestURI)
 			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+
 			muLock.Unlock()
 
-			if _, err := w.Write(data); err != nil {
+			_, err = w.Write(data)
+			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 
 				return
@@ -276,6 +282,7 @@ func TestDashboardCreatePanels(t *testing.T) {
 		dashDataString := `[{"width":940,"height":258,"x":0,"y":0,"id":"12"},{"width":940,"height":258,"x":940,"y":0,"id":"26"},{"width":940,"height":258,"x":0,"y":0,"id":"27"}]`
 
 		var dashData []any
+
 		err = json.Unmarshal([]byte(dashDataString), &dashData)
 
 		Convey("setup dashboard data unmarshal", func() {

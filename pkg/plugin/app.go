@@ -86,7 +86,8 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	}
 
 	// Make a new HTTP client
-	if app.httpClient, err = httpclient.New(app.conf.HTTPClientOptions); err != nil {
+	app.httpClient, err = httpclient.New(app.conf.HTTPClientOptions)
+	if err != nil {
 		return nil, fmt.Errorf("error in httpclient new: %w", err)
 	}
 

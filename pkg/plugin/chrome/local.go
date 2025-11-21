@@ -1,6 +1,7 @@
 package chrome
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"golang.org/x/net/context"
 )
 
 // Path to chrome executable.
@@ -42,7 +42,9 @@ func init() {
 
 	// Create a folder to use it as HOME for chrome process
 	homeDir := filepath.Join(dataPath, ".chrome")
-	if err := os.MkdirAll(homeDir, 0o750); err == nil {
+
+	err = os.MkdirAll(homeDir, 0o750)
+	if err == nil {
 		chromeHomeDir = homeDir
 	}
 
@@ -67,10 +69,11 @@ func init() {
 				defer cancel()
 
 				// This command should print an empty DOM and exit
-				if _, err := exec.CommandContext(
+				_, err := exec.CommandContext(
 					ctx, path, "--headless", "--no-sandbox", "--disable-gpu",
 					"--disable-logging ", "--dump-dom",
-				).Output(); err == nil {
+				).Output()
+				if err == nil {
 					chromeExec = path
 				}
 
@@ -157,7 +160,8 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 		// chromedp.WithDebugf(chromeLogger.Debug),
 	)
 
-	if err := chromedp.Run(browserCtx); err != nil {
+	err := chromedp.Run(browserCtx)
+	if err != nil {
 		return nil, fmt.Errorf("couldn't create browser context: %w", err)
 	}
 
@@ -183,7 +187,8 @@ func (i *LocalInstance) NewTab(_ log.Logger, _ *config.Config) *Tab {
 
 func (i *LocalInstance) Close(logger log.Logger) {
 	if i.browserCtx != nil {
-		if err := chromedp.Cancel(i.browserCtx); err != nil {
+		err := chromedp.Cancel(i.browserCtx)
+		if err != nil {
 			logger.Error("got error from cancel browser context", "error", err)
 		}
 	}

@@ -1,10 +1,11 @@
 package chrome
 
 import (
+	"context"
+
 	"github.com/chromedp/chromedp"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
-	"golang.org/x/net/context"
 )
 
 // RemoteInstance is a remotely running browser instance.

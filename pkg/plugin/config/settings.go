@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/sethvargo/go-envconfig"
-	"golang.org/x/net/context"
 )
 
 const SaToken = "saToken"
@@ -83,7 +83,8 @@ func (c *Config) RTValidate() error {
 	}
 
 	// Set time zone to current server time zone if empty
-	if loc, err := time.LoadLocation(c.TimeZone); err != nil || c.TimeZone == "" {
+	loc, err := time.LoadLocation(c.TimeZone)
+	if err != nil || c.TimeZone == "" {
 		c.Location = time.Now().Local().Location()
 		c.TimeZone = c.Location.String()
 	} else {
@@ -93,7 +94,9 @@ func (c *Config) RTValidate() error {
 
 	// Set time format to time.UnixDate if the provided one is invalid
 	t := time.Now().Format(c.TimeFormat)
-	if parsedTime, err := time.Parse(c.TimeFormat, t); err != nil || parsedTime.Unix() <= 0 {
+
+	parsedTime, err := time.Parse(c.TimeFormat, t)
+	if err != nil || parsedTime.Unix() <= 0 {
 		c.TimeFormat = time.UnixDate
 	}
 
@@ -103,14 +106,16 @@ func (c *Config) RTValidate() error {
 // Validate checks current settings and sets them to defaults for invalid ones.
 func (c *Config) Validate() error {
 	// Make runtime validations
-	if err := c.RTValidate(); err != nil {
+	err := c.RTValidate()
+	if err != nil {
 		return err
 	}
 
 	// Verify RemoteChromeURL
 	// url.Parse almost allows all the URLs. Need to check Scheme and Host
 	if c.RemoteChromeURL != "" {
-		if u, err := url.Parse(c.RemoteChromeURL); err != nil {
+		u, err := url.Parse(c.RemoteChromeURL)
+		if err != nil {
 			return err
 		} else {
 			if u.Scheme == "" || u.Host == "" {
@@ -234,23 +239,27 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 
 	// Update plugin settings defaults
 	if settings.JSONData != nil && string(settings.JSONData) != "null" {
-		if err = json.Unmarshal(settings.JSONData, &config); err != nil { //nolint:musttag
+		err = json.Unmarshal(settings.JSONData, &config) //nolint: musttag
+		if err != nil {
 			return Config{}, err
 		}
 	}
 
 	// Override provisioned config from env vars, if set
-	if err := envconfig.Process(ctx, &config); err != nil {
+	err = envconfig.Process(ctx, &config)
+	if err != nil {
 		return Config{}, fmt.Errorf("error in reading config env vars: %w", err)
 	}
 
 	// Validate config
-	if err := config.Validate(); err != nil {
+	err = config.Validate()
+	if err != nil {
 		return Config{}, fmt.Errorf("error in config settings: %w", err)
 	}
 
 	// Get default HTTP client options
-	if config.HTTPClientOptions, err = settings.HTTPClientOptions(ctx); err != nil {
+	config.HTTPClientOptions, err = settings.HTTPClientOptions(ctx)
+	if err != nil {
 		return Config{}, fmt.Errorf("error in http client options: %w", err)
 	}
 

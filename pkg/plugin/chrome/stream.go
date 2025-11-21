@@ -96,8 +96,8 @@ func (reader *streamReader) next(pos, size int) (cdprotoio.ReadReturns, error) {
 		WithSize(int64(size))
 
 	var res cdprotoio.ReadReturns
-	err := cdp.Execute(reader.ctx, cdprotoio.CommandRead, params, &res)
 
+	err := cdp.Execute(reader.ctx, cdprotoio.CommandRead, params, &res)
 	if err == nil {
 		return res, nil
 	}
