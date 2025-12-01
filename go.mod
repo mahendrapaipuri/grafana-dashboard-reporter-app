@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/chromedp/cdproto v0.0.0-20250803210736-d308e07a266d
 	github.com/chromedp/chromedp v0.14.2
-	github.com/grafana/grafana-plugin-sdk-go v0.283.0
+	github.com/grafana/grafana-plugin-sdk-go v0.284.0
 	github.com/magefile/mage v1.15.0
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.3.0
