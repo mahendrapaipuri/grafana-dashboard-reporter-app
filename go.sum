@@ -91,8 +91,8 @@ github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25d
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=
 github.com/grafana/authlib/claims v0.0.0-20240814142503-ca29e2d96514 h1:pBEIWc3CmZd/cAlWj5y8xZrM395dNmpOyqVOie6ncr0=
 github.com/grafana/authlib/claims v0.0.0-20240814142503-ca29e2d96514/go.mod h1:r+F8H6awwjNQt/KPZ2GNwjk8TvsJ7/gxzkXN26GlL/A=
-github.com/grafana/grafana-plugin-sdk-go v0.283.0 h1:G7IHshAr30rLWV9FtX3iLlFTTlBhuOkfe7xVAoIP5rE=
-github.com/grafana/grafana-plugin-sdk-go v0.283.0/go.mod h1:20qhoYxIgbZRmwCEO1KMP8q2yq/Kge5+xE/99/hLEk0=
+github.com/grafana/grafana-plugin-sdk-go v0.284.0 h1:1bK7eWsnPBLUWDcWJWe218Ik5ad0a5JpEL4mH9ry7Ws=
+github.com/grafana/grafana-plugin-sdk-go v0.284.0/go.mod h1:lHPniaSxq3SL5MxDIPy04TYB1jnTp/ivkYO+xn5Rz3E=
 github.com/grafana/otel-profiling-go v0.5.1 h1:stVPKAFZSa7eGiqbYuG25VcqYksR6iWvF3YH66t4qL8=
 github.com/grafana/otel-profiling-go v0.5.1/go.mod h1:ftN/t5A/4gQI19/8MoWurBEtC6gFw8Dns1sJZ9W4Tls=
 github.com/grafana/pyroscope-go/godeltaprof v0.1.9 h1:c1Us8i6eSmkW+Ez05d3co8kasnuOY813tbMN8i/a3Og=
