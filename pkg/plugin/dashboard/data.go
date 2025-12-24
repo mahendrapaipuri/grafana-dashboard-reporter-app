@@ -93,11 +93,11 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 			return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyBlobURL)
 		}
 	case err := <-errCh:
-		return nil, fmt.Errorf("error fetching CSV data using URL from browser %s: %w", panelURL, err)
+		return nil, err
 	case <-tab.Context().Done():
-		d.logger.Warn("failed to find panel data element", "panel_id", p.ID, "url", panelURL)
+		d.logger.Warn("no data found in the panel", "panel_id", p.ID, "url", panelURL)
 
-		return nil, nil
+		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyPanelElement)
 	}
 
 	close(blobURLCh)
