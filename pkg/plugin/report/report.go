@@ -129,7 +129,7 @@ func (r *Report) populatePanels(ctx context.Context, dashboardData *dashboard.Da
 				defer wg.Done()
 
 				panelData, err := r.dashboard.PanelCSV(ctx, panel)
-				if err != nil {
+				if err != nil && !errors.Is(err, dashboard.ErrEmptyPanelElement) {
 					errorCh <- fmt.Errorf("failed to fetch CSV data for panel %s: %w", panel.ID, err)
 				}
 
