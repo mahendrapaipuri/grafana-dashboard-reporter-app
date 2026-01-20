@@ -68,3 +68,6 @@ plugin-validator
 
 # Ignore legacy golanglint ci config file
 .golangci.bck.yml
+
+# plugincheck related files
+pipeline.yaml
