@@ -81,6 +81,7 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]any, error) {
 
 	// Create a new tab
 	tab := d.chromeInstance.NewTab(d.logger, d.conf)
+
 	tab.WithTimeout(2 * d.conf.HTTPClientOptions.Timeouts.Timeout)
 	defer tab.Close(d.logger)
 
@@ -122,7 +123,8 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]any, error) {
 		// chromedp.FullScreenshot(&buf, 5000),
 	}...)
 
-	if err := tab.Run(tasks); err != nil {
+	err = tab.Run(tasks)
+	if err != nil {
 		return nil, fmt.Errorf("error fetching dashboard data from browser %s: %w", dashURL, err)
 	}
 

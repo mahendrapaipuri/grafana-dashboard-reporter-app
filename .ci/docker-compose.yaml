@@ -1,4 +1,4 @@
-version: '3.0'
+version: "3.0"
 
 services:
   grafana_plain:
@@ -7,8 +7,8 @@ services:
     build:
       context: ../.config
       args:
-        grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.4.0}
+        grafana_image: ${GRAFANA_IMAGE:-grafana}
+        grafana_version: ${GRAFANA_VERSION:-12.3.0}
     ports:
       - 3080:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
@@ -57,13 +57,7 @@ services:
   renderer_plain:
     image: grafana/grafana-image-renderer:latest
     environment:
-      # Recommendation of grafana-image-renderer for optimal performance
-      # https://grafana.com/docs/grafana/latest/setup-grafana/image-rendering/#configuration
-      - RENDERING_MODE=clustered
-      - RENDERING_CLUSTERING_MODE=browser
-      - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
-      - RENDERING_CLUSTERING_TIMEOUT=600
-      - IGNORE_HTTPS_ERRORS=true
+      - BROWSER_FLAG=--ignore-certificate-errors
 
   chrome_plain:
     image: chromedp/headless-shell:latest
@@ -77,8 +71,8 @@ services:
     build:
       context: ../.config
       args:
-        grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
-        grafana_version: ${GRAFANA_VERSION:-11.4.0}
+        grafana_image: ${GRAFANA_IMAGE:-grafana}
+        grafana_version: ${GRAFANA_VERSION:-12.3.0}
     ports:
       - 3443:${GF_SERVER_HTTP_PORT:-3000}/tcp
     volumes:
@@ -112,7 +106,7 @@ services:
       - GF_UNIFIED_ALERTING_ENABLED=false
       - GF_LIVE_MAX_CONNECTIONS=0
       - GF_PLUGINS_DISABLE_PLUGINS=grafana-lokiexplore-app
-       # TLS
+        # TLS
       - GF_SERVER_PROTOCOL=https
       - GF_SERVER_CERT_KEY=/etc/grafana/tls/localhost.key
       - GF_SERVER_CERT_FILE=/etc/grafana/tls/localhost.crt
@@ -128,16 +122,10 @@ services:
       - GF_REPORTER_PLUGIN_SKIP_TLS_CHECK=true
 
   renderer_tls:
-    image: grafana/grafana-image-renderer:latest
+    image: grafana/grafana-image-renderer:latest # localhost/renderer:latest
     environment:
-      # Recommendation of grafana-image-renderer for optimal performance
-      # https://grafana.com/docs/grafana/latest/setup-grafana/image-rendering/#configuration
-      - RENDERING_MODE=clustered
-      - RENDERING_CLUSTERING_MODE=browser
-      - RENDERING_CLUSTERING_MAX_CONCURRENCY=5
-      - RENDERING_CLUSTERING_TIMEOUT=600
-      - IGNORE_HTTPS_ERRORS=true
-  
+      - BROWSER_FLAG=--ignore-certificate-errors
+
   chrome_tls:
     image: chromedp/headless-shell:latest
     shm_size: 2G
@@ -145,4 +133,4 @@ services:
     network_mode: service:grafana_tls
     # We need to manually setup chrome instance as default entrypoint does not have --ignore-certificate-errors flag
     entrypoint: /headless-shell/headless-shell
-    command: --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 --disable-gpu --headless --no-sandbox --ignore-certificate-errors=1
+    command: --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 --disable-gpu --headless --no-sandbox --ignore-certificate-errors

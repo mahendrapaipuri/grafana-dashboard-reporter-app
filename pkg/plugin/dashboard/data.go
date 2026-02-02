@@ -79,7 +79,8 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 	// If an error occurs, it will be sent to the errCh channel.
 	// If a element can't be found, a timeout will occur and the context will be canceled.
 	go func() {
-		if err := tab.Run(downTasks); err != nil {
+		err := tab.Run(downTasks)
+		if err != nil {
 			errCh <- fmt.Errorf("error fetching CSV URL from browser %s: %w", panelURL, err)
 		}
 	}()
@@ -92,9 +93,11 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 			return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyBlobURL)
 		}
 	case err := <-errCh:
-		return nil, fmt.Errorf("error fetching CSV data using URL from browser %s: %w", panelURL, err)
+		return nil, err
 	case <-tab.Context().Done():
-		return nil, fmt.Errorf("error fetching CSV data using URL from browser %s: %w", panelURL, tab.Context().Err())
+		d.logger.Warn("no data found in the panel", "panel_id", p.ID, "url", panelURL)
+
+		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, ErrEmptyPanelElement)
 	}
 
 	close(blobURLCh)
@@ -109,7 +112,8 @@ func (d *Dashboard) PanelCSV(_ context.Context, p Panel) (CSVData, error) {
 		chrome.WithAwaitPromise,
 	)
 
-	if err := tab.RunWithTimeout(d.conf.HTTPClientOptions.Timeouts.Timeout, task); err != nil {
+	err = tab.RunWithTimeout(d.conf.HTTPClientOptions.Timeouts.Timeout, task)
+	if err != nil {
 		return nil, fmt.Errorf("error fetching CSV data from URL from browser %s: %w", panelURL, err)
 	}
 

@@ -63,7 +63,8 @@ func (r *Report) Generate(ctx context.Context, writer http.ResponseWriter) error
 	}
 
 	// Populate panels with PNG and tabular data
-	if err := r.populatePanels(ctx, dashboardData); err != nil {
+	err = r.populatePanels(ctx, dashboardData)
+	if err != nil {
 		return fmt.Errorf("failed to populate panels: %w", err)
 	}
 
@@ -83,7 +84,8 @@ func (r *Report) Generate(ctx context.Context, writer http.ResponseWriter) error
 		return fmt.Errorf("failed to generate HTML file: %w", err)
 	}
 
-	if err = r.renderPDF(htmlReport, writer); err != nil {
+	err = r.renderPDF(htmlReport, writer)
+	if err != nil {
 		return fmt.Errorf("failed to render PDF: %w", err)
 	}
 
@@ -127,7 +129,7 @@ func (r *Report) populatePanels(ctx context.Context, dashboardData *dashboard.Da
 				defer wg.Done()
 
 				panelData, err := r.dashboard.PanelCSV(ctx, panel)
-				if err != nil {
+				if err != nil && !errors.Is(err, dashboard.ErrEmptyPanelElement) {
 					errorCh <- fmt.Errorf("failed to fetch CSV data for panel %s: %w", panel.ID, err)
 				}
 
@@ -197,7 +199,8 @@ func (r *Report) generateHTMLFile(dashboardData *dashboard.Data) (HTML, error) {
 	maps.Copy(funcMap, localFuncMap)
 
 	// Make a new template for Body of the PDF
-	if tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml"); err != nil {
+	tmpl, err = template.New("report").Funcs(funcMap).ParseFS(templateFS, "templates/report.gohtml")
+	if err != nil {
 		return HTML{}, fmt.Errorf("error parsing PDF template: %w", err)
 	}
 
@@ -210,7 +213,9 @@ func (r *Report) generateHTMLFile(dashboardData *dashboard.Data) (HTML, error) {
 
 	// Render the template for Body of the PDF
 	bufBody := &bytes.Buffer{}
-	if err = tmpl.ExecuteTemplate(bufBody, "report.gohtml", data); err != nil {
+
+	err = tmpl.ExecuteTemplate(bufBody, "report.gohtml", data)
+	if err != nil {
 		return HTML{}, fmt.Errorf("error executing PDF template: %w", err)
 	}
 
@@ -229,7 +234,9 @@ func (r *Report) generateHTMLFile(dashboardData *dashboard.Data) (HTML, error) {
 
 	// Render the template for Header of the PDF
 	bufHeader := &bytes.Buffer{}
-	if err = tmpl.ExecuteTemplate(bufHeader, "header.gohtml", data); err != nil {
+
+	err = tmpl.ExecuteTemplate(bufHeader, "header.gohtml", data)
+	if err != nil {
 		return HTML{}, fmt.Errorf("error executing Header template: %w", err)
 	}
 
@@ -248,7 +255,9 @@ func (r *Report) generateHTMLFile(dashboardData *dashboard.Data) (HTML, error) {
 
 	// Render the template for Footer of the PDF
 	bufFooter := &bytes.Buffer{}
-	if err = tmpl.ExecuteTemplate(bufFooter, "footer.gohtml", data); err != nil {
+
+	err = tmpl.ExecuteTemplate(bufFooter, "footer.gohtml", data)
+	if err != nil {
 		return HTML{}, fmt.Errorf("error executing Footer template: %w", err)
 	}
 

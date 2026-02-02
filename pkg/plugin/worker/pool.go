@@ -1,9 +1,8 @@
 package worker
 
 import (
+	"context"
 	"runtime"
-
-	"golang.org/x/net/context"
 )
 
 type Pool struct {

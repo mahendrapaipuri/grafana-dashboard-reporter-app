@@ -31,6 +31,12 @@ different host, `chromium` must be installed on the host where Grafana is instal
 dependent libraries of the `chromium` are available on the host. Ensure to install
 a more recent version of `chromium` as few issues were noticed with `chromium <= 90`.
 
+> [!WARNING]
+> Using `grafana-image-renderer` as Grafana plugin is deprecated and there is a known
+[bug](https://github.com/grafana/grafana-image-renderer/issues/815) from the version
+`4.0.17` that makes the plugin unusable. Therefore, users must install a version `<= 4.0.16`
+or use Grafana image renderer as an external service.
+
 ## Installation
 
 ### Installation via `grafana-cli`
@@ -50,7 +56,7 @@ However, it is still possible to install this plugin using `grafana-cli` by over
 For example following command will install latest version of plugin
 
 ```bash
-VERSION=1.11.0; grafana-cli --pluginUrl "https://github.com/samanamonitor/grafana-dashboard-reporter-app/releases/download/v${VERSION}/grafana-dashboardreporter-app-${VERSION}.zip" plugins install grafana-dashboardreporter-app
+VERSION=1.10.1; grafana-cli --pluginUrl "https://github.com/samanamonitor/grafana-dashboard-reporter-app/releases/download/v${VERSION}/grafana-dashboardreporter-app-${VERSION}.zip" plugins install grafana-dashboardreporter-app
 ```
 
 Similarly, `nightly` version can be installed suing
@@ -601,6 +607,10 @@ not possible to render the panel and fetch the data.
 
 ## Troubleshooting
 
+- In Grafana v12, fetching dashboard JSON models might fail with "Dashboard Not found" error.
+A workaround is described [discussions](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/discussions/422)
+until the bug is fixed in upstream Grafana.
+
 - When TLS is enabled on Grafana server, `grafana-image-renderer` tends to throw
 certificate errors even when the TLS certificates are signed by well-known CA. Typical
 error messages will be as follows:
@@ -611,7 +621,8 @@ error messages will be as follows:
   ```
 
   To solve this issue set environment variables `GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true`
-  and `IGNORE_HTTPS_ERRORS=true` for the `grafana-image-renderer` service.
+  and `IGNORE_HTTPS_ERRORS=true` for the `grafana-image-renderer < 5` and for `grafana-image-renderer >= 5`,
+	set variable `BROWSER_FLAG=--ignore-certificate-errors` on renderer service.
 
 - If `chromium` fails to run, it suggests that there are missing dependent libraries on
 the host. In that case, we advise to install `chromium` on the machine which will

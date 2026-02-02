@@ -82,7 +82,8 @@ func TestReportResource(t *testing.T) {
 					repDashName = urlParts[len(urlParts)-1]
 				}
 
-				if _, err := w.Write([]byte(`{"dashboard": {"title": "foo","panels":[{"type":"singlestat", "id":0}]}}`)); err != nil {
+				_, err := w.Write([]byte(`{"dashboard": {"title": "foo","panels":[{"type":"singlestat", "id":0}]}}`))
+				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 
 					return
@@ -95,6 +96,7 @@ func TestReportResource(t *testing.T) {
 			}))
 
 			var r mockCallResourceResponseSender
+
 			err = app.CallResource(ctx, &backend.CallResourceRequest{
 				PluginContext: backend.PluginContext{
 					OrgID:    3,

@@ -1,9 +1,13 @@
 # Changelog
 
-## 1.11.0
+## 1.10.1
+
+- fix: When data element not found, do not return error [#464](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/464)
+- fix: Update Grafana renderer config in dev env [#451](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/451)
+
+## 1.10.0a
 
 - First version forked by Samana Group
-
 
 ## 1.10.0
 

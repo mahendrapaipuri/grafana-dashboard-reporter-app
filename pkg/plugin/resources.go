@@ -241,7 +241,8 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	app.updateConfig(req, &conf)
 
 	// Validate new updated config
-	if err := conf.RTValidate(); err != nil {
+	err = conf.RTValidate()
+	if err != nil {
 		ctxLogger.Debug("invalid config: "+conf.String(), "err", err)
 		http.Error(w, "invalid query parameters found", http.StatusBadRequest)
 
@@ -319,10 +320,11 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Here we check if user has permissions to do an action "dashboards:read" on
 	// dashboards resource of a given dashboard UID
 	if app.featureTogglesEnabled(req.Context()) {
-		if hasAccess, err := app.HasAccess(
+		hasAccess, err := app.HasAccess(
 			req, "dashboards:read",
 			resources...,
-		); err != nil || !hasAccess {
+		)
+		if err != nil || !hasAccess {
 			if err != nil {
 				ctxLogger.Error("failed to check permissions", "err", err)
 			} else {
@@ -365,7 +367,8 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	)
 
 	// Generate report
-	if err = pdfReport.Generate(req.Context(), w); err != nil {
+	err = pdfReport.Generate(req.Context(), w)
+	if err != nil {
 		ctxLogger.Error("error generating report", "err", err)
 		http.Error(w, "error generating report", http.StatusInternalServerError)
 
@@ -379,7 +382,8 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 func (app *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", "text/plan")
 
-	if _, err := w.Write([]byte("OK")); err != nil {
+	_, err := w.Write([]byte("OK"))
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return

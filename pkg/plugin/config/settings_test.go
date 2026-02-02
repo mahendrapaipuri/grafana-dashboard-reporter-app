@@ -14,6 +14,7 @@ import (
 func TestSettings(t *testing.T) {
 	Convey("When creating a new config from minimum JSONData", t, func() {
 		const configJSON = `{}`
+
 		configData := json.RawMessage(configJSON)
 		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
@@ -28,6 +29,7 @@ func TestSettings(t *testing.T) {
 
 	Convey("When creating a new config from provisioned JSONData", t, func() {
 		const configJSON = `{"layout": "grid"}`
+
 		configData := json.RawMessage(configJSON)
 		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
@@ -42,6 +44,7 @@ func TestSettings(t *testing.T) {
 
 	Convey("When creating a new config from provisioned JSONData and secrets", t, func() {
 		const configJSON = `{"layout": "grid"}`
+
 		configData := json.RawMessage(configJSON)
 		secretsMap := map[string]string{
 			"saToken": "supersecrettoken",
@@ -101,6 +104,7 @@ func TestSettingsUsingEnvVars(t *testing.T) {
 
 	Convey("When creating a new config from only env vars", t, func() {
 		const configJSON = `{}`
+
 		configData := json.RawMessage(configJSON)
 		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
@@ -133,6 +137,7 @@ func TestSettingsUsingConfigAndEnvVars(t *testing.T) {
 
 	Convey("When creating a new config from file and env vars", t, func() {
 		const configJSON = `{"appUrl": "https://localhost:3000","dashboardMode": "full"}`
+
 		configData := json.RawMessage(configJSON)
 		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 
@@ -166,6 +171,7 @@ func TestSettingsUsingConfigAndOverridingEnvVars(t *testing.T) {
 
 	Convey("When creating a new config from file and overriding them from env vars", t, func() {
 		const configJSON = `{"appUrl": "https://localhost:3000","theme": "dark", "dashboardMode": "full"}`
+
 		configData := json.RawMessage(configJSON)
 		config, err := Load(t.Context(), backend.AppInstanceSettings{JSONData: configData})
 

@@ -1,12 +1,12 @@
 package chrome
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
-	"golang.org/x/net/context"
 )
 
 /*
@@ -59,6 +59,7 @@ func waitFor(eventName string) chromedp.ActionFunc {
 				}
 			}
 		})
+
 		select {
 		case <-ch:
 			return nil

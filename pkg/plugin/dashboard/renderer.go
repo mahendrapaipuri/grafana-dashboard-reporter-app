@@ -37,6 +37,7 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 
 	// Create a new tab
 	tab := d.chromeInstance.NewTab(d.logger, d.conf)
+
 	tab.WithTimeout(2 * d.conf.HTTPClientOptions.Timeouts.Timeout)
 	defer tab.Close(d.logger)
 
@@ -71,7 +72,8 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 		chromedp.CaptureScreenshot(&buf),
 	}...)
 
-	if err := tab.Run(tasks); err != nil {
+	err = tab.Run(tasks)
+	if err != nil {
 		return PanelImage{}, fmt.Errorf("error fetching panel PNG from browser %s: %w", panelURL, err)
 	}
 
@@ -79,7 +81,8 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 
 	encoder := base64.NewEncoder(base64.StdEncoding, sb)
 
-	if _, err = encoder.Write(buf); err != nil {
+	_, err = encoder.Write(buf)
+	if err != nil {
 		return PanelImage{}, fmt.Errorf("error reading data of panel PNG: %w", err)
 	}
 
@@ -150,7 +153,8 @@ func (d *Dashboard) panelPNGImageRenderer(ctx context.Context, p Panel) (PanelIm
 
 	encoder := base64.NewEncoder(base64.StdEncoding, sb)
 
-	if _, err = encoder.Write(body); err != nil {
+	_, err = encoder.Write(body)
+	if err != nil {
 		return PanelImage{}, fmt.Errorf("error reading response body of panel PNG: %w", err)
 	}
 
@@ -179,7 +183,8 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 	if p.Repeat != "" && len(parts) == 2 {
 		pID = parts[0]
 
-		if i, err := strconv.Atoi(parts[1]); err == nil {
+		i, err := strconv.Atoi(parts[1])
+		if err == nil {
 			varKey := "var-" + p.Repeat
 			if varValues := values[varKey]; len(varValues) > 1 && i < len(varValues) {
 				values.Del(varKey)

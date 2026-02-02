@@ -28,6 +28,7 @@ linters:
     - testpackage
     - varnamelen
     - wrapcheck
+    - wsl
   settings:
     errcheck:
       exclude-functions:
@@ -37,12 +38,16 @@ linters:
     recvcheck:
       disable-builtin: true
       exclusions:
-        - '*.String'
+        - "*.String"
     revive:
       rules:
         - name: unused-parameter
           severity: warning
           disabled: true
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
   exclusions:
     generated: lax
     presets:
