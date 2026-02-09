@@ -11,8 +11,79 @@ const baseDelayMsecs = 10;
 // Define a timer to wait until next try
 const timer = ms => new Promise(res => setTimeout(res, ms));
 
+// Wait for element to either appear or disappear on DOM
+// Seems like this approach does not work well. Need to dissect more
+// on why!!
+const waitForElement = async (selector, appear=true) => {
+    // Initialise parameters
+    let checkCounts = 1;
+    const start = Date.now();
+
+    // Wait for download button
+    while (Date.now() - start < 1000) {
+        // Query for element
+        const element = document.querySelectorAll(selector);
+
+        // If appear is true check for element existence
+        if (appear) {
+            if (element) {
+                return;
+            }
+        } else {
+            if (!element) {
+                return;
+            }
+        }
+
+        // If not, wait and retry
+        await timer(baseDelayMsecs * 2 ** checkCounts);
+        checkCounts++;
+    }
+
+    return;
+};
+
 // Panel data
-const panelData = selector => [...document.querySelectorAll('[' + selector + ']')].map((e) => ({ "x": e.getBoundingClientRect().x, "y": e.getBoundingClientRect().y, "width": e.getBoundingClientRect().width, "height": e.getBoundingClientRect().height, "title": e.innerText.split('\n')[0], "id": e.getAttribute(selector) }))
+const panelData = async (selector) => {
+    // Get all panels
+    const panelElements = document.querySelectorAll('[' + selector + ']');
+
+    // Get panel details
+    let panels = [];
+    for (let e of panelElements) {
+        // Get panel ID
+        let id = e.getAttribute(selector);
+
+        // Now click all the panels show-on-hover buttons to get View options
+        [...e.getElementsByClassName("show-on-hover")].map((ee) => ee.click());
+
+        // Wait for dialog to appear
+        await timer(100);
+
+        // Now fetch all the hrefs from the resulting dialogs for each panel
+        const viewItems = document.querySelectorAll('[data-testid="data-testid Panel menu item View"]');
+
+        // This href attribute exists only after Grafana 11.3.0 (I guess). It does not exist
+        // at least in Grafana 11.0.0
+        if (viewItems.length === 1 && viewItems[0].hasAttribute('href')) {
+            let url =  new URL(viewItems[0].href);
+
+            // Get viewPanel query parameter
+            id = url.searchParams.get('viewPanel') || id;
+        }
+
+        // Get panel dimensions
+        panels.push({ "x": e.getBoundingClientRect().x, "y": e.getBoundingClientRect().y, "width": e.getBoundingClientRect().width, "height": e.getBoundingClientRect().height, "title": e.innerText.split('\n')[0], "id": id });
+
+        // Click show-on-hover again to close dialog
+        [...e.getElementsByClassName("show-on-hover")].map((ee) => ee.click());
+
+        // Wait for dialog to disappear
+        await timer(100);
+    }
+    
+    return panels
+}
 
 /**
  * Semantic Versioning Comparing
