@@ -191,7 +191,7 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 			i, err := strconv.Atoi(parts[1])
 			if err == nil {
 				varKey := "var-" + p.Repeat
-				if varValues := values[varKey]; len(varValues) > 1 && i < len(varValues) {
+				if varValues := values[varKey]; len(varValues) > 0 && i < len(varValues) {
 					values.Del(varKey)
 					values.Set(varKey, varValues[i])
 				}
@@ -225,7 +225,7 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 			i, err := strconv.Atoi(cloneIndex)
 			if err == nil {
 				varKey := "var-" + p.Repeat
-				if varValues := values[varKey]; len(varValues) > 1 && i < len(varValues) {
+				if varValues := values[varKey]; len(varValues) > 0 && i < len(varValues) {
 					values.Del(varKey)
 					values.Set(varKey, varValues[i])
 					pID = fmt.Sprintf("%s$%s", varValues[i], pID)
