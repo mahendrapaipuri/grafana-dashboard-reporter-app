@@ -12,10 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Go environment
-        uses: actions/setup-go@v6
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v6
         with:
-          go-version: '1.24'
+          node-version: '22'
+          cache: 'yarn'
 
       - name: Download build artifacts
         uses: actions/download-artifact@v7
@@ -30,7 +31,7 @@ jobs:
           # Upload/Download artifacts wont preserve permissions
           # https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
           # Add +x bits on executables
-          chmod -R +x dist/gpx_*
+          chmod -R 0755 dist/gpx_*
           
           mv dist mahendrapaipuri-dashboardreporter-app
           zip mahendrapaipuri-dashboardreporter-app-nightly.zip mahendrapaipuri-dashboardreporter-app -r
@@ -38,12 +39,8 @@ jobs:
 
       - name: Validate plugin
         run: |
-          zip plugin-app.zip pkg/ src/ package.json go.* Magefile.go -r
-          git clone --depth 1 --branch v0.16.1 https://github.com/grafana/plugin-validator
-          pushd ./plugin-validator/pkg/cmd/plugincheck2
-          go install
-          popd
-          plugincheck2 -sourceCodeUri plugin-app.zip -config ./plugin-validator/config/pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
+          wget https://raw.githubusercontent.com/grafana/plugin-validator/refs/heads/main/config/pipeline.yaml
+          npx @grafana/plugin-validator@latest -sourceCodeUri file://. -config ./pipeline.yaml mahendrapaipuri-dashboardreporter-app-nightly.zip
         shell: bash
 
       # Check if bootstrap script is working for latest release and nightly release
