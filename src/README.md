@@ -594,13 +594,9 @@ possible to set them using either environment variables or Grafana UI.
 ## Limitations
 
 - Due to a [bug](https://github.com/grafana/grafana/issues/108754) in Grafana, there exists
-a limitation for the reports generated for dashboards with repeated panels using query based variable.
-If variable `All` in selected for generating report with repeated panels, depending on the version of
-Grafana either all the data will be included in the same panel instead of generating a panel for each
-different variable or no panels will be included in the report. This cannot
-be fixed until the bug in upstream Grafana is fixed. A workaround is to select all the variables
-in the dashboard instead of selecting `All` which will generate different panel for each variable
-in the report.
+a limitation for the reports generated for dashboards with repeated panels/rows using query based variable.
+This bug exists in Grafana 11.3.x, 11.4.x and 11.5.x versions and it seemed to be fixed in
+the later versions.
 
 - Including tabular data for the datasources that rely on Grafana Live (like MQTT) is not supported.
 Grafana does not include authentication headers in the websocket handshake protocol and thus, it is
@@ -623,7 +619,7 @@ error messages will be as follows:
 
   To solve this issue set environment variables `GF_RENDERER_PLUGIN_IGNORE_HTTPS_ERRORS=true`
   and `IGNORE_HTTPS_ERRORS=true` for the `grafana-image-renderer < 5` and for `grafana-image-renderer >= 5`,
-	set variable `BROWSER_FLAG=--ignore-certificate-errors` on renderer service.
+  set variable `BROWSER_FLAG=--ignore-certificate-errors` on renderer service.
 
 - If `chromium` fails to run, it suggests that there are missing dependent libraries on
 the host. In that case, we advise to install `chromium` on the machine which will

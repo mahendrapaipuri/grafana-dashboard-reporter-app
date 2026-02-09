@@ -9,7 +9,6 @@ import (
 	"maps"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/chromedp/cdproto/runtime"
@@ -169,70 +168,93 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 	values := maps.Clone(d.model.Dashboard.Variables)
 	pID := p.ID
 
-	switch {
-	case helpers.SemverCompare(d.appVersion, "v11.3.0") >= 0 && helpers.SemverCompare(d.appVersion, "v11.5.0") <= 0:
-		// Starting from Grafana v11.3.0, repeated panels will have clone in
-		// their IDs.
-		//
-		// For Grafana versions between 11.3.0 and 11.5.0 (both included),
-		// but we need to strip it down and repeat the panel ID with
-		// each var. If var is $__all, there is nothing we can do, just pass
-		// it through and all panels will be overlapped.
-		//
-		// Panel IDs will be of format panel-10-clone-0
-		// Split by -clone- and get first and second parts
-		//
-		// NOTE: Workaround until https://github.com/grafana/grafana/issues/108754 gets fixed
-		parts := strings.Split(p.ID, "-clone-")
+	// UPDATE: 20260209
+	// No need of any dirty hacking as we get the supposedly correct panel IDs directly
+	// from the JS. If something does not work, it is a bug in Grafana and there is nothing
+	// we can do.
+	//
+	// From the tests, Grafana versions 11.3.x, 11.4.x, 11.5.x have quite some bugs and
+	// repeated panels and rows would not work well. Later versions of >= 11.6.x seem to
+	// be working very well.
+	//
+	// switch {
+	// case helpers.SemverCompare(d.appVersion, "v11.3.0") >= 0 && helpers.SemverCompare(d.appVersion, "v11.5.0") <= 0:
+	// 	// Starting from Grafana v11.3.0, repeated panels will have clone in
+	// 	// their IDs.
+	// 	//
+	// 	// For Grafana versions between 11.3.0 and 11.5.0 (both included),
+	// 	// but we need to strip it down and repeat the panel ID with
+	// 	// each var. If var is $__all, there is nothing we can do, just pass
+	// 	// it through and all panels will be overlapped.
+	// 	//
+	// 	// Panel IDs will be of format panel-10-clone-0
+	// 	// Split by -clone- and get first and second parts
+	// 	//
+	// 	// NOTE: Workaround until https://github.com/grafana/grafana/issues/108754 gets fixed
+	// 	parts := strings.Split(p.ID, "-clone-")
 
-		if p.Repeat != "" && len(parts) == 2 {
-			pID = parts[0]
+	// 	if p.Repeat != "" && len(parts) == 2 {
+	// 		pID = parts[0]
 
-			i, err := strconv.Atoi(parts[1])
-			if err == nil {
-				varKey := "var-" + p.Repeat
-				if varValues := values[varKey]; len(varValues) > 0 && i < len(varValues) {
-					values.Del(varKey)
-					values.Set(varKey, varValues[i])
-				}
-			}
-		}
-	case helpers.SemverCompare(d.appVersion, "v12.2.0") >= 0:
-		// Starting from Grafana v12.2.0, the repeated panel names should have the
-		// value of repeated value in the panel ID.
-		//
-		// For instance, if panel is repeated on a panel variable having values
-		// node, grafana and panelIDs are panel-1-clone-0, panel-1-clone-1, they
-		// must be renamed to node$panel-1 and grafana$panel-1.
-		//
-		// IMPORTANT: The first repeated panel would not have -clone-0 suffix. So, we
-		// need to take that into account
-		//
-		// We can pass all the panel vars in the URL without any issues. If var is
-		// $__all, there is nothing we can do, we can empty panels as we do not know
-		// the values of the var
-		parts := strings.Split(p.ID, "-clone-")
+	// 		i, err := strconv.Atoi(parts[1])
+	// 		if err == nil {
+	// 			varKey := "var-" + p.Repeat
+	// 			if varValues := values[varKey]; len(varValues) > 0 && i < len(varValues) {
+	// 				values.Del(varKey)
+	// 				values.Set(varKey, varValues[i])
+	// 			}
+	// 		}
+	// 	}
+	// case helpers.SemverCompare(d.appVersion, "v12.2.0") >= 0:
+	// 	// Starting from Grafana v12.2.0, the repeated panel names should have the
+	// 	// value of repeated value in the panel ID.
+	// 	//
+	// 	// For instance, if panel is repeated on a panel variable having values
+	// 	// node, grafana and panelIDs are panel-1-clone-0, panel-1-clone-1, they
+	// 	// must be renamed to node$panel-1 and grafana$panel-1.
+	// 	//
+	// 	// Moreover if there is a repeated row, we need to prepend the row value
+	// 	// as well. For instance, if repeated row value is row1, the abov example
+	// 	// becomes row1$node$panel-1, row1$grafana$panel-1.
+	// 	//
+	// 	// IMPORTANT: The first repeated panel would not have -clone-0 suffix. So, we
+	// 	// need to take that into account
+	// 	//
+	// 	// We can pass all the panel vars in the URL without any issues. If var is
+	// 	// $__all, there is nothing we can do, we can empty panels as we do not know
+	// 	// the values of the var
+	// 	parts := strings.Split(p.ID, "-clone-")
 
-		if p.Repeat != "" && len(parts) >= 1 {
-			pID = parts[0]
+	// 	if p.Repeat != "" && len(parts) >= 1 {
+	// 		pID = parts[0]
 
-			// For first panel that does not -clone-0 in the name
-			cloneIndex := "0"
-			if len(parts) == 2 {
-				cloneIndex = parts[1]
-			}
+	// 		// For first panel that does not -clone-0 in the name
+	// 		cloneIndex := "0"
+	// 		if len(parts) == 2 {
+	// 			cloneIndex = parts[1]
+	// 		}
 
-			i, err := strconv.Atoi(cloneIndex)
-			if err == nil {
-				varKey := "var-" + p.Repeat
-				if varValues := values[varKey]; len(varValues) > 0 && i < len(varValues) {
-					values.Del(varKey)
-					values.Set(varKey, varValues[i])
-					pID = fmt.Sprintf("%s$%s", varValues[i], pID)
-				}
-			}
-		}
-	}
+	// 		i, err := strconv.Atoi(cloneIndex)
+	// 		if err == nil {
+	// 			panelVarKey := "var-" + p.Repeat
+	// 			if panelVarValues := values[panelVarKey]; len(panelVarValues) > 0 && i < len(panelVarValues) {
+	// 				values.Del(panelVarKey)
+	// 				values.Set(panelVarKey, panelVarValues[i])
+	// 				pID = fmt.Sprintf("%s$%s", panelVarValues[i], pID)
+
+	// 				// If row is repeated as well, prepend row variable value to panel ID
+	// 				if p.RowRepeat != "" {
+	// 					rowVarKey := "var-" + p.RowRepeat
+	// 					if rowVarValues := values[rowVarKey]; len(rowVarValues) > 0 && i < len(rowVarValues) {
+	// 						values.Del(rowVarKey)
+	// 						values.Set(rowVarKey, rowVarValues[i])
+	// 						pID = fmt.Sprintf("%s$%s", rowVarValues[i], pID)
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	values.Add("theme", d.conf.Theme)
 	values.Add("panelId", pID)
