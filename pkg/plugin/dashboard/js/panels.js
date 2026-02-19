@@ -248,14 +248,14 @@ const openInspectDataTab = async () => {
     await timer(100);
 
     // Create a mouse event to hover on Inspect menu item
-    var hoverInspectEvent = new MouseEvent('mouseover', {
+    const hoverInspectEvent = new MouseEvent('mouseover', {
         'view': window,
         'bubbles': true,
         'cancelable': true
     }); 
 
     // Dispatch event on window
-    let inspectItems = document.querySelectorAll('[data-testid*="data-testid Panel menu item Inspect"]');
+    const inspectItems = document.querySelectorAll('[data-testid*="data-testid Panel menu item Inspect"]');
 
     // Dispatch event on inspect item
     for (let i = 0; i < inspectItems.length; i++) {
