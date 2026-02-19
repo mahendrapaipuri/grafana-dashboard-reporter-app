@@ -55,13 +55,13 @@ const panelData = async (selector) => {
         let id = e.getAttribute(selector);
 
         // Now click all the panels show-on-hover buttons to get View options
-        [...e.getElementsByClassName("show-on-hover")].map((ee) => ee.click());
+        [...e.querySelectorAll('[title="Menu"]')].map((ee) => ee.click());
 
         // Wait for dialog to appear
         await timer(100);
 
         // Now fetch all the hrefs from the resulting dialogs for each panel
-        const viewItems = document.querySelectorAll('[data-testid="data-testid Panel menu item View"]');
+        const viewItems = document.querySelectorAll('[data-testid*="data-testid Panel menu item View"]');
 
         // This href attribute exists only after Grafana 11.3.0 (I guess). It does not exist
         // at least in Grafana 11.0.0
@@ -76,7 +76,7 @@ const panelData = async (selector) => {
         panels.push({ "x": e.getBoundingClientRect().x, "y": e.getBoundingClientRect().y, "width": e.getBoundingClientRect().width, "height": e.getBoundingClientRect().height, "title": e.innerText.split('\n')[0], "id": id });
 
         // Click show-on-hover again to close dialog
-        [...e.getElementsByClassName("show-on-hover")].map((ee) => ee.click());
+        [...e.querySelectorAll('[title="Menu"]')].map((ee) => ee.click());
 
         // Wait for dialog to disappear
         await timer(100);
@@ -239,10 +239,45 @@ const checkFormatDataToggle = async () => {
     return;
 };
 
+// Opens Inspect Data tab
+const openInspectDataTab = async () => {
+    // Click the top right menu
+    [...document.querySelectorAll('[title="Menu"]')].map((ee) => ee.click());
+
+    // Wait for dialog to appear
+    await timer(100);
+
+    // Create a mouse event to hover on Inspect menu item
+    var hoverInspectEvent = new MouseEvent('mouseover', {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true
+    }); 
+
+    // Dispatch event on window
+    let inspectItems = document.querySelectorAll('[data-testid*="data-testid Panel menu item Inspect"]');
+
+    // Dispatch event on inspect item
+    for (let i = 0; i < inspectItems.length; i++) {
+        inspectItems[i].dispatchEvent(hoverInspectEvent);
+    }
+
+    // Wait for dispatch event
+    await timer(100);
+
+    // Click data menu item
+    [...document.querySelectorAll('[data-testid*="data-testid Panel menu item Data"]')].map((ee) => ee.click());
+
+    return;
+};
+
 // Waits for CSV data to be ready to download
 const waitForCSVData = async (version = `v${fallbackVersion}`, timeout = 30000) => {
     // First wait for panel to load data
     await waitForQueriesAndVisualizations(version, 'default', timeout);
+
+    // Open inspect tab
+    await openInspectDataTab();
 
     // Ensure format data toggle is checked
     await checkFormatDataToggle();
