@@ -243,12 +243,15 @@ func (d *Dashboard) createPanels(dashData []any) ([]Panel, error) {
 			}
 		}
 
-		// Check if panel has repeat variable and repeat variable is set to $__all, ignore all
-		// clones except the first one
-		// NOTE: Workaround until https://github.com/grafana/grafana/issues/108754 gets fixed
-		if p.Repeat != "" && d.model.Dashboard.Variables.Get("var-"+p.Repeat) == "$__all" && !strings.Contains(p.ID, "clone-0") {
-			continue
-		}
+		// UPDATE 20260209
+		// No need of hacking anymore. See the comment in renderer.go file
+		//
+		// // Check if panel has repeat variable and repeat variable is set to $__all, ignore all
+		// // clones except the first one
+		// // NOTE: Workaround until https://github.com/grafana/grafana/issues/108754 gets fixed
+		// if p.Repeat != "" && d.model.Dashboard.Variables.Get("var-"+p.Repeat) == "$__all" && !strings.Contains(p.ID, "clone-0") {
+		// 	continue
+		// }
 
 		// Create panel model and append to panels
 		panels = append(panels, p)
