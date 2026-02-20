@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.0
+
+- Take into account new repeated panel naming scheme in Grafana 12.x [#483](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/483)
+
 ## 1.10.1
 
 - fix: When data element not found, do not return error [#464](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/464)
