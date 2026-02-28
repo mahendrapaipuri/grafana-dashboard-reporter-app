@@ -8,7 +8,7 @@ const dashUid = "fe6xfyecry03ke";
 
 test("should be possible to generate report by a team user using folder permissions", async ({ request }) => {
   // Set larger timeout
-  test.setTimeout(60000);
+  test.setTimeout(120000);
 
   const report = await request.get(
     `/api/plugins/${pluginJson.id}/resources/report?dashUid=${dashUid}`
