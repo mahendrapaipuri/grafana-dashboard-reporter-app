@@ -106,7 +106,7 @@ jobs:
 
       # Install chrome as we will use it in e2e tests
       - name: Install browsers
-        run: yarn playwright install
+        run: yarn playwright install chromium --with-deps
 
       - name: Run e2e tests
         env:
