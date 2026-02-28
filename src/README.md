@@ -20,11 +20,14 @@ This plugin app depends on following:
 [`grafana-image-renderer`](https://github.com/grafana/grafana-image-renderer) to render
 panels into PNG files
 
-- If `grafana-image-renderer` is installed as Grafana plugin, no other external
+- If `grafana-image-renderer < 4.0` is installed as Grafana plugin, no other external
 dependencies are required for the plugin to work. `grafana-image-renderer` ships the
 plugin with a standalone instance of `chromium` and the same `chromium` will be used
-to render PDF reports. If `grafana-image-renderer` is deployed as a service on a
-different host, `chromium` must be installed on the host where Grafana is installed.
+to render PDF reports. For `grafana-image-renderer >= 4`, the plugin must be deployed as
+an external service and hence, `chromium` must be installed on the host where Grafana is
+installed. It is also possible to use a remote headless chrome instance without having to
+install `chromium` on the host/container where Grafana is running. Please consult
+[Additional Settings](#additional-settings) section on how to set up remote chrome instance.
 
 > [!IMPORTANT]
 > `grafana-image-renderer` advises to install `chromium` to ensure that all the
@@ -119,6 +122,17 @@ must be added to `auth` section of Grafana.
 managed_service_accounts_enabled = true
 ```
 
+> [!IMPORTANT]
+> From Grafana v11.4.0+, host environment variables are not forwarded to the plugin process
+by default. This means `PATH` environment variable in unset and hence, installed `chromium`
+or `google-chrome` can not be found by the plugin. In order to forward host environment
+variables, add the following configuration in `plugins` section.
+
+```ini
+[plugins]
+forward_host_env_vars = mahendrapaipuri-dashboardreporter-app
+```
+
 More details can be found in Grafana [docs](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#managed_service_accounts_enabled)
 
 ### Install with Docker-compose
@@ -187,6 +201,17 @@ To resume, the configuration settings can be set in the following ways:
 - Using provisioning through a YAML file at install time
 - Using environment variables set on Grafana server at install time
 - Using Grafana UI at runtime
+
+> [!IMPORTANT]
+> From Grafana v11.4.0+, host environment variables are not forwarded to the plugin process
+by default. If the plugin is configured using environment variables,
+add the following configuration in `plugins` section so that Grafana will forward the
+plugin specific environment variables to plugin process correctly.
+
+```ini
+[plugins]
+forward_host_env_vars = mahendrapaipuri-dashboardreporter-app
+```
 
 The configuration options set in the above stated methods are applied `Org` wide
 in Grafana acting as baseline configuration for the plugin. Hence, these settings can
