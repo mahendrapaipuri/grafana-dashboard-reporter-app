@@ -6,7 +6,7 @@ services:
       context: ./.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana}
-        grafana_version: ${GRAFANA_VERSION:-12.3.0}
+        grafana_version: ${GRAFANA_VERSION:-12.4.0}
         development: ${DEVELOPMENT:-false}
         go_version: ${GOVERSION:-1.24.2}
     cap_add:
@@ -46,6 +46,8 @@ services:
       - GF_UNIFIED_ALERTING_ENABLED=false
       - GF_LIVE_MAX_CONNECTIONS=0
       - GF_PLUGINS_DISABLE_PLUGINS=grafana-lokiexplore-app
+      # Starting from Grafana 12.4.0, host env vars are not forwarded to plugin by default
+      - GF_PLUGINS_FORWARD_HOST_ENV_VARS=mahendrapaipuri-dashboardreporter-app
       # Grafana image renderer
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:${GF_SERVER_HTTP_PORT:-3000}/
@@ -55,7 +57,7 @@ services:
   renderer:
     image: grafana/grafana-image-renderer:latest
     environment:
-      - BROWSER_FLAG=--ignore-certificate-errors
+      - BROWSER_FLAGS=--ignore-certificate-errors
     ports:
       - 8081
   chrome:
