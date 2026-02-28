@@ -107,6 +107,7 @@ services:
       - GF_UNIFIED_ALERTING_ENABLED=false
       - GF_LIVE_MAX_CONNECTIONS=0
       - GF_PLUGINS_DISABLE_PLUGINS=grafana-lokiexplore-app
+      - GF_PLUGINS_FORWARD_HOST_ENV_VARS=${GF_PLUGINS_FORWARD_HOST_ENV_VARS:-}
         # TLS
       - GF_SERVER_PROTOCOL=https
       - GF_SERVER_CERT_KEY=/etc/grafana/tls/localhost.key
