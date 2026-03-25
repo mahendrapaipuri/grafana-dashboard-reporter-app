@@ -32,7 +32,11 @@ import (
 	- https://github.com/chromedp/chromedp/issues/805
 */
 var (
-	defaultBlockedURLs = []string{"*/api/frontend-metrics", "*/api/live/ws", "*/api/user/*"}
+	defaultBlockedURLs = []*network.BlockPattern{
+		{URLPattern: "*/api/frontend-metrics", Block: true},
+		{URLPattern: "*/api/live/ws", Block: true},
+		{URLPattern: "*/api/user/*", Block: true},
+	}
 )
 
 var WithAwaitPromise = func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
@@ -69,9 +73,15 @@ func (t *Tab) Close(logger log.Logger) {
 
 // NavigateAndWaitFor navigates to the given address and waits for the given event to be fired on the page.
 func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName string, blockedURLs []string) error {
+	// Convert blocked URL strings to pointers to BlockPattern
+	var blockedURLPatterns []*network.BlockPattern
+	for _, url := range blockedURLs {
+		blockedURLPatterns = append(blockedURLPatterns, &network.BlockPattern{URLPattern: url, Block: true})
+	}
+
 	err := t.Run(
 		// block some URLs to avoid unnecessary requests
-		network.SetBlockedURLs(append(defaultBlockedURLs, blockedURLs...)),
+		network.SetBlockedURLs().WithURLPatterns(append(defaultBlockedURLs, blockedURLPatterns...)),
 		enableLifeCycleEvents(),
 	)
 	if err != nil {
