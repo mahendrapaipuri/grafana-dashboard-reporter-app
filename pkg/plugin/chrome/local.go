@@ -135,6 +135,13 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 		chromeOptions = append(chromeOptions, chromedp.Flag("ignore-certificate-errors", "1"))
 	}
 
+	// Not entirely sure why, without this flag chrome does not load dashboard panels
+	// correctly and thus we can never get panel data.
+	// This is happening since Chromium 146.0.7680.153.
+	// I think also, this happens only in the local chrome instance.
+	chromeOptions = append(chromeOptions, chromedp.Flag("auto-open-devtools-for-tabs", true))
+	// chromeOptions = append(chromeOptions, chromedp.Flag("log-net-log", "network.json"))
+
 	// Create a new browser allocator
 	/*
 		The side-effect here is everytime the settings are updated from Grafana UI
@@ -157,7 +164,7 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	browserCtx, _ := chromedp.NewContext(allocCtx,
 		chromedp.WithErrorf(chromeLogger.Error),
 		chromedp.WithLogf(chromeLogger.Debug),
-		// chromedp.WithDebugf(chromeLogger.Debug),
+		// chromedp.WithDebugf(std_log.Printf),
 	)
 
 	err := chromedp.Run(browserCtx)

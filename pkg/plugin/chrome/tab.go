@@ -33,9 +33,9 @@ import (
 */
 var (
 	defaultBlockedURLs = []*network.BlockPattern{
-		{URLPattern: "*/api/frontend-metrics", Block: true},
-		{URLPattern: "*/api/live/ws", Block: true},
-		{URLPattern: "*/api/user/*", Block: true},
+		{URLPattern: "*://*:*/api/frontend-metrics", Block: true},
+		{URLPattern: "*://*:*/api/live/ws", Block: true},
+		{URLPattern: "*://*:*/api/user/*", Block: true},
 	}
 )
 
