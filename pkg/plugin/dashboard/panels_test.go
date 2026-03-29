@@ -80,7 +80,9 @@ func TestDashboardFetchWithLocalChrome(t *testing.T) {
 			muLock.Lock()
 
 			requestURI = append(requestURI, r.RequestURI)
-			requestCookie = r.Header.Get(backend.CookiesHeaderName)
+			if requestCookie == "" {
+				requestCookie = r.Header.Get(backend.CookiesHeaderName)
+			}
 
 			muLock.Unlock()
 
