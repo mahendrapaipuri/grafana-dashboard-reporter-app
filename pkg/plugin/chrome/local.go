@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	std_log "log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -160,10 +161,10 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	allocCtx, _ := chromedp.NewExecAllocator(ctx, chromeOptions...)
 
 	// start a browser (and an empty tab) so we can add more tabs to the browser
-	chromeLogger := logger.With("subsystem", "chromium")
+	// chromeLogger := logger.With("subsystem", "chromium")
 	browserCtx, _ := chromedp.NewContext(allocCtx,
-		chromedp.WithErrorf(chromeLogger.Error),
-		chromedp.WithLogf(chromeLogger.Debug),
+		chromedp.WithErrorf(std_log.Printf),
+		chromedp.WithLogf(std_log.Printf),
 		// chromedp.WithDebugf(std_log.Printf),
 	)
 

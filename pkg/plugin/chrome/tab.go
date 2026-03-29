@@ -79,9 +79,15 @@ func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName 
 		blockedURLPatterns = append(blockedURLPatterns, &network.BlockPattern{URLPattern: url, Block: true})
 	}
 
-	err := t.Run(
-		// block some URLs to avoid unnecessary requests
+	// Block some URLs to avoid unnecessary requests
+	//
+	// In older of versions of chrome, the newer CDP might not work so ignore the error
+	// here. Not ideal as we will miss any errors from newer evolutions of CDP :(
+	t.Run( //nolint:errcheck
 		network.SetBlockedURLs().WithURLPatterns(append(defaultBlockedURLs, blockedURLPatterns...)),
+	)
+
+	err := t.Run(
 		enableLifeCycleEvents(),
 	)
 	if err != nil {
