@@ -146,7 +146,7 @@ func (app *App) dashboardModel(ctx context.Context, appURL, dashUID string, auth
 	dashURL := fmt.Sprintf("%s/api/dashboards/uid/%s", appURL, dashUID)
 
 	// Create a new GET request
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dashURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dashURL, nil) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("error creating request for %s: %w", dashURL, err)
 	}
@@ -159,7 +159,7 @@ func (app *App) dashboardModel(ctx context.Context, appURL, dashUID string, auth
 	}
 
 	// Make request
-	resp, err := app.httpClient.Do(req)
+	resp, err := app.httpClient.Do(req) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("error executing request for %s: %w", dashURL, err)
 	}

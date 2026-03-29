@@ -96,7 +96,17 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]any, error) {
 	// We dont need to load data from backend datasources to get panels metadata.
 	// Similarly there is no need of Grafana live for fetching metadata.
 	// So block both of them as they can hinder firing networkIdle event.
-	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle", []string{"*/api/ds/query*", "*/api/live/ws"})
+	//
+	// When there are repeated panels/rows based on query result, the URLs that are
+	// generated to make queries are of form
+	// - /api/datasources/uid/testprometheusds/resources/api/v1/query?query=up&time=1774520344
+	// - /api/datasources/uid/testprometheusds/resources/api/v1/label/cpu/values
+	// which will not be captured by the URL patterns we are using here. So, blocking just
+	// query URL for dashboards should not impact the loading of all repeated panels/rows
+	// in the dashboard
+	//
+	// Testing URL patterns: https://urlpattern.com/
+	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle", []string{"*://*:*/api/ds/query*", "*://*:*/api/live/ws"})
 	if err != nil {
 		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}
