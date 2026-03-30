@@ -7,7 +7,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20260321001828-e3e3800016bc
 	github.com/chromedp/chromedp v0.15.1
 	github.com/grafana/grafana-plugin-sdk-go v0.290.1
-	github.com/magefile/mage v1.16.1
+	github.com/magefile/mage v1.17.0
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/smartystreets/goconvey v1.8.1
