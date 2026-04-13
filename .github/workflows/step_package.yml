@@ -68,7 +68,7 @@ jobs:
           retention-days: 3
       
       - name: Release nightly
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         # Only run on main branch
         if: github.ref == 'refs/heads/main'
         with:
