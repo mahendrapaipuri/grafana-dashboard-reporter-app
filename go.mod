@@ -6,13 +6,13 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/chromedp/cdproto v0.0.0-20260321001828-e3e3800016bc
 	github.com/chromedp/chromedp v0.15.1
-	github.com/grafana/grafana-plugin-sdk-go v0.291.0
+	github.com/grafana/grafana-plugin-sdk-go v0.291.1
 	github.com/magefile/mage v1.17.1
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/mod v0.34.0
+	golang.org/x/mod v0.35.0
 )
 
 require (
@@ -110,9 +110,9 @@ require (
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260209163413-e7419c687ee4 // indirect
+	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
 	golang.org/x/text v0.35.0 // indirect
-	golang.org/x/tools v0.42.0 // indirect
+	golang.org/x/tools v0.43.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
