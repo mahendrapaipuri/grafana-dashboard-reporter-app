@@ -42,7 +42,7 @@ or use Grafana image renderer as an external service.
 
 ## Installation
 
-### Installation via `grafana-cli`
+### Installation via `grafana cli`
 
 Grafana Enterprise offers a very similar plugin [reports](https://grafana.com/docs/grafana/latest/dashboards/create-reports/#export-dashboard-as-pdf)
 and hence, their plugin policies do not allow to publish the current plugin in their
@@ -59,13 +59,13 @@ However, it is still possible to install this plugin using `grafana-cli` by over
 For example following command will install latest version of plugin
 
 ```bash
-VERSION=1.11.0; grafana-cli --pluginUrl "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
+VERSION=1.11.0; grafana cli --pluginUrl "https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${VERSION}/mahendrapaipuri-dashboardreporter-app-${VERSION}.zip" plugins install mahendrapaipuri-dashboardreporter-app
 ```
 
 Similarly, `nightly` version can be installed suing
 
 ```bash
-grafana-cli --pluginUrl  https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/nightly/mahendrapaipuri-dashboardreporter-app-nightly.zip plugins install mahendrapaipuri-dashboardreporter-app
+grafana cli --pluginUrl  https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/nightly/mahendrapaipuri-dashboardreporter-app-nightly.zip plugins install mahendrapaipuri-dashboardreporter-app
 ```
 
 > [!TIP]
