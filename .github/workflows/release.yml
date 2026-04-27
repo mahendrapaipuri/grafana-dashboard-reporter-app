@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: grafana/plugin-actions/build-plugin@09d9424ff9e927a13892275f0792e1f010ae4bfe # commit of 2024-07-08
+      - uses: grafana/plugin-actions/build-plugin@73cd57e848b81e75e3c17697e6701c9fa1404bcc # commit of 2024-07-08
         with:
           go-version: '1.26'
           node-version: '22'
