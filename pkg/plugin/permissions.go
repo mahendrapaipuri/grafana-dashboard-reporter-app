@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/config"
 	"github.com/mahendrapaipuri/authlib/authn"
 	"github.com/mahendrapaipuri/authlib/authz"
 	"github.com/mahendrapaipuri/authlib/cache"
@@ -44,7 +44,7 @@ func (app *App) GetAuthZClient(req *http.Request) (authz.EnforcementClient, erro
 	app.mx.Lock()
 	defer app.mx.Unlock()
 
-	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
+	grafanaConfig := config.GrafanaConfigFromContext(req.Context())
 
 	grafanaAppURL, err := app.grafanaAppURL(grafanaConfig)
 	if err != nil {
