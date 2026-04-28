@@ -12,8 +12,9 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/config"
 	"github.com/mahendrapaipuri/authlib/authz"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
+	plugin_config "github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/dashboard"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/report"
@@ -51,7 +52,7 @@ func (app *App) convertPanelIDs(ids []string) []string {
 }
 
 // updateConfig updates the default config from query parameters.
-func (app *App) updateConfig(req *http.Request, conf *config.Config) {
+func (app *App) updateConfig(req *http.Request, conf *plugin_config.Config) {
 	if req.URL.Query().Has("theme") {
 		conf.Theme = req.URL.Query().Get("theme")
 	}
@@ -112,7 +113,7 @@ func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 	}
 
 	// Get Grafana config from context
-	cfg := backend.GrafanaConfigFromContext(ctx)
+	cfg := config.GrafanaConfigFromContext(ctx)
 
 	// For grafana >= 10.4.4 check for feature toggles
 	if cfg.FeatureToggles().IsEnabled(accessControlFeatureFlag) && cfg.FeatureToggles().IsEnabled(idForwardingFlag) {
@@ -124,7 +125,7 @@ func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 
 // grafanaAppURL returns the Grafana's App URL. User configured URL has higher
 // precedence than the App URL in the request's context.
-func (app *App) grafanaAppURL(grafanaConfig *backend.GrafanaCfg) (string, error) {
+func (app *App) grafanaAppURL(grafanaConfig *config.GrafanaCfg) (string, error) {
 	var grafanaAppURL string
 
 	var err error
@@ -226,7 +227,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	// Add dash uid and user to logger
 	ctxLogger = ctxLogger.With("user", currentUser, "dash_uid", dashboardUID)
 
-	grafanaConfig := backend.GrafanaConfigFromContext(req.Context())
+	grafanaConfig := config.GrafanaConfigFromContext(req.Context())
 
 	// Get Grafana App URL by looking both at passed config and user defined config
 	grafanaAppURL, err := app.grafanaAppURL(grafanaConfig)

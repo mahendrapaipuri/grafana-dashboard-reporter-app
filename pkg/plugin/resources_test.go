@@ -8,7 +8,8 @@ import (
 	"testing"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
+	"github.com/grafana/grafana-plugin-sdk-go/config"
+	plugin_config "github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -56,7 +57,7 @@ func TestReportResource(t *testing.T) {
 	// Initialize app
 	inst, err := NewDashboardReporterApp(t.Context(), backend.AppInstanceSettings{
 		DecryptedSecureJSONData: map[string]string{
-			config.SaToken: "token",
+			plugin_config.SaToken: "token",
 		},
 	})
 	if err != nil {
@@ -91,7 +92,7 @@ func TestReportResource(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			ctx := backend.WithGrafanaConfig(t.Context(), backend.NewGrafanaCfg(map[string]string{
+			ctx := config.WithGrafanaConfig(t.Context(), config.NewGrafanaCfg(map[string]string{
 				backend.AppURL: ts.URL,
 			}))
 
