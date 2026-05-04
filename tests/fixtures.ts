@@ -11,10 +11,10 @@ export const test = base.extend<AppTestFixture>({
     const configPage = await gotoAppConfigPage({
       pluginId: pluginJson.id,
     });
-    await use(configPage); // eslint-disable-line
+    await use(configPage);  
   },
   gotoPage: async ({ gotoAppPage }, use) => {
-    // eslint-disable-next-line
+     
     await use((path) =>
       gotoAppPage({
         path,
