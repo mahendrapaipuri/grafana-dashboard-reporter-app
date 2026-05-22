@@ -142,6 +142,61 @@ func (app *App) grafanaAppURL(grafanaConfig *config.GrafanaCfg) (string, error) 
 	return strings.TrimSuffix(grafanaAppURL, "/"), nil
 }
 
+// dashboardFolder fetches current dashboard folder from Grafana API.
+func (app *App) dashboardFolder(ctx context.Context, appURL, folderUID string, authHeader http.Header) ([]string, error) {
+	dashURL := fmt.Sprintf("%s/api/folders/%s", appURL, folderUID)
+
+	// Create a new GET request
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dashURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request for %s: %w", dashURL, err)
+	}
+
+	// Forward auth headers
+	for name, values := range authHeader {
+		for _, value := range values {
+			req.Header.Add(name, value)
+		}
+	}
+
+	// Make request
+	resp, err := app.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error executing request for %s: %w", dashURL, err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body from %s: %w", dashURL, err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(
+			"failed to fetch dashboard model: URL: %s. Status: %s, message: %s",
+			dashURL,
+			resp.Status,
+			string(body),
+		)
+	}
+
+	var folder dashboard.Folder
+
+	// Read data into dashboard.Model
+	err = json.Unmarshal(body, &folder) //nolint:musttag
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body into dashboard folder: %w", err)
+	}
+
+	// Get folder parents
+	var parentUIDs []string
+	for _, parent := range folder.Parents {
+		parentUIDs = append(parentUIDs, parent.UID)
+	}
+
+	return parentUIDs, nil
+}
+
 // dashboardModel fetches dashboard JSON model from Grafana API.
 func (app *App) dashboardModel(ctx context.Context, appURL, dashUID string, authHeader http.Header, values url.Values) (*dashboard.Model, error) {
 	dashURL := fmt.Sprintf("%s/api/dashboards/uid/%s", appURL, dashUID)
@@ -190,6 +245,18 @@ func (app *App) dashboardModel(ctx context.Context, appURL, dashUID string, auth
 
 	// Add template variables to model
 	model.Dashboard.Variables = values
+
+	// If dashboard is in folder, fetch all parents. Because if permissions is set on
+	// parent folder, they are inherited in the nested dashboards and so, we need to
+	// provide the top level one where permissions are set
+	if model.Meta.FolderUID != "" {
+		folderUIDs, err := app.dashboardFolder(ctx, appURL, model.Meta.FolderUID, authHeader)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching dashboard folder: %w", err)
+		}
+
+		model.Meta.ParentFolderUIDs = folderUIDs
+	}
 
 	return &model, nil
 }
@@ -314,6 +381,15 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 			Attr: "uid",
 			ID:   model.Meta.FolderUID,
 		})
+
+		// If there are parents, add them too
+		for _, uid := range model.Meta.ParentFolderUIDs {
+			resources = append(resources, authz.Resource{
+				Kind: "folders",
+				Attr: "uid",
+				ID:   uid,
+			})
+		}
 	}
 
 	// If the required feature flags are enabled, check if user has access to the resource
