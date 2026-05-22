@@ -57,6 +57,7 @@
   "iam": {
     "permissions": [
       { "action": "dashboards:read", "scope": "folders:uid:*" },
+      { "action": "folders:read", "scope": "folders:uid:*" },
       { "action": "annotations:read", "scope": "annotations:type:*" },
       { "action": "datasources:query", "scope": "datasources:*" },
       { "action": "users.permissions:read", "scope": "users:*" }

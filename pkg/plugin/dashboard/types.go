@@ -36,9 +36,10 @@ type RowOrPanel struct {
 // Model represents a Grafana JSON dashboard.
 type Model struct {
 	Meta struct {
-		FolderUID   string `json:"folderUid"`
-		FolderTitle string `json:"folderTitle"`
-		FolderURL   string `json:"folderUrl"`
+		FolderUID        string `json:"folderUid"`
+		FolderTitle      string `json:"folderTitle"`
+		FolderURL        string `json:"folderUrl"`
+		ParentFolderUIDs []string
 	} `json:"meta"`
 	Dashboard struct {
 		ID          int          `json:"id"`
@@ -49,6 +50,16 @@ type Model struct {
 		Panels      []Panel
 		Variables   url.Values
 	} `json:"dashboard"`
+}
+
+// Folder represent a Grafana dashboard folder.
+type Folder struct {
+	UID     string `json:"uid"`
+	Title   string `json:"title"`
+	Parents []struct {
+		UID   string `json:"uid"`
+		Title string `json:"title"`
+	}
 }
 
 // Data represents dashboard data that will be included in the report.
