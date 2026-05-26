@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.12.0
+
+- fix: Use all nested folders for permissions check [#538](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/538)
+- chore: Add GF_PLUGINS_FORWARD_HOST_ENV_VARS config to Grafana [#496](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/496)
+
 ## 1.11.0
 
 - Take into account new repeated panel naming scheme in Grafana 12.x [#483](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/483)
