@@ -89,6 +89,13 @@ jobs:
             forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
             name: local-chrome-12.4.0-with-features
 
+          # Latest Grafana v13.x with remote chrome and native-renderer
+          - grafana-version: 13.0.1
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            # snapshots-folder: remote-chrome
+            forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
+            name: local-chrome-13.0.1-with-features
+
     steps:
       - uses: actions/checkout@v6
 
