@@ -94,7 +94,7 @@ jobs:
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             # snapshots-folder: remote-chrome
             forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
-            name: local-chrome-12.4.0-with-features
+            name: local-chrome-13.0.1-with-features
 
     steps:
       - uses: actions/checkout@v6
