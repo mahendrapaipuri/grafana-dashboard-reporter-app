@@ -2,6 +2,7 @@
 
 ## 1.12.0
 
+- ci: Add Grafana 13.x in e2e tests matrix [#541](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/541)
 - fix: Use all nested folders for permissions check [#538](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/538)
 - chore: Add GF_PLUGINS_FORWARD_HOST_ENV_VARS config to Grafana [#496](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/496)
 
