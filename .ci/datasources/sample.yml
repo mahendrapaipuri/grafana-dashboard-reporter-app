@@ -14,4 +14,4 @@ datasources:
     type: prometheus
     # Seems like Prometheus demo can go down. So we are
     # using our own instance
-    url: http://ceems-demo.myaddr.tools:9090
+    url: https://ceems-demo.myaddr.tools:9443

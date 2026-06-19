@@ -6,7 +6,7 @@
  */
 
 import { defineConfig } from 'eslint/config';
-import grafanaConfig from '@grafana/eslint-config/flat.js';
+import grafanaConfig from '@grafana/eslint-config';
 
 export default defineConfig([
   ...grafanaConfig,
@@ -36,7 +36,7 @@ export default defineConfig([
     },
   },
   {
-    name: "@grafana/eslint-config/flat",
+    name: "@grafana/eslint-config",
     settings: {
       // Fix for ESLint 10+: eslint-plugin-react uses context.getFilename() (legacy API)
       // which was removed in ESLint 10 flat config. Declaring the version explicitly
