@@ -97,7 +97,7 @@ jobs:
             name: local-chrome-13.0.1-with-features
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download build artifacts
         uses: actions/download-artifact@v8
