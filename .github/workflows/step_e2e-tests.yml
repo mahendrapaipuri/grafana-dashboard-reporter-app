@@ -27,6 +27,7 @@ jobs:
             remote-chrome-url: ''
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             native-rendering: true
+            format: html
             # snapshots-folder: local-chrome
             name: local-chrome-10.4.5-with-features
 
@@ -44,6 +45,7 @@ jobs:
             remote-chrome-url: ws://localhost:9222
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             native-rendering: false
+            format: html
             # snapshots-folder: remote-chrome
             name: remote-chrome-11.1.0-with-features
 
@@ -87,6 +89,7 @@ jobs:
             feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
             # snapshots-folder: remote-chrome
             forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
+            format: html
             name: local-chrome-12.4.0-with-features
 
           # Latest Grafana v13.x with remote chrome and native-renderer
@@ -95,6 +98,14 @@ jobs:
             # snapshots-folder: remote-chrome
             forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
             name: local-chrome-13.0.1-with-features
+
+          # Latest Grafana v13.x with remote chrome and native-renderer
+          - grafana-version: 13.0.1
+            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            # snapshots-folder: remote-chrome
+            forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
+            format: html
+            name: local-chrome-13.0.1-with-features-html
 
     steps:
       - uses: actions/checkout@v7
@@ -125,6 +136,7 @@ jobs:
           GF_REPORTER_PLUGIN_NATIVE_RENDERER: ${{ matrix.native-rendering }}
           GF_FEATURE_TOGGLES_ENABLE: ${{ matrix.feature-flags }}
           GF_PLUGINS_FORWARD_HOST_ENV_VARS: ${{ matrix.forward-host-env-vars }}
+          GF_REPORTER_PLUGIN_REPORT_FORMAT: ${{ matrix.format }}
         run: |
           # Upload/Download artifacts wont preserve permissions
           # https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss

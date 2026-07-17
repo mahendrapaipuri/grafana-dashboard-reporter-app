@@ -286,6 +286,9 @@ as well to render the panels in that given time zone.
 The following settings are advanced settings that allow to customize the header and footer
 of the report using custom HTML templates.
 
+- `file:reportFormat; env:GF_REPORTER_PLUGIN_REPORT_FORMAT; ui:Report Format`:
+  Format of the generated report. Currently supports PDF and HTML. Default is PDF.
+
 - `file:headerTemplate; env:GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE; ui:Header Template`:
   HTML template that will be added as header to the report. Mutually exclusive with
   `headerTemplateFile`.

@@ -59,6 +59,11 @@ linters:
       - linters:
           - errcheck
         path: _test.go
+      - linters: 
+          - exhaustive
+          - intrange
+          - nilnil
+        path: node_modules
     paths:
       - third_party$
       - builtin$

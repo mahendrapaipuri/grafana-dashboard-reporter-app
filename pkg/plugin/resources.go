@@ -69,6 +69,10 @@ func (app *App) updateConfig(req *http.Request, conf *plugin_config.Config) {
 		conf.DashboardMode = req.URL.Query().Get("dashboardMode")
 	}
 
+	if req.URL.Query().Has("format") {
+		conf.ReportFormat = req.URL.Query().Get("format")
+	}
+
 	if req.URL.Query().Has("timeZone") {
 		conf.TimeZone = req.URL.Query().Get("timeZone")
 	}

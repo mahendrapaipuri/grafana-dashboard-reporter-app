@@ -78,3 +78,8 @@ func (t templateData) VariableValues() string {
 func (t templateData) Theme() string {
 	return t.Conf.Theme
 }
+
+// IsHTMLFormat returns true if report format is HTML.
+func (t templateData) IsHTMLFormat() bool {
+	return t.Conf.ReportFormat == "html"
+}

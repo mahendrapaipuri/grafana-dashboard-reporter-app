@@ -21,6 +21,21 @@ func remove[T comparable](l []T, item T) []T {
 	return out
 }
 
+// normalizePanelID normalizes panel ID to be able to compare to user's input.
+func normalizePanelID(panelID string) string {
+	// Prior to Grafana 13.x, repeated panels used to have suffixes -clone-0, -clone-1, etc
+	panelID = strings.Split(panelID, "-clone")[0]
+	// From Grafana 13.x, we get panel IDs of format <var1>$<var2>$panel-3 for
+	// repeated panels based on variables. If we find "$" in panelID, we split
+	// it along $ and take the last value to get panel ID
+	if strings.Contains(panelID, "$") {
+		// Playground: https://go.dev/play/p/Jfj4FtbA2YF
+		panelID = panelID[strings.LastIndex(panelID, "$")+1:]
+	}
+
+	return panelID
+}
+
 // selectPanels returns panel indexes to render based on IncludePanelIDs and ExcludePanelIDs
 // config parameters.
 func selectPanels(panels []dashboard.Panel, includeIDs, excludeIDs []string, defaultInclude bool) []int {
@@ -30,7 +45,7 @@ func selectPanels(panels []dashboard.Panel, includeIDs, excludeIDs []string, def
 	// includeIDs
 	if len(includeIDs) == 0 && defaultInclude {
 		for _, p := range panels {
-			includeIDs = append(includeIDs, strings.Split(p.ID, "-clone")[0])
+			includeIDs = append(includeIDs, normalizePanelID(p.ID))
 		}
 	}
 
@@ -41,7 +56,7 @@ func selectPanels(panels []dashboard.Panel, includeIDs, excludeIDs []string, def
 
 		_, err := strconv.ParseInt(panel.ID, 10, 0)
 		if err != nil {
-			panelID = strings.Split(panel.ID, "-clone")[0]
+			panelID = normalizePanelID(panel.ID)
 		}
 
 		for _, id := range includeIDs {
