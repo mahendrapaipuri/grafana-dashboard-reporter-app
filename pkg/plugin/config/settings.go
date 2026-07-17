@@ -24,6 +24,7 @@ var (
 	validLayouts      = []string{"simple", "grid"}
 	validOrientations = []string{"portrait", "landscape"}
 	validModes        = []string{"default", "full"}
+	validFormats      = []string{"pdf", "html"}
 )
 
 // Config contains plugin settings.
@@ -45,6 +46,7 @@ type Config struct {
 	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"          json:"maxRenderWorkers"`
 	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"           json:"remoteChromeUrl"`
 	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"             json:"nativeRenderer"`
+	ReportFormat        string `env:"GF_REPORTER_PLUGIN_REPORT_FORMAT, overwrite"               json:"reportFormat"`
 	AppVersion          string `json:"appVersion"`
 	IncludePanelIDs     []string
 	ExcludePanelIDs     []string
@@ -80,6 +82,11 @@ func (c *Config) RTValidate() error {
 	// Check Mode
 	if !slices.Contains(validModes, c.DashboardMode) {
 		return fmt.Errorf("dashboard mode: %s must be one of [%s]", c.DashboardMode, strings.Join(validModes, ","))
+	}
+
+	// Check format
+	if !slices.Contains(validFormats, c.ReportFormat) {
+		return fmt.Errorf("report format: %s must be one of [%s]", c.ReportFormat, strings.Join(validFormats, ","))
 	}
 
 	// Set time zone to current server time zone if empty
@@ -197,11 +204,11 @@ func (c *Config) String() string {
 			"Time Zone: %s; Time Format: %s; Encoded Logo: %s; "+
 			"Max Renderer Workers: %d; Max Browser Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
 			"TLS Skip verify: %v; Included Panel IDs: %s; Excluded Panel IDs: %s Included Data for Panel IDs: %s; "+
-			"Native Renderer: %v; Client Timeout: %d",
+			"Native Renderer: %v; Client Timeout: %d; Report Format: %s",
 		c.Theme, c.Orientation, c.Layout, c.DashboardMode, c.TimeZone, c.TimeFormat,
 		encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers, c.RemoteChromeURL, appURL,
 		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs, includeDataPanelIDs, c.NativeRendering,
-		int(c.HTTPClientOptions.Timeouts.Timeout.Seconds()),
+		int(c.HTTPClientOptions.Timeouts.Timeout.Seconds()), c.ReportFormat,
 	)
 }
 
@@ -214,6 +221,7 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 		Orientation:       "portrait",
 		Layout:            "simple",
 		DashboardMode:     "default",
+		ReportFormat:      "pdf",
 		TimeZone:          "",
 		TimeFormat:        "",
 		EncodedLogo:       "",

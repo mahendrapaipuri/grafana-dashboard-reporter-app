@@ -37,6 +37,7 @@ export type JsonData = {
   orientation?: string;
   layout?: string;
   dashboardMode?: string;
+  reportFormat?: string;
   timeZone?: string;
   timeFormat?: string;
   logo?: string;
@@ -84,6 +85,10 @@ type State = {
   dashboardMode: string;
   // If dashboardMode has changed
   dashboardModeChanged: boolean;
+  // reportFormat (pdf or html)
+  reportFormat: string;
+  // If reportFormat has changed
+  reportFormatChanged: boolean;
   // time zone in IANA format
   timeZone: string;
   // If timeZone has changed
@@ -162,6 +167,8 @@ export const AppConfig = ({ plugin }: Props) => {
     layoutChanged: false,
     dashboardMode: jsonData?.dashboardMode || "default",
     dashboardModeChanged: false,
+    reportFormat: jsonData?.reportFormat || "pdf",
+    reportFormatChanged: false,
     timeZone: jsonData?.timeZone || "",
     timeZoneChanged: false,
     timeFormat: jsonData?.timeFormat || "",
@@ -215,6 +222,11 @@ export const AppConfig = ({ plugin }: Props) => {
     { label: "Full", value: "full" },
   ];
 
+  const reportFormatOptions = [
+    { label: "PDF", value: "pdf" },
+    { label: "HTML", value: "html" },
+  ];
+
   const onChangeURL = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
@@ -260,6 +272,14 @@ export const AppConfig = ({ plugin }: Props) => {
       ...state,
       dashboardMode: value,
       dashboardModeChanged: true,
+    });
+  };
+
+  const onChangeReportFormat = (value: string) => {
+    setState({
+      ...state,
+      reportFormat: value,
+      reportFormatChanged: true,
     });
   };
 
@@ -382,6 +402,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
+                    reportFormat: state.reportFormat,
                     timeZone: state.timeZone,
                     timeFormat: state.timeFormat,
                     logo: state.logo,
@@ -435,6 +456,7 @@ export const AppConfig = ({ plugin }: Props) => {
                     orientation: state.orientation,
                     layout: state.layout,
                     dashboardMode: state.dashboardMode,
+                    reportFormat: state.reportFormat,
                     timeZone: state.timeZone,
                     timeFormat: state.timeFormat,
                     logo: state.logo,
@@ -616,6 +638,20 @@ export const AppConfig = ({ plugin }: Props) => {
           isCollapsible
           isInitiallyOpen={false}
         >
+          {/* Report Format */}
+          <Field
+            label="Report Format"
+            description="Format of the dashboard report."
+            data-testid={testIds.appConfig.reportFormat}
+            className={s.marginTop}
+          >
+            <RadioButtonGroup
+              options={reportFormatOptions}
+              value={state.reportFormat}
+              onChange={onChangeReportFormat}
+            />
+          </Field>
+
           {/* Header Template */}
           <Field
             label="Report Header Template"
@@ -793,6 +829,7 @@ export const AppConfig = ({ plugin }: Props) => {
                 orientation: state.orientation,
                 layout: state.layout,
                 dashboardMode: state.dashboardMode,
+                reportFormat: state.reportFormat,
                 timeZone: state.timeZone,
                 timeFormat: state.timeFormat,
                 logo: state.logo,
@@ -828,6 +865,7 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.layoutChanged &&
               !state.orientationChanged &&
               !state.dashboardModeChanged &&
+              !state.reportFormatChanged &&
               !state.timeZoneChanged &&
               !state.timeFormatChanged &&
               !state.logoChanged &&

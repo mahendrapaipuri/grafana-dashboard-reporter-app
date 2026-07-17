@@ -12,16 +12,45 @@
     [data-theme="light"] {
         --color-bg: #ffffff;
         --color-fg: #000000;
+        --color-margin: lightgray;
     }
 
     [data-theme="dark"] {
         --color-bg: #181b1f;
         --color-fg: #ffffff;
+        --color-margin: #ffffff;
     }
 
     @page { 
         margin: 3cm 0cm 1cm 0cm;
         background-color: var(--color-bg);
+    }
+
+    .content-header {
+        width: 100%;
+        background-color: var(--color-bg);
+        color: var(--color-fg);
+        display: flex;
+        flex-wrap: wrap;
+        padding: 10px;
+        vertical-align: middle;
+        font-weight: bold;
+        font-size: 50px;
+        display: inline-block;
+        text-align: start;
+        border-bottom: 1px solid var(--color-margin);
+    }
+
+    .content-header-left {
+        font-weight: bold;
+        font-size: 20px;
+        float: left;
+    }
+
+    .content-header-right {
+        font-weight: bold;
+        font-size: 20px;
+        float: right;
     }
 
     html {
@@ -108,6 +137,18 @@
 </head>
 
 <body>
+    {{- if .IsHTMLFormat }}
+    <div class="content-header" data-theme="{{.Theme}}">
+        <div class="content-header-left" data-theme="{{.Theme}}">generated on {{.Date}}</div>
+        <div class="content-header-right" data-theme="{{.Theme}}">Datetime range: {{.From}} to {{.To}}</div>
+        <br />
+        {{ .Title }}
+        {{- if .VariableValues }}
+        <br />
+        <div class="content-header-left" data-theme="{{.Theme}}">{{ .VariableValues }}</div>
+        {{- end}}
+    </div>
+    {{- end }}
     <div class="container">
         <div class="grid">
             {{- range $i, $v := .Panels}}

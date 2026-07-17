@@ -72,21 +72,26 @@ func (r *Report) Generate(ctx context.Context, writer http.ResponseWriter) error
 	// 	return panelTable.Data == nil
 	// })
 
-	// Sanitize title to escape non ASCII characters
-	// Ref: https://stackoverflow.com/questions/62705546/unicode-characters-in-attachment-name
-	// Ref: https://medium.com/@JeremyLaine/non-ascii-content-disposition-header-in-django-3a20acc05f0d
-	filename := url.PathEscape(dashboardData.Title)
-	header := fmt.Sprintf(`inline; filename*=UTF-8''%s.pdf`, filename)
-	writer.Header().Add("Content-Disposition", header)
-
 	htmlReport, err := r.generateHTMLFile(dashboardData)
 	if err != nil {
 		return fmt.Errorf("failed to generate HTML file: %w", err)
 	}
 
-	err = r.renderPDF(htmlReport, writer)
-	if err != nil {
-		return fmt.Errorf("failed to render PDF: %w", err)
+	if r.conf.ReportFormat == "html" {
+		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprint(writer, htmlReport.Body)
+	} else {
+		// Sanitize title to escape non ASCII characters
+		// Ref: https://stackoverflow.com/questions/62705546/unicode-characters-in-attachment-name
+		// Ref: https://medium.com/@JeremyLaine/non-ascii-content-disposition-header-in-django-3a20acc05f0d
+		filename := url.PathEscape(dashboardData.Title)
+		header := fmt.Sprintf(`inline; filename*=UTF-8''%s.pdf`, filename)
+		writer.Header().Add("Content-Disposition", header)
+
+		err = r.renderPDF(htmlReport, writer)
+		if err != nil {
+			return fmt.Errorf("failed to render PDF: %w", err)
+		}
 	}
 
 	return nil

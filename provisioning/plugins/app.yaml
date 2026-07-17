@@ -126,6 +126,15 @@ apps:
       #
       logo: ''
 
+      # Report format.
+      #
+      # Format of the generated report. Currently supports HTML and PDF.
+      #
+      # This setting can be overridden for a particular dashboard by using query parameter
+      # ?format=pdf or ?format=html during report generation process
+      #
+      reportFormat: pdf
+
       # Header HTML template in the report.
       #
       # Custom HTML header template to be used in the report. If empty, default template
