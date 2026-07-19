@@ -370,6 +370,9 @@ to set these values. Currently, the supported query parameters are:
 - Query field for dashboard mode is `dashboardMode` and it takes either `default` or `full`
   as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&dashboardMode=full`
 
+- Query field for report format is `format` and it takes either `html` or `pdf`
+  as value. Example is `<grafanaAppUrl>/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=<UID of dashboard>&format=html`
+
 - Query field for dashboard mode is `timeZone` and it takes a value in [IANA format](https://www.iana.org/time-zones)
   as value. **Note** that it should be encoded to escape URL specific characters. For example
   to use `America/New_York` query parameter should be

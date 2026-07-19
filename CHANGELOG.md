@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.0
+
+- feat: Support HTML report format [#561](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/561)
+
 ## 1.12.0
 
 - ci: Add Grafana 13.x in e2e tests matrix [#541](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/541)
