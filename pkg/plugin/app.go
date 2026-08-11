@@ -11,6 +11,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/useragent"
 	"github.com/mahendrapaipuri/authlib/authz"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/chrome"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/config"
@@ -75,7 +76,7 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	app.ctxLogger.Info("starting plugin with initial config: " + app.conf.String())
 
 	// Get current Grafana version
-	app.grafanaSemVer = "v" + backend.UserAgentFromContext(ctx).GrafanaVersion()
+	app.grafanaSemVer = "v" + useragent.FromContext(ctx).GrafanaVersion()
 
 	if app.grafanaSemVer == "v0.0.0" && app.conf.AppVersion != "0.0.0" {
 		app.grafanaSemVer = "v" + app.conf.AppVersion
