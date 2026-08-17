@@ -6,13 +6,13 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/chromedp/cdproto v0.0.0-20260714215040-dc233986426f
 	github.com/chromedp/chromedp v0.16.0
-	github.com/grafana/grafana-plugin-sdk-go v0.296.1
+	github.com/grafana/grafana-plugin-sdk-go v0.296.2
 	github.com/magefile/mage v1.17.2
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/smartystreets/goconvey v1.8.1
-	github.com/stretchr/testify v1.11.1
-	golang.org/x/mod v0.38.0
+	github.com/stretchr/testify v1.12.0
+	golang.org/x/mod v0.40.0
 )
 
 require (
@@ -29,7 +29,6 @@ require (
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
 	github.com/go-json-experiment/json v0.0.0-20260623181947-01eb4420fa68 // indirect
@@ -78,7 +77,6 @@ require (
 	github.com/olekukonko/tablewriter v1.1.4 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pierrec/lz4/v4 v4.1.27 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.67.5 // indirect
