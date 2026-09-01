@@ -77,13 +77,15 @@
     "swc-loader": "^0.2.7",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "7.0.2",
     "webpack": "^5.110.1",
     "webpack-cli": "^7.2.2",
     "webpack-livereload-plugin": "^3.0.2",
     "imports-loader": "^5.0.0",
     "webpack-virtual-modules": "^0.6.2",
-    "minimizer-webpack-plugin": "^5.6.1"
+    "minimizer-webpack-plugin": "^5.6.1",
+    "@swc/register": "^0.1.10",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "engines": {
     "node": ">=22"
