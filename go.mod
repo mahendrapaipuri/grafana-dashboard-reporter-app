@@ -12,7 +12,7 @@ require (
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/mod v0.40.0
+	golang.org/x/mod v0.41.0
 )
 
 require (
