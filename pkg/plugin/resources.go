@@ -31,6 +31,10 @@ const (
 	idForwardingFlag         = "idForwarding"        // added in Grafana 10.3.0
 )
 
+const (
+	uidAttr = "uid"
+)
+
 // convertPanelIDs returns panel IDs based on Grafana version.
 func (app *App) convertPanelIDs(ids []string) []string {
 	// For Grafana < 11.3.0, we can use the IDs as such
@@ -116,7 +120,7 @@ func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 		return false
 	}
 
-	// From Grafana 11.6.0 and above accessControl and idForwaring feature toggles are always enabled. 
+	// From Grafana 11.6.0 and above accessControl and idForwaring feature toggles are always enabled.
 	// So we can skip checking for them.
 	if helpers.SemverCompare(app.grafanaSemVer, "v11.6.0") >= 0 {
 		return true
@@ -389,14 +393,14 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	resources := []authz.Resource{
 		{
 			Kind: "dashboards",
-			Attr: "uid",
+			Attr: uidAttr,
 			ID:   dashboardUID,
 		},
 	}
 	if model.Meta.FolderUID != "" {
 		resources = append(resources, authz.Resource{
 			Kind: "folders",
-			Attr: "uid",
+			Attr: uidAttr,
 			ID:   model.Meta.FolderUID,
 		})
 
@@ -404,7 +408,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		for _, uid := range model.Meta.ParentFolderUIDs {
 			resources = append(resources, authz.Resource{
 				Kind: "folders",
-				Attr: "uid",
+				Attr: uidAttr,
 				ID:   uid,
 			})
 		}
