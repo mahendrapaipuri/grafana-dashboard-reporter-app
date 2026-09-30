@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.1
+
+- chore: Feature flags accessControlOnCall and idForwarding have been removed in 11.6.0 [#592](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/592)
+
 ## 1.13.0
 
 - feat: Support HTML report format [#561](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/561)
