@@ -98,8 +98,8 @@ logger=plugin.loader t=2024-03-21T11:16:54.738166325Z level=info msg="Plugin reg
 The plugin depends on following features flags and it is **strongly** recommended to enable
 them on Grafana server.
 
-- `accessControlOnCall`: Available in `Grafana >= 10.4.0`
-- `idForwarding`: Available in `Grafana >= 10.4.0`
+- `accessControlOnCall`: Available in `Grafana >= 10.4.0, < 11.6.0`
+- `idForwarding`: Available in `Grafana >= 10.4.0, < 11.2.0`
 - `externalServiceAccounts`: Available in `Grafana >= 10.3.0`
 
 This can be done using `feature_toggles` section of Grafana as follows:
