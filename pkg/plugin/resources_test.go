@@ -100,9 +100,9 @@ func TestReportResource(t *testing.T) {
 
 			err = app.CallResource(ctx, &backend.CallResourceRequest{
 				PluginContext: backend.PluginContext{
-					OrgID:    3,
-					PluginID: "my-plugin",
-					User:     &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
+					Namespace: "3",
+					PluginID:  "my-plugin",
+					User:      &backend.User{Name: "foobar", Email: "foo@bar.com", Login: "foo@bar.com"},
 				},
 				Method: http.MethodGet,
 				Path:   "report?dashUid=testDash",

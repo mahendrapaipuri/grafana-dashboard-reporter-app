@@ -10,6 +10,7 @@ linters:
     - dupword
     - err113
     - exhaustruct
+    - exhaustruct_v5
     - funlen
     - gochecknoglobals
     - gochecknoinits
@@ -58,6 +59,7 @@ linters:
     rules:
       - linters:
           - errcheck
+          - goconst
         path: _test.go
       - linters: 
           - exhaustive

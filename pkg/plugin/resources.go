@@ -31,6 +31,10 @@ const (
 	idForwardingFlag         = "idForwarding"        // added in Grafana 10.3.0
 )
 
+const (
+	uidAttr = "uid"
+)
+
 // convertPanelIDs returns panel IDs based on Grafana version.
 func (app *App) convertPanelIDs(ids []string) []string {
 	// For Grafana < 11.3.0, we can use the IDs as such
@@ -112,16 +116,30 @@ func (app *App) updateConfig(req *http.Request, conf *plugin_config.Config) {
 func (app *App) featureTogglesEnabled(ctx context.Context) bool {
 	// If Grafana <= 10.4.3, we use cookies to make request. Moreover feature toggles are
 	// not available for these Grafana versions.
-	if helpers.SemverCompare(app.grafanaSemVer, "v10.4.3") <= -1 {
+	if helpers.SemverCompare(app.grafanaSemVer, "v10.4.3") <= 0 {
 		return false
+	}
+
+	// From Grafana 11.6.0 and above accessControl and idForwaring feature toggles are always enabled.
+	// So we can skip checking for them.
+	if helpers.SemverCompare(app.grafanaSemVer, "v11.6.0") >= 0 {
+		return true
 	}
 
 	// Get Grafana config from context
 	cfg := config.GrafanaConfigFromContext(ctx)
 
-	// For grafana >= 10.4.4 check for feature toggles
-	if cfg.FeatureToggles().IsEnabled(accessControlFeatureFlag) && cfg.FeatureToggles().IsEnabled(idForwardingFlag) {
-		return true
+	// For grafana >= 10.4.4 and < 11.2.0 check for feature toggles
+	if helpers.SemverCompare(app.grafanaSemVer, "v11.2.0") == -1 {
+		if cfg.FeatureToggles().IsEnabled(accessControlFeatureFlag) && cfg.FeatureToggles().IsEnabled(idForwardingFlag) {
+			return true
+		}
+	} else {
+		// In Grafana v11.2.0, idForwarding has been removed. So, check for only accessControl
+		// for versions >= 11.2.0 and < 11.6.0
+		if cfg.FeatureToggles().IsEnabled(accessControlFeatureFlag) {
+			return true
+		}
 	}
 
 	return false
@@ -375,14 +393,14 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 	resources := []authz.Resource{
 		{
 			Kind: "dashboards",
-			Attr: "uid",
+			Attr: uidAttr,
 			ID:   dashboardUID,
 		},
 	}
 	if model.Meta.FolderUID != "" {
 		resources = append(resources, authz.Resource{
 			Kind: "folders",
-			Attr: "uid",
+			Attr: uidAttr,
 			ID:   model.Meta.FolderUID,
 		})
 
@@ -390,7 +408,7 @@ func (app *App) handleReport(w http.ResponseWriter, req *http.Request) {
 		for _, uid := range model.Meta.ParentFolderUIDs {
 			resources = append(resources, authz.Resource{
 				Kind: "folders",
-				Attr: "uid",
+				Attr: uidAttr,
 				ID:   uid,
 			})
 		}
