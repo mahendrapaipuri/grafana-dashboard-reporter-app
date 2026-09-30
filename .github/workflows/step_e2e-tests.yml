@@ -63,7 +63,7 @@ jobs:
           # Latest Grafana with local chrome and grafana-image-renderer
           - grafana-version: 11.6.0
             remote-chrome-url: ws://localhost:9222
-            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            feature-flags: 'externalServiceAccounts'
             native-rendering: false
             # snapshots-folder: remote-chrome
             name: local-chrome-11.6.0-with-features
@@ -79,14 +79,14 @@ jobs:
           # Grafana v12.1 with remote chrome and native-renderer
           - grafana-version: 12.1.0
             remote-chrome-url: ws://localhost:9222
-            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            feature-flags: 'externalServiceAccounts'
             native-rendering: true
             # snapshots-folder: remote-chrome
             name: remote-chrome-12.1.0-with-features-native-renderer
 
           # Latest Grafana v12.x with remote chrome and native-renderer
           - grafana-version: 12.4.0
-            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            feature-flags: 'externalServiceAccounts'
             # snapshots-folder: remote-chrome
             forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
             format: html
@@ -94,14 +94,14 @@ jobs:
 
           # Latest Grafana v13.x with remote chrome and native-renderer
           - grafana-version: 13.0.1
-            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            feature-flags: 'externalServiceAccounts'
             # snapshots-folder: remote-chrome
             forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
             name: local-chrome-13.0.1-with-features
 
           # Latest Grafana v13.x with remote chrome and native-renderer
           - grafana-version: 13.0.1
-            feature-flags: 'accessControlOnCall,idForwarding,externalServiceAccounts'
+            feature-flags: 'externalServiceAccounts'
             # snapshots-folder: remote-chrome
             forward-host-env-vars: mahendrapaipuri-dashboardreporter-app
             format: html
