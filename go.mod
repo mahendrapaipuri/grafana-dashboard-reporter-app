@@ -1,10 +1,10 @@
 module github.com/mahendrapaipuri/grafana-dashboard-reporter-app
 
-go 1.26.5
+go 1.27
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/chromedp/cdproto v0.0.0-20260912003405-686a5c723acc
+	github.com/chromedp/cdproto v0.157.2
 	github.com/chromedp/chromedp v0.16.0
 	github.com/grafana/grafana-plugin-sdk-go v0.296.5
 	github.com/magefile/mage v1.17.2
@@ -25,7 +25,6 @@ require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
-	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
