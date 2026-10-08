@@ -94,8 +94,8 @@ func (t *Tab) NavigateAndWaitFor(addr string, headers map[string]any, eventName 
 		return fmt.Errorf("error enable lifecycle events: %w", err)
 	}
 
-	if headers != nil {
-		err := t.Run(setHeaders(headers))
+	if len(headers) > 0 {
+		err := t.Run(setHeaders(addr, headers))
 		if err != nil {
 			return fmt.Errorf("error set headers: %w", err)
 		}
