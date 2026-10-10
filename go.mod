@@ -1,11 +1,11 @@
 module github.com/mahendrapaipuri/grafana-dashboard-reporter-app
 
-go 1.26.5
+go 1.27
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/chromedp/cdproto v0.0.0-20260912003405-686a5c723acc
-	github.com/chromedp/chromedp v0.16.0
+	github.com/chromedp/cdproto v0.157.6
+	github.com/chromedp/chromedp v0.19.1
 	github.com/grafana/grafana-plugin-sdk-go v0.296.5
 	github.com/magefile/mage v1.17.2
 	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
@@ -25,18 +25,13 @@ require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
-	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
-	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/gobwas/httphead v0.1.0 // indirect
-	github.com/gobwas/pool v0.2.1 // indirect
-	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
