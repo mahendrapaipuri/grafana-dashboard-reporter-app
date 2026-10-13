@@ -130,18 +130,21 @@ const waitForQueriesAndVisualizations = async (version = `v${fallbackVersion}`, 
         dockMenu.click();
     }
 
-    // Expand row panels if mode is full
-    if (mode === 'full') {
-        // For Grafana <= v10
-        [...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0].click());
-        // For Grafana > v10 and <= v11
-        [...document.querySelectorAll("[data-testid='dashboard-row-container']")].map((e) => [...e.querySelectorAll("[aria-expanded=false]")].map((e) => e.click()));
-        // For Grafana >= v11.3
-        [...document.querySelectorAll("[aria-label='Expand row']")].map((e) => e.click());
-    }
+    // Expand collapsed rows and return number of rows that were expanded
+    const expandRows = () => {
+        const collapsedRows = [
+            // For Grafana <= v10
+            ...[...document.getElementsByClassName('dashboard-row--collapsed')].map((e) => e.getElementsByClassName('dashboard-row__title pointer')[0]),
+            // For Grafana > v10 and <= v11
+            ...[...document.querySelectorAll("[data-testid='dashboard-row-container']")].flatMap((e) => [...e.querySelectorAll("[aria-expanded=false]")]),
+            // For Grafana >= v11.3 (label is "Expand row" or "Expand row with title <title>")
+            ...document.querySelectorAll("button[aria-label^='Expand row']"),
+        ].filter((e) => e);
 
-    // Always scroll to bottom of the page
-    window.scrollTo(0, document.body.scrollHeight);
+        collapsedRows.forEach((e) => e.click());
+
+        return collapsedRows.length;
+    };
 
     // Panel count should be unchanged for minStableSizeIterations times
     let countStableSizeIterations = 0;
@@ -153,11 +156,17 @@ const waitForQueriesAndVisualizations = async (version = `v${fallbackVersion}`, 
     const start = Date.now();
 
     while (Date.now() - start < timeout) {
+        // Rows may render late or reveal nested/repeated rows, so expand on every iteration
+        const expandedRows = mode === 'full' ? expandRows() : 0;
+
+        // Always scroll to bottom of the page to trigger lazy loading
+        window.scrollTo(0, document.body.scrollHeight);
+
         // Get current number of rendered panels
         let currentPanels = document.querySelectorAll("[class$='panel-content']");
 
         // If current panels and last panels are same, increment iterator
-        if (lastPanels.length !== 0 && currentPanels.length === lastPanels.length) {
+        if (expandedRows === 0 && lastPanels.length !== 0 && currentPanels.length === lastPanels.length) {
             countStableSizeIterations++;
         } else {
             countStableSizeIterations = 0; // reset the counter
