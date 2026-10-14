@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.13.2
+
+- Fix row expansion [#604](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/604)
+- fix: Scope auth headers to Grafana's origin [#601](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/601)
+
 ## 1.13.1
 
 - chore: Feature flags accessControlOnCall and idForwarding have been removed in 11.6.0 [#592](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/592)
