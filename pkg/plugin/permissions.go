@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/grafana/grafana-plugin-sdk-go/config"
 	"github.com/grafana/authlib/authn"
 	"github.com/grafana/authlib/authz"
 	"github.com/grafana/authlib/cache"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/grafana/grafana-plugin-sdk-go/config"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
 )
 

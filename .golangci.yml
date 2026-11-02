@@ -49,6 +49,9 @@ linters:
       allow-first-in-block: true
       allow-whole-block: false
       branch-max-lines: 2
+    gomoddirectives:
+      replace-allow-list:
+        - github.com/grafana/authlib
   exclusions:
     generated: lax
     presets:
