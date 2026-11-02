@@ -6,9 +6,9 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/chromedp/cdproto v0.0.0-20260922220944-a19bff23514f
 	github.com/chromedp/chromedp v0.16.0
+	github.com/grafana/authlib v0.0.0-20261102133748-32d8bf24a41b
 	github.com/grafana/grafana-plugin-sdk-go v0.298.0
 	github.com/magefile/mage v1.17.2
-	github.com/mahendrapaipuri/authlib v0.0.0-20240829124252-b9fafb827c67
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/stretchr/testify v1.12.1
@@ -30,7 +30,7 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/fatih/color v1.19.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.7 // indirect
 	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -116,3 +116,5 @@ require (
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 )
+
+replace github.com/grafana/authlib => github.com/mahendrapaipuri/authlib v0.0.0-20261102150017-7551b9cc071a
