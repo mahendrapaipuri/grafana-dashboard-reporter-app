@@ -52,6 +52,7 @@ linters:
     gomoddirectives:
       replace-allow-list:
         - github.com/grafana/authlib
+        - github.com/grafana/authlib/types
   exclusions:
     generated: lax
     presets:
