@@ -296,3 +296,16 @@ const waitForCSVData = async (version = `v${fallbackVersion}`, timeout = 30000) 
 
     return;
 };
+
+// Hides three dot menu button element on top right corner of d-solo view
+const hideThreeDotMenuButton = async () => {
+    // Get show on hover elements
+    const threeDotElements = document.getElementsByClassName('show-on-hover');
+
+    // Set display to none
+    for (let i = 0; i < threeDotElements.length; i++) {
+        threeDotElements[i].style.display = 'none';
+    }
+
+    return;
+};

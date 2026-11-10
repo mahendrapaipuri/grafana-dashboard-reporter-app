@@ -57,15 +57,10 @@ func (d *Dashboard) panelPNGNativeRenderer(_ context.Context, p Panel) (PanelIma
 
 	tasks := make(chromedp.Tasks, 0)
 
-	js := fmt.Sprintf(
-		`waitForQueriesAndVisualizations(version = '%s', timeout = %d);`,
-		d.appVersion, d.conf.HTTPClientOptions.Timeouts.Timeout.Milliseconds(),
-	)
-
 	tasks = append(tasks, chromedp.Tasks{
 		chromedp.Evaluate(d.jsContent, nil),
 		chromedp.EmulateViewport(d.panelDims(p)),
-		chromedp.Evaluate(js, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+		chromedp.Evaluate("hideThreeDotMenuButton()", nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 			return p.WithAwaitPromise(true)
 		}),
 		chromedp.CaptureScreenshot(&buf),
