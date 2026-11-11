@@ -307,5 +307,22 @@ const hideThreeDotMenuButton = async () => {
         threeDotElements[i].style.display = 'none';
     }
 
+    // Initialise parameters
+    let checkCounts = 1;
+    const start = Date.now();
+
+    // Wait for queries to finish
+    while (Date.now() - start < 1000) {
+        // If no running queries found, return
+        // Ref: https://github.com/grafana/grafana-image-renderer/blob/815ad7cf32fde584c69e6d1270ad3bb92395756c/pkg/service/browser.go#L1039-L1043
+        if (!(window.__grafanaSceneContext && window.__grafanaRunningQueryCount > 0)) {
+            return;
+        }
+
+        // If not, wait and retry
+        await timer(baseDelayMsecs * 2 ** checkCounts);
+        checkCounts++;
+    }
+
     return;
 };
