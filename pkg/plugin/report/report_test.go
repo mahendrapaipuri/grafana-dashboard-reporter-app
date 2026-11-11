@@ -22,7 +22,6 @@ func TestReport(t *testing.T) {
 		defer cancel()
 
 		workerPools := worker.Pools{
-			worker.Browser:  worker.New(ctx, 6),
 			worker.Renderer: worker.New(ctx, 2),
 		}
 

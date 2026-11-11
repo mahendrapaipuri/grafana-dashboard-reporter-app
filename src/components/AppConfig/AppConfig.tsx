@@ -45,7 +45,6 @@ export type JsonData = {
   headerTemplateFile?: string;
   footerTemplate?: string;
   footerTemplateFile?: string;
-  maxBrowserWorkers?: number;
   maxRenderWorkers?: number;
   remoteChromeUrl?: string;
   timeout?: number;
@@ -117,10 +116,6 @@ type State = {
   footerTemplateFile: string;
   // If footer template has changed
   footerTemplateFileChanged: boolean;
-  // Maximum browser workers
-  maxBrowserWorkers: number;
-  // If maxRenderWorkers has changed
-  maxBrowserWorkersChanged: boolean;
   // Maximum rendering workers
   maxRenderWorkers: number;
   // If maxRenderWorkers has changed
@@ -183,8 +178,6 @@ export const AppConfig = ({ plugin }: Props) => {
     footerTemplateChanged: false,
     footerTemplateFile: jsonData?.footerTemplateFile || "",
     footerTemplateFileChanged: false,
-    maxBrowserWorkers: jsonData?.maxBrowserWorkers || 2,
-    maxBrowserWorkersChanged: false,
     maxRenderWorkers: jsonData?.maxRenderWorkers || 2,
     maxRenderWorkersChanged: false,
     remoteChromeUrl: jsonData?.remoteChromeUrl || "",
@@ -339,14 +332,6 @@ export const AppConfig = ({ plugin }: Props) => {
     });
   };
 
-  const onChangeMaxBrowserWorkers = (event: ChangeEvent<HTMLInputElement>) => {
-    setState({
-      ...state,
-      maxBrowserWorkers: event.target.valueAsNumber,
-      maxBrowserWorkersChanged: true,
-    });
-  };
-
   const onChangeMaxRenderWorkers = (event: ChangeEvent<HTMLInputElement>) => {
     setState({
       ...state,
@@ -410,7 +395,6 @@ export const AppConfig = ({ plugin }: Props) => {
                     headerTemplateFile: state.headerTemplateFile,
                     footerTemplate: state.footerTemplate,
                     footerTemplateFile: state.footerTemplateFile,
-                    maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
                     timeout: state.timeout,
@@ -464,7 +448,6 @@ export const AppConfig = ({ plugin }: Props) => {
                     headerTemplateFile: state.headerTemplateFile,
                     footerTemplate: state.footerTemplate,
                     footerTemplateFile: state.footerTemplateFile,
-                    maxBrowserWorkers: state.maxBrowserWorkers,
                     maxRenderWorkers: state.maxRenderWorkers,
                     remoteChromeUrl: state.remoteChromeUrl,
                     timeout: state.timeout,
@@ -776,24 +759,6 @@ export const AppConfig = ({ plugin }: Props) => {
           />
         </Field>
 
-        {/* Max browser workers */}
-        <Field
-          label="Maximum Browser Workers"
-          description="Maximum number of workers for interacting with chrome browser. Default is 2."
-          className={s.marginTop}
-        >
-          <Input
-            type="number"
-            width={60}
-            id="max-browser-workers"
-            data-testid={testIds.appConfig.maxBrowserWorkers}
-            label={`Maximum Browser Workers`}
-            pattern={`[0-9]{1,2}`}
-            value={state.maxBrowserWorkers}
-            onChange={onChangeMaxBrowserWorkers}
-          />
-        </Field>
-
         {/* Max render workers */}
         <Field
           label="Maximum Render Workers"
@@ -837,7 +802,6 @@ export const AppConfig = ({ plugin }: Props) => {
                 headerTemplateFile: state.headerTemplateFile,
                 footerTemplate: state.footerTemplate,
                 footerTemplateFile: state.footerTemplateFile,
-                maxBrowserWorkers: state.maxBrowserWorkers,
                 maxRenderWorkers: state.maxRenderWorkers,
                 remoteChromeUrl: state.remoteChromeUrl,
                 timeout: state.timeout,
@@ -873,7 +837,6 @@ export const AppConfig = ({ plugin }: Props) => {
               !state.headerTemplateFileChanged &&
               !state.footerTemplateChanged &&
               !state.footerTemplateFileChanged &&
-              !state.maxBrowserWorkersChanged &&
               !state.maxRenderWorkersChanged &&
               !state.remoteChromeUrlChanged &&
               !state.isSaTokenReset &&

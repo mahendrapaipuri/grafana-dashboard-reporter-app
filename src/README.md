@@ -337,9 +337,6 @@ The following configuration settings allow more control over plugin's functional
   container is not desired. An example [docker-compose file](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/blob/main/docker-compose.yaml) shows how to run `chromium` in an `init` container. When remote chrome instance is being used, ensure
   that `appUrl` is accessible to remote chrome.
 
-- `file:maxBrowserWorkers; env: GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS; ui: Maximum Browser Workers`:
-  Maximum number of workers for interacting with chrome browser.
-
 - `file:maxRenderWorkers; env: GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS; ui: Maximum Render Workers`:
   Maximum number of workers for generating panel PNGs.
 
@@ -347,6 +344,10 @@ The following configuration settings allow more control over plugin's functional
 > Starting from `v1.4.0`, config parameter `dataPath` is not needed anymore as the plugin
 will get the Grafana's data path based on its own executable path. If the existing provisioned
 configs have this parameter set, it will be ignored while loading the plugin's configuration.
+
+> [!NOTE]
+> Starting from `v1.14.0`, config parameter `maxBrowserWorkers` is not needed anymore as concurrency
+is managed using a single queue of length `maxRenderWorkers`.
 
 More advanced settings on HTTP client can be configured using provisioned config file which are
 presented in [Advanced Settings](#advanced-settings).

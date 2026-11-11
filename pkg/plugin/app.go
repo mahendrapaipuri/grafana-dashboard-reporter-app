@@ -116,6 +116,14 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 		return nil, fmt.Errorf("failed to start browser: %w", err)
 	}
 
+	// If native rendering is enabled, limit renderer workers to 1
+	// This is due to the tab visibility issues when generating concurrent screenshots
+	// on chrome. Seems like it effects only when using local chrome.
+	if app.conf.NativeRendering && app.conf.RemoteChromeURL == "" {
+		app.ctxLogger.Warn("native renderer using local chrome enabled. Limiting renderer workers to 1")
+		app.conf.MaxRenderWorkers = 1
+	}
+
 	// Use the same browser instance for all API requests
 	app.chromeInstance = chromeInstance
 
@@ -126,7 +134,6 @@ func NewDashboardReporterApp(ctx context.Context, settings backend.AppInstanceSe
 	// safely disposing both workers and chrome instances in dispose() method, we are
 	// sure that there wont be any leaks.
 	app.workerPools = worker.Pools{
-		worker.Browser:  worker.New(context.Background(), app.conf.MaxBrowserWorkers),
 		worker.Renderer: worker.New(context.Background(), app.conf.MaxRenderWorkers),
 	}
 
