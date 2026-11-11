@@ -13,7 +13,6 @@ type Pool struct {
 type Pools map[string]*Pool
 
 const (
-	Browser  = "browser"
 	Renderer = "renderer"
 )
 

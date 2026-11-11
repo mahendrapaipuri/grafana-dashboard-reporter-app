@@ -42,7 +42,6 @@ type Config struct {
 	FooterTemplate      string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE, overwrite"      json:"footerTemplate"`
 	HeaderTemplateFile  string `env:"GF_REPORTER_PLUGIN_REPORT_HEADER_TEMPLATE_FILE, overwrite" json:"headerTemplateFile"`
 	FooterTemplateFile  string `env:"GF_REPORTER_PLUGIN_REPORT_FOOTER_TEMPLATE_FILE, overwrite" json:"footerTemplateFile"`
-	MaxBrowserWorkers   int    `env:"GF_REPORTER_PLUGIN_MAX_BROWSER_WORKERS, overwrite"         json:"maxBrowserWorkers"`
 	MaxRenderWorkers    int    `env:"GF_REPORTER_PLUGIN_MAX_RENDER_WORKERS, overwrite"          json:"maxRenderWorkers"`
 	RemoteChromeURL     string `env:"GF_REPORTER_PLUGIN_REMOTE_CHROME_URL, overwrite"           json:"remoteChromeUrl"`
 	NativeRendering     bool   `env:"GF_REPORTER_PLUGIN_NATIVE_RENDERER, overwrite"             json:"nativeRenderer"`
@@ -202,11 +201,11 @@ func (c *Config) String() string {
 	return fmt.Sprintf(
 		"Theme: %s; Orientation: %s; Layout: %s; Dashboard Mode: %s; "+
 			"Time Zone: %s; Time Format: %s; Encoded Logo: %s; "+
-			"Max Renderer Workers: %d; Max Browser Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
+			"Max Renderer Workers: %d; Remote Chrome Addr: %s; App URL: %s; "+
 			"TLS Skip verify: %v; Included Panel IDs: %s; Excluded Panel IDs: %s Included Data for Panel IDs: %s; "+
 			"Native Renderer: %v; Client Timeout: %d; Report Format: %s",
 		c.Theme, c.Orientation, c.Layout, c.DashboardMode, c.TimeZone, c.TimeFormat,
-		encodedLogo, c.MaxRenderWorkers, c.MaxBrowserWorkers, c.RemoteChromeURL, appURL,
+		encodedLogo, c.MaxRenderWorkers, c.RemoteChromeURL, appURL,
 		c.SkipTLSCheck, includedPanelIDs, excludedPanelIDs, includeDataPanelIDs, c.NativeRendering,
 		int(c.HTTPClientOptions.Timeouts.Timeout.Seconds()), c.ReportFormat,
 	)
@@ -217,18 +216,17 @@ func Load(ctx context.Context, settings backend.AppInstanceSettings) (Config, er
 	// Always start with a default config so that when the plugin is not provisioned
 	// with a config, we will still have "non-null" config to work with
 	config := Config{
-		Theme:             "light",
-		Orientation:       "portrait",
-		Layout:            "simple",
-		DashboardMode:     "default",
-		ReportFormat:      "pdf",
-		TimeZone:          "",
-		TimeFormat:        "",
-		EncodedLogo:       "",
-		HeaderTemplate:    "",
-		FooterTemplate:    "",
-		MaxBrowserWorkers: 2,
-		MaxRenderWorkers:  2,
+		Theme:            "light",
+		Orientation:      "portrait",
+		Layout:           "simple",
+		DashboardMode:    "default",
+		ReportFormat:     "pdf",
+		TimeZone:         "",
+		TimeFormat:       "",
+		EncodedLogo:      "",
+		HeaderTemplate:   "",
+		FooterTemplate:   "",
+		MaxRenderWorkers: 2,
 		HTTPClientOptions: httpclient.Options{
 			TLS: &httpclient.TLSOptions{
 				InsecureSkipVerify: false,
