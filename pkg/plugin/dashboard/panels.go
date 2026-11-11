@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chromedp/cdproto/emulation"
+	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pkg/plugin/helpers"
@@ -93,6 +95,21 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]any, error) {
 		}
 	}
 
+	// Opening DevTools shrinks the page viewport, which fires a resize event that forces
+	// Grafana's React grid layout (react-grid-layout) to calculate panel widths and trigger
+	// data queries. Calling SetDeviceMetricsOverride and dispatching resize replicates
+	// that exact trigger without opening DevTools.
+	err := tab.Run(chromedp.Tasks{
+		// Bring tab to front so document.visibilityState is "visible"
+		page.BringToFront(),
+
+		// Force explicit viewport metrics so Grafana's ResizeObserver triggers
+		emulation.SetDeviceMetricsOverride(viewportWidth, viewportHeight, 1.0, false),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error triggering grafana to render panels %s: %w", dashURL, err)
+	}
+
 	// We dont need to load data from backend datasources to get panels metadata.
 	// Similarly there is no need of Grafana live for fetching metadata.
 	// So block both of them as they can hinder firing networkIdle event.
@@ -106,7 +123,7 @@ func (d *Dashboard) panelMetaData(_ context.Context) ([]any, error) {
 	// in the dashboard
 	//
 	// Testing URL patterns: https://urlpattern.com/
-	err := tab.NavigateAndWaitFor(dashURL, headers, "networkIdle", []string{"*://*:*/api/ds/query*", "*://*:*/api/live/ws"})
+	err = tab.NavigateAndWaitFor(dashURL, headers, "networkIdle", []string{"*://*:*/api/ds/query*", "*://*:*/api/live/ws"})
 	if err != nil {
 		return nil, fmt.Errorf("NavigateAndWaitFor: %w", err)
 	}

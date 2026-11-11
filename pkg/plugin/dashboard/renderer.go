@@ -253,6 +253,7 @@ func (d *Dashboard) panelPNGURL(p Panel, render bool) string {
 
 	values.Add("theme", d.conf.Theme)
 	values.Add("panelId", pID)
+	values.Add("hideLogo", "true")
 
 	if d.conf.TimeZone != "" && values.Get("timezone") == "" {
 		values.Add("timezone", d.conf.TimeZone)
