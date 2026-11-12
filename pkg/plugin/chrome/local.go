@@ -140,7 +140,15 @@ func NewLocalBrowserInstance(ctx context.Context, logger log.Logger, insecureSki
 	// correctly and thus we can never get panel data.
 	// This is happening since Chromium 146.0.7680.153.
 	// I think also, this happens only in the local chrome instance.
-	chromeOptions = append(chromeOptions, chromedp.Flag("auto-open-devtools-for-tabs", true))
+	// chromeOptions = append(chromeOptions, chromedp.Flag("auto-open-devtools-for-tabs", true))
+	//
+	// Update 20261111: It can be fixed in an another hacky way
+	// Ensure Canvas/WebGL panels render cleanly without DevTools
+	chromeOptions = append(
+		chromeOptions,
+		chromedp.Flag("use-gl", "angle"),
+		chromedp.Flag("use-angle", "swiftshader"),
+	)
 	// chromeOptions = append(chromeOptions, chromedp.Flag("log-net-log", "network.json"))
 
 	// Create a new browser allocator

@@ -130,7 +130,7 @@ func (r *Report) populatePanels(ctx context.Context, dashboardData *dashboard.Da
 		if slices.Contains(tablePanels, idx) {
 			wg.Add(1)
 
-			r.pools[worker.Browser].Do(func() {
+			r.pools[worker.Renderer].Do(func() {
 				defer wg.Done()
 
 				panelData, err := r.dashboard.PanelCSV(ctx, panel)
