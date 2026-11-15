@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.0
+
+- fix: Hide three dot menu button for panels for native renderer [#616](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/616)
+
 ## 1.13.2
 
 - Fix row expansion [#604](https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/pull/604)
